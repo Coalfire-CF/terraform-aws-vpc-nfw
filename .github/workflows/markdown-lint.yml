@@ -15,7 +15,6 @@ jobs:
       uses: docker://avtodev/markdown-lint:v1 # fastest way
       id: lintFile
       with:
-        rules: './.github/workflows/customrules.js'
         config: '/lint/config/changelog.yml'
         output: './.github/md_lint_output.txt'
         args: './README.md'
