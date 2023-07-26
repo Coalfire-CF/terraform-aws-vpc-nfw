@@ -229,6 +229,7 @@ behavior)
 - `enable_nat_gateway = true`
 - `single_nat_gateway = false`
 - `one_nat_gateway_per_az = false`
+
 *
 
 Single
@@ -238,6 +239,7 @@ Gateway
 - `enable_nat_gateway = true`
 - `single_nat_gateway = true`
 - `one_nat_gateway_per_az = false`
+
 *
 
 One
