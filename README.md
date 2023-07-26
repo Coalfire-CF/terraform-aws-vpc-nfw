@@ -1,104 +1,23 @@
 # ACE-AWS-VPC-NFW
 
-Template for AWS VPC with network firewall functionality. this is still a work in progress for documentation, but the code is funcational
+Template for AWS VPC with network firewall functionality. this is still a work in progress for documentation, but the code is functional
 
-## v1.0.0 - 2022-09-06
+## Description
 
-### **Description**
-
-- Terraform Version: 1.2.7
 - Cloud(s) supported: Gov & Com
 - Product Version/License:
 - FedRAMP Compliance Support: FR Mod/High
 - DoD Compliance Support:
 - Misc Framework Support:
-- Launchpad validated version:
 
-### **Setup and usage**
-
-Describes what changes are needed to leverage this code. Likely should have several sub headings including items as
-
-- process/structure for code modifications in the version of Launchpad listed above
-- modules/output/variable updates
-- removal of existing LP technology
-
-#### **Code Location**
-
-Code should be stored in terraform/app/code
-
-#### **Code updates**
-
-Ensure that vars zyx are in regional/global vars
-
-### **Issues**
-
-Bug fixes and enhancements are managed, tracked, and discussed through the GitHub issues on this repository.
-
-Issues should be flagged appropriately.
-
-- Bug
-- Enhancement
-- Documentation
-- Code
-
-#### **Bugs**
-
-Bugs are problems that exist with the technology or code that occur when expected behavior does not match implementation.
-For example, spelling mistakes on a dashboard.
-
-Use the Bug fix template to describe the issue and expected behaviors.
-
-#### **Enhancements**
-
-Updates and changes to the code to support additional functionality, new features or improve engineering or operations usage of the technology.
-For example, adding a new widget to a dashboard to report on failed backups is enhancement.
-
-Use the Enhancement issue template to request enhancements to the codebase. Enhancements should be improvements that are applicable to wide variety of clients and projects. One of updates for a specific project should be handled locally. If you are unsure if something qualifies for an enhancement contact the repository code owner.
-
-#### **Pull Requests**
-
-Code updates ideally are limited in scope to address one enhancement or bug fix per PR. The associated PR should be linked to the relevant issue.
-
-#### **Code Owners**
+### Code Owners
 
 - Primary Code owner: Douglas Francis (@douglas-f)
 - Backup Code owner: James Westbrook (@i-ate-a-vm)
 
 The responsibility of the code owners is to approve and Merge PR's on the repository, and generally manage and direct issue discussions.
 
-### **Repository Settings**
-
-Settings that should be applied to repos
-
-#### **Branch Protection**
-
-##### **main Branch**
-
-- Require a pull request before merging
-- Require Approvals
-- Dismiss stale pull requests approvals when new commits are pushed
-- Require review from Code Owners
-
-##### **other branches**
-
-- add as needed
-
-#### **GitHub Actions**
-
-##### **Markdown Linter**
-
-- Triggered by a Pull Request on the main branch
-- Makes use of the markdown-lint.yml and the customrules.js files, and will lint the README.md file present in the project's Top Level Directory and create a comment on the Pull Request with its body as any markdown formatting errors that are found or if there are none, then it will output 'Markdown Valid' as the body of the comment
-- The only change that may need to be made is if the README.md file is not in the Top Level Directory, then the file path value must be changed in markdown-lint.yml, line 21
-
-##### **Checkov Scan**
-
-- Triggered by a Pull Request on the main branch
-- Makes use of the checkov.yml file, and will scan the Terraform code present in the directory for any security or compliance misconfigurations using graph-based scanning and will create a comment on the Pull Request with its body as the findings from the scan
-- No changes truly need to be made
-
-
-# AWS VPC Terraform module
+## AWS VPC Terraform module
 
 Terraform
 module
@@ -116,23 +35,23 @@ resources
 are
 supported:
 
-* [VPC](https://www.terraform.io/docs/providers/aws/r/vpc.html)
-* [Subnet](https://www.terraform.io/docs/providers/aws/r/subnet.html)
-* [Route](https://www.terraform.io/docs/providers/aws/r/route.html)
-* [Route table](https://www.terraform.io/docs/providers/aws/r/route_table.html)
-* [Internet Gateway](https://www.terraform.io/docs/providers/aws/r/internet_gateway.html)
-* [NAT Gateway](https://www.terraform.io/docs/providers/aws/r/nat_gateway.html)
-* [VPN Gateway](https://www.terraform.io/docs/providers/aws/r/vpn_gateway.html)
-* [VPC Endpoint](https://www.terraform.io/docs/providers/aws/r/vpc_endpoint.html) (
+- [VPC](https://www.terraform.io/docs/providers/aws/r/vpc.html)
+- [Subnet](https://www.terraform.io/docs/providers/aws/r/subnet.html)
+- [Route](https://www.terraform.io/docs/providers/aws/r/route.html)
+- [Route table](https://www.terraform.io/docs/providers/aws/r/route_table.html)
+- [Internet Gateway](https://www.terraform.io/docs/providers/aws/r/internet_gateway.html)
+- [NAT Gateway](https://www.terraform.io/docs/providers/aws/r/nat_gateway.html)
+- [VPN Gateway](https://www.terraform.io/docs/providers/aws/r/vpn_gateway.html)
+- [VPC Endpoint](https://www.terraform.io/docs/providers/aws/r/vpc_endpoint.html) (
   S3
   and
   DynamoDB)
-* [RDS DB Subnet Group](https://www.terraform.io/docs/providers/aws/r/db_subnet_group.html)
-* [ElastiCache Subnet Group](https://www.terraform.io/docs/providers/aws/r/elasticache_subnet_group.html)
-* [Redshift Subnet Group](https://www.terraform.io/docs/providers/aws/r/redshift_subnet_group.html)
-* [DHCP Options Set](https://www.terraform.io/docs/providers/aws/r/vpc_dhcp_options.html)
-* [Default VPC](https://www.terraform.io/docs/providers/aws/r/default_vpc.html)
-* [AWS NFW](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall)
+- [RDS DB Subnet Group](https://www.terraform.io/docs/providers/aws/r/db_subnet_group.html)
+- [ElastiCache Subnet Group](https://www.terraform.io/docs/providers/aws/r/elasticache_subnet_group.html)
+- [Redshift Subnet Group](https://www.terraform.io/docs/providers/aws/r/redshift_subnet_group.html)
+- [DHCP Options Set](https://www.terraform.io/docs/providers/aws/r/vpc_dhcp_options.html)
+- [Default VPC](https://www.terraform.io/docs/providers/aws/r/default_vpc.html)
+- [AWS NFW](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall)
 
 module "
 vpc"
@@ -157,13 +76,16 @@ public_subnets
 
 enable_nat_gateway
 =
+
 true
 enable_vpn_gateway
 =
+
 true
 
 tags
 =
+
 {
 Terraform
 = "
@@ -304,18 +226,18 @@ subnet (
 default
 behavior)
 
-* `enable_nat_gateway = true`
-* `single_nat_gateway = false`
-* `one_nat_gateway_per_az = false`
+- `enable_nat_gateway = true`
+- `single_nat_gateway = false`
+- `one_nat_gateway_per_az = false`
 *
 
 Single
 NAT
 Gateway
 
-* `enable_nat_gateway = true`
-* `single_nat_gateway = true`
-* `one_nat_gateway_per_az = false`
+- `enable_nat_gateway = true`
+- `single_nat_gateway = true`
+- `one_nat_gateway_per_az = false`
 *
 
 One
@@ -325,9 +247,9 @@ per
 availability
 zone
 
-* `enable_nat_gateway = true`
-* `single_nat_gateway = false`
-* `one_nat_gateway_per_az = true`
+- `enable_nat_gateway = true`
+- `single_nat_gateway = false`
+- `one_nat_gateway_per_az = true`
 
 If
 both `single_nat_gateway`
