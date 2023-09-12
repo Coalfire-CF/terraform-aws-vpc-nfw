@@ -1,7 +1,6 @@
-//variable "create_vpc" {
-//  description = "Controls if VPC should be created (it affects almost all resources)"
-//  default     = true
-//}
+###################
+# Network Firewall
+###################
 
 variable "deploy_aws_nfw" {
   description = "will this VPC utilize a AWS NFW?"
@@ -23,34 +22,112 @@ variable "aws_nfw_name" {
 
 variable "aws_nfw_stateless_rule_group" {
   description = "AWS NFW sateless rule group"
-  type        = any
-  default     = ""
-}
-
-variable "aws_nfw_description" {
-  description = "Description for the resources"
-  default     = ""
-  type        = string
+  type = list(object({
+    name        = string
+    description = string
+    capacity    = number
+    rule_config = list(object({
+      protocols_number      = list(number)
+      source_ipaddress      = string
+      source_to_port        = string
+      destination_to_port   = string
+      destination_ipaddress = string
+      tcp_flag = object({
+        flags = list(string)
+        masks = list(string)
+      })
+      actions = map(string)
+    }))
+  }))
+  default = []
 }
 
 variable "aws_nfw_fivetuple_stateful_rule_group" {
   description = "Config for 5-tuple type stateful rule group"
-  default     = []
-  type        = any
+  type = list(object({
+    name        = string
+    description = string
+    capacity    = number
+    rule_config = list(object({
+      description           = string
+      protocol              = string
+      source_ipaddress      = string
+      source_port           = string
+      direction             = string
+      destination_port      = string
+      destination_ipaddress = string
+      sid                   = number
+      actions               = map(string)
+    }))
+  }))
+  default = []
 }
 
 variable "aws_nfw_domain_stateful_rule_group" {
   description = "Config for domain type stateful rule group"
-  default     = []
-  type        = any
+  type = list(object({
+    name        = string
+    description = string
+    capacity    = number
+    domain_list = list(string)
+    actions     = string
+    protocols   = list(string)
+    rules_file  = optional(string, "")
+    rule_variables = optional(object({
+      ip_sets = list(object({
+        key    = string
+        ip_set = list(string)
+      }))
+      port_sets = list(object({
+        key       = string
+        port_sets = list(string)
+      }))
+      }), {
+      ip_sets   = []
+      port_sets = []
+    })
+  }))
+  default = []
 }
 
 variable "aws_nfw_suricata_stateful_rule_group" {
   description = "Config for Suricata type stateful rule group"
-  default     = []
-  type        = any
+  type = list(object({
+    name        = string
+    description = string
+    capacity    = number
+    rules_file  = optional(string, "")
+    rule_variables = optional(object({
+      ip_sets = list(object({
+        key    = string
+        ip_set = list(string)
+      }))
+      port_sets = list(object({
+        key       = string
+        port_sets = list(string)
+      }))
+      }), {
+      ip_sets   = []
+      port_sets = []
+    })
+  }))
+  default = []
 }
 
+variable "delete_protection" {
+  description = "Whether or not to enable deletion protection of NFW"
+  type        = bool
+  default     = true
+}
+
+variable "nfw_kms_key_id" {
+  description = "NFW KMS Key Id for encryption"
+  type        = string
+}
+
+######
+# VPC
+######
 variable "name" {
   description = "Name to be used on all the resources as identifier"
   default     = ""
@@ -58,8 +135,7 @@ variable "name" {
 }
 
 variable "cidr" {
-  description = "The CIDR block for the VPC. Default value is a valid CIDR, but not acceptable by AWS and should be overridden"
-  default     = "0.0.0.0/0"
+  description = "The CIDR block for the VPC."
   type        = string
 }
 
@@ -108,12 +184,6 @@ variable "database_subnet_suffix" {
 variable "redshift_subnet_suffix" {
   description = "Suffix to append to redshift subnets name"
   default     = "redshift"
-  type        = string
-}
-
-variable "siem_subnet_suffix" {
-  description = "Suffix to append to redshift subnets name"
-  default     = "siem"
   type        = string
 }
 
@@ -171,12 +241,6 @@ variable "create_redshift_subnet_route_table" {
   type        = bool
 }
 
-variable "create_siem_subnet_route_table" {
-  description = "Controls if separate route table for siem should be created"
-  default     = true
-  type        = bool
-}
-
 variable "create_elasticache_subnet_route_table" {
   description = "Controls if separate route table for elasticache should be created"
   default     = false
@@ -186,12 +250,6 @@ variable "create_elasticache_subnet_route_table" {
 variable "intra_subnets" {
   type        = list(string)
   description = "A list of intra subnets"
-  default     = []
-}
-
-variable "siem_subnets" {
-  type        = list(string)
-  description = "A list of siem subnets"
   default     = []
 }
 
@@ -273,21 +331,19 @@ variable "enable_vpn_gateway" {
   type        = bool
 }
 
-variable "enable_vpcflowlog" {
-  description = "Should be true if you want to create a flowlog and attach it to the VPC"
-  default     = false
-  type        = bool
-}
-
-variable "enable_vpcflowlog_toS3" {
-  description = "Should be true if you want to create a flowlog and attach it to the VPC"
-  default     = false
-  type        = bool
-}
-
-variable "vpcflowlog_s3_arn" {
+variable "flow_log_destination_arn" {
+  description = "The ARN of the Cloudwatch log destination for Flow Logs"
   type        = string
-  description = "S3 ARN for VPC Flowlogs"
+  default     = null
+}
+
+variable "flow_log_destination_type" {
+  description = "Type of flow log destination. Can be s3 or cloud-watch-logs"
+  type        = string
+  validation {
+    condition     = can(regex("^(cloud-watch-logs|s3)$", var.flow_log_destination_type))
+    error_message = "ERROR: benchmark value must match 'cloud-watch-logs' or 's3'."
+  }
 }
 
 variable "vpn_gateway_id" {
@@ -328,18 +384,6 @@ variable "igw_tags" {
 
 variable "public_subnet_tags" {
   description = "Additional tags for the public subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "public_subnet_name_tag" {
-  description = "Additional name tag for the public subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "firewall_subnet_tags" {
-  description = "Additional tags for the firewall subnets"
   default     = {}
   type        = map(string)
 }
@@ -405,12 +449,6 @@ variable "elasticache_route_table_tags" {
   type        = map(string)
 }
 
-variable "siem_route_table_tags" {
-  description = "Additional tags for the elasticache route tables"
-  default     = {}
-  type        = map(string)
-}
-
 variable "intra_route_table_tags" {
   description = "Additional tags for the intra route tables"
   default     = {}
@@ -425,18 +463,6 @@ variable "database_subnet_tags" {
 
 variable "database_subnet_group_tags" {
   description = "Additional tags for the database subnet group"
-  default     = {}
-  type        = map(string)
-}
-
-variable "siem_subnet_tags" {
-  description = "Additional tags for the siem subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "siem_subnet_group_tags" {
-  description = "Additional tags for the siem subnet group"
   default     = {}
   type        = map(string)
 }
@@ -487,18 +513,6 @@ variable "vpn_gateway_tags" {
   description = "Additional tags for the VPN gateway"
   default     = {}
   type        = map(string)
-}
-
-variable "vpcflowlog_tags" {
-  description = "Additional tags for the VPN flowlogs"
-  default     = {}
-  type        = map(string)
-}
-
-variable "cloud_watch_logs_group_name" {
-  description = "Name of the log group to send Flow Logs"
-  default     = ""
-  type        = string
 }
 
 variable "enable_dhcp_options" {
@@ -561,12 +575,6 @@ variable "default_vpc_enable_dns_hostnames" {
   type        = bool
 }
 
-variable "default_vpc_enable_classiclink" {
-  description = "Should be true to enable ClassicLink in the Default VPC"
-  default     = false
-  type        = bool
-}
-
 variable "default_vpc_tags" {
   description = "Additional tags for the Default VPC"
   default     = {}
@@ -583,26 +591,90 @@ variable "s3_endpoint_type" {
   default     = "Gateway"
 }
 
-variable "az" {
-  type        = map(any)
-  default     = {}
-  description = "if you need to declare specific az's to subnets"
+variable "cloudwatch_log_group_retention_in_days" {
+  description = "Number of days to retain Cloudwatch logs"
+  type        = number
+  default     = 365
+}
+variable "cloudwatch_log_group_kms_key_id" {
+  description = "Customer KMS Key id for Cloudwatch Log encryption"
+  type        = string
 }
 
-variable "private_az" {
-  type        = map(any)
-  default     = {}
-  description = "if you need to declare specific az's to subnets"
+variable "database_custom_routes" {
+  description = "Custom routes for Database Subnets"
+  type = list(object({
+    destination_cidr_block     = optional(string, null)
+    destination_prefix_list_id = optional(string, null)
+    network_interface_id       = optional(string, null)
+    transit_gateway_id         = optional(string, null)
+    vpc_endpoint_id            = optional(string, null)
+  }))
+  default = []
 }
 
-variable "public_az" {
-  type        = map(any)
-  default     = {}
-  description = "if you need to declare specific az's to subnets"
+variable "elasticache_custom_routes" {
+  description = "Custom routes for Elasticache Subnets"
+  type = list(object({
+    destination_cidr_block     = optional(string, null)
+    destination_prefix_list_id = optional(string, null)
+    network_interface_id       = optional(string, null)
+    transit_gateway_id         = optional(string, null)
+    vpc_endpoint_id            = optional(string, null)
+  }))
+  default = []
 }
 
-variable "firewall_az" {
-  type        = map(any)
-  default     = {}
-  description = "if you need to declare specific az's to subnets"
+variable "firewall_custom_routes" {
+  description = "Custom routes for Firewall Subnets"
+  type        = list(map(string))
+  default     = []
+}
+
+variable "intra_custom_routes" {
+  description = "Custom routes for Intra Subnets"
+  type = list(object({
+    destination_cidr_block     = optional(string, null)
+    destination_prefix_list_id = optional(string, null)
+    network_interface_id       = optional(string, null)
+    transit_gateway_id         = optional(string, null)
+    vpc_endpoint_id            = optional(string, null)
+  }))
+  default = []
+}
+
+variable "private_custom_routes" {
+  description = "Custom routes for Private Subnets"
+  type = list(object({
+    destination_cidr_block     = optional(string, null)
+    destination_prefix_list_id = optional(string, null)
+    network_interface_id       = optional(string, null)
+    transit_gateway_id         = optional(string, null)
+    vpc_endpoint_id            = optional(string, null)
+  }))
+  default = []
+}
+
+variable "public_custom_routes" {
+  description = "Custom routes for Public Subnets"
+  type = list(object({
+    destination_cidr_block     = optional(string, null)
+    destination_prefix_list_id = optional(string, null)
+    network_interface_id       = optional(string, null)
+    internet_route             = optional(bool, null)
+    transit_gateway_id         = optional(string, null)
+  }))
+  default = []
+}
+
+variable "redshift_custom_routes" {
+  description = "Custom routes for Redshift Subnets"
+  type = list(object({
+    destination_cidr_block     = optional(string, null)
+    destination_prefix_list_id = optional(string, null)
+    network_interface_id       = optional(string, null)
+    transit_gateway_id         = optional(string, null)
+    vpc_endpoint_id            = optional(string, null)
+  }))
+  default = []
 }

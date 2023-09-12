@@ -4,8 +4,14 @@ resource "aws_networkfirewall_firewall" "this" {
   firewall_policy_arn = aws_networkfirewall_firewall_policy.this.arn
   vpc_id              = var.vpc_id
 
+  delete_protection                 = var.delete_protection
   firewall_policy_change_protection = var.firewall_policy_change_protection
   subnet_change_protection          = var.subnet_change_protection
+
+  encryption_configuration {
+    key_id = var.nfw_kms_key_id
+    type   = "CUSTOMER_KMS"
+  }
 
   dynamic "subnet_mapping" {
     for_each = toset(var.subnet_mapping)
@@ -26,6 +32,11 @@ resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
   description = var.suricata_stateful_rule_group[count.index]["description"]
   capacity    = var.suricata_stateful_rule_group[count.index]["capacity"]
 
+  encryption_configuration {
+    key_id = var.nfw_kms_key_id
+    type   = "CUSTOMER_KMS"
+  }
+
   rule_group {
     rules_source {
       rules_string = file(var.suricata_stateful_rule_group[count.index]["rules_file"])
@@ -33,8 +44,8 @@ resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
 
     dynamic "rule_variables" {
       for_each = [
-      for b in lookup(var.suricata_stateful_rule_group[count.index], "rule_variables", {}) : b
-      if length(b) > 1
+        for b in lookup(var.suricata_stateful_rule_group[count.index], "rule_variables", {}) : b
+        if length(b) > 1
       ]
       content {
         dynamic "ip_sets" {
@@ -73,11 +84,16 @@ resource "aws_networkfirewall_rule_group" "domain_stateful_group" {
   description = var.domain_stateful_rule_group[count.index]["description"]
   capacity    = var.domain_stateful_rule_group[count.index]["capacity"]
 
+  encryption_configuration {
+    key_id = var.nfw_kms_key_id
+    type   = "CUSTOMER_KMS"
+  }
+
   rule_group {
     dynamic "rule_variables" {
       for_each = [
-      for b in lookup(var.domain_stateful_rule_group[count.index], "rule_variables", {}) : b
-      if length(b) > 1
+        for b in lookup(var.domain_stateful_rule_group[count.index], "rule_variables", {}) : b
+        if length(b) > 1
       ]
       content {
         dynamic "ip_sets" {
@@ -123,6 +139,11 @@ resource "aws_networkfirewall_rule_group" "fivetuple_stateful_group" {
   description = var.fivetuple_stateful_rule_group[count.index]["description"]
   capacity    = var.fivetuple_stateful_rule_group[count.index]["capacity"]
 
+  encryption_configuration {
+    key_id = var.nfw_kms_key_id
+    type   = "CUSTOMER_KMS"
+  }
+
   rule_group {
     rules_source {
       dynamic "stateful_rule" {
@@ -158,13 +179,18 @@ resource "aws_networkfirewall_rule_group" "stateless_group" {
   description = var.stateless_rule_group[count.index]["description"]
   capacity    = var.stateless_rule_group[count.index]["capacity"]
 
+  encryption_configuration {
+    key_id = var.nfw_kms_key_id
+    type   = "CUSTOMER_KMS"
+  }
+
   rule_group {
     rules_source {
       stateless_rules_and_custom_actions {
         dynamic "stateless_rule" {
           for_each = var.stateless_rule_group[count.index].rule_config
           content {
-            priority = stateless_rule.value.priority
+            priority = index(var.stateless_rule_group[count.index].rule_config, stateless_rule.value) + 1
             rule_definition {
               actions = ["aws:${stateless_rule.value.actions["type"]}"]
               match_attributes {
@@ -227,6 +253,11 @@ resource "aws_networkfirewall_rule_group" "stateless_group" {
 resource "aws_networkfirewall_firewall_policy" "this" {
   name = "${var.prefix}-nfw-policy-${var.firewall_name}"
 
+  encryption_configuration {
+    key_id = var.nfw_kms_key_id
+    type   = "CUSTOMER_KMS"
+  }
+
   firewall_policy {
     stateless_default_actions          = ["aws:${var.stateless_default_actions}"]
     stateless_fragment_default_actions = ["aws:${var.stateless_fragment_default_actions}"]
@@ -254,29 +285,32 @@ resource "aws_networkfirewall_firewall_policy" "this" {
 
 ###################### Logging Config ######################
 
-#resource "aws_cloudwatch_log_group" "nfw" {
-#  for_each = try(var.logging_config, {})
-#  name     = "/aws/network-firewall/${each.key}"
-#
-#  tags = merge(var.tags)
-#
-#  retention_in_days = each.value.retention_in_days
-#}
-#
-#resource "aws_networkfirewall_logging_configuration" "this" {
-#  count        = try(length(var.logging_config), 0) > 0 ? 1 : 0
-#  firewall_arn = aws_networkfirewall_firewall.this.arn
-#  logging_configuration {
-#    dynamic "log_destination_config" {
-#      for_each = var.logging_config
-#      content {
-#        log_destination = {
-#          logGroup = aws_cloudwatch_log_group.nfw[log_destination_config.key].name
-#        }
-#        log_destination_type = "CloudWatchLogs"
-#        log_type             = upper(log_destination_config.key)
-#      }
-#
-#    }
-#  }
-#}
+resource "aws_cloudwatch_log_group" "nfw" {
+  name = "/aws/network-firewall"
+
+  tags = merge(var.tags)
+
+  retention_in_days = var.cloudwatch_log_group_retention_in_days
+  kms_key_id        = var.cloudwatch_log_group_kms_key_id
+}
+
+resource "aws_networkfirewall_logging_configuration" "this" {
+  firewall_arn = aws_networkfirewall_firewall.this.arn
+
+  logging_configuration {
+    log_destination_config {
+      log_destination = {
+        logGroup = aws_cloudwatch_log_group.nfw.name
+      }
+      log_destination_type = "CloudWatchLogs"
+      log_type             = "ALERT"
+    }
+    log_destination_config {
+      log_destination = {
+        logGroup = aws_cloudwatch_log_group.nfw.name
+      }
+      log_destination_type = "CloudWatchLogs"
+      log_type             = "FLOW"
+    }
+  }
+}
