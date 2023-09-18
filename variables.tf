@@ -3,7 +3,7 @@
 ###################
 
 variable "deploy_aws_nfw" {
-  description = "will this VPC utilize a AWS NFW?"
+  description = "enable nfw true/false"
   type        = bool
   default     = false
 }
