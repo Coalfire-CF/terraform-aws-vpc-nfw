@@ -1,57 +1,19 @@
-# ACE-AWS-VPC-NFW
+<div align="center">
+<img src="coalfire_logo.png" width="200">
 
-Template for AWS VPC with network firewall functionality. this is still a work in progress for documentation, but the code is functional
+</div>
+
+# AWS VPC NFW Terraform Module
 
 ## Description
 
-- Cloud(s) supported: Gov & Com
-- Product Version/License:
-- FedRAMP Compliance Support: FR Mod/High
-- DoD Compliance Support:
-- Misc Framework Support:
+Template for AWS VPC with network firewall functionality. This is still a work in progress for documentation, but the code is functional.
 
-### Code Owners
+FedRAMP Compliance: Moderate, High
 
-- Primary Code owner: Douglas Francis (@douglas-f)
-- Backup Code owner: James Westbrook (@i-ate-a-vm)
+## Dependencies
 
-The responsibility of the code owners is to approve and Merge PR's on the repository, and generally manage and direct issue discussions.
-
-## AWS VPC Terraform module
-
-Terraform
-module
-which
-creates
-VPC
-resources
-on
-AWS.
-
-These
-types
-of
-resources
-are
-supported:
-
-- [VPC](https://www.terraform.io/docs/providers/aws/r/vpc.html)
-- [Subnet](https://www.terraform.io/docs/providers/aws/r/subnet.html)
-- [Route](https://www.terraform.io/docs/providers/aws/r/route.html)
-- [Route table](https://www.terraform.io/docs/providers/aws/r/route_table.html)
-- [Internet Gateway](https://www.terraform.io/docs/providers/aws/r/internet_gateway.html)
-- [NAT Gateway](https://www.terraform.io/docs/providers/aws/r/nat_gateway.html)
-- [VPN Gateway](https://www.terraform.io/docs/providers/aws/r/vpn_gateway.html)
-- [VPC Endpoint](https://www.terraform.io/docs/providers/aws/r/vpc_endpoint.html) (
-  S3
-  and
-  DynamoDB)
-- [RDS DB Subnet Group](https://www.terraform.io/docs/providers/aws/r/db_subnet_group.html)
-- [ElastiCache Subnet Group](https://www.terraform.io/docs/providers/aws/r/elasticache_subnet_group.html)
-- [Redshift Subnet Group](https://www.terraform.io/docs/providers/aws/r/redshift_subnet_group.html)
-- [DHCP Options Set](https://www.terraform.io/docs/providers/aws/r/vpc_dhcp_options.html)
-- [Default VPC](https://www.terraform.io/docs/providers/aws/r/default_vpc.html)
-- [AWS NFW](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall)
+No dependencies.
 
 module "
 vpc"
@@ -641,8 +603,6 @@ module "vpc" {
   # ... omitted
 }
 ```
-
-## Terraform version
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
