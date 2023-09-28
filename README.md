@@ -1,7 +1,4 @@
-<div align="center">
-<img src="coalfire_logo.png" width="200">
-
-</div>
+![Coalfire](coalfire_logo.png)
 
 # AWS VPC NFW Terraform Module
 
@@ -188,9 +185,9 @@ subnet (
 default
 behavior)
 
-- `enable_nat_gateway = true`
-- `single_nat_gateway = false`
-- `one_nat_gateway_per_az = false`
+* `enable_nat_gateway = true`
+* `single_nat_gateway = false`
+* `one_nat_gateway_per_az = false`
 
 *
 
@@ -198,9 +195,9 @@ Single
 NAT
 Gateway
 
-- `enable_nat_gateway = true`
-- `single_nat_gateway = true`
-- `one_nat_gateway_per_az = false`
+* `enable_nat_gateway = true`
+* `single_nat_gateway = true`
+* `one_nat_gateway_per_az = false`
 
 *
 
@@ -211,9 +208,9 @@ per
 availability
 zone
 
-- `enable_nat_gateway = true`
-- `single_nat_gateway = false`
-- `one_nat_gateway_per_az = true`
+* `enable_nat_gateway = true`
+* `single_nat_gateway = false`
+* `one_nat_gateway_per_az = true`
 
 If
 both `single_nat_gateway`
