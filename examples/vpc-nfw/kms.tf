@@ -1,7 +1,7 @@
 resource "aws_kms_key" "nfw_key" {
   provider = aws.mgmt
 
-  description         = "AWS Secrets Manager key for ${var.resource_prefix}"
+  description         = "AWS KMS key for Network Firewall"
   policy              = data.aws_iam_policy_document.nfw_kms_policy.json
   enable_key_rotation = true
 }
@@ -9,7 +9,7 @@ resource "aws_kms_key" "nfw_key" {
 resource "aws_kms_alias" "nfw_alias" {
   provider = aws.mgmt
 
-  name          = "alias/${var.resource_prefix}-secrets-manager"
+  name          = "alias/${var.resource_prefix}-nfw"
   target_key_id = aws_kms_key.nfw_key.key_id
 }
 
