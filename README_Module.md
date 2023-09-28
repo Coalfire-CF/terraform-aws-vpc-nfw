@@ -57,13 +57,16 @@ public_subnets
 
 enable_nat_gateway
 =
+
 true
 enable_vpn_gateway
 =
+
 true
 
 tags
 =
+
 {
 Terraform
 = "
