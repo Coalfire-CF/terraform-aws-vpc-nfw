@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ![Coalfire](coalfire_logo.png)
 
 # AWS VPC NFW Terraform Module
@@ -13,49 +12,27 @@ FedRAMP Compliance: Moderate, High
 
 No dependencies.
 
-module "
-vpc"
+``` hcl
+module "vpc"
 {
-source
-= "
-terraform-aws-modules/vpc/aws"
+  source = "terraform-aws-modules/vpc/aws"
 
-name
-= "
-my-vpc"
-cidr
-= "
-10.0.0.0/16"
+  name = "my-vpc"
+  cidr = "10.0.0.0/16"
 
-azs
-= ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
-private_subnets
-= ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-public_subnets
-= ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  azs = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+  private_subnets = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  public_subnets = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
 
-enable_nat_gateway
-=
+  enable_nat_gateway = true
+  enable_vpn_gateway = true
 
-true
-enable_vpn_gateway
-=
-
-true
-
-tags
-=
-
-{
-Terraform
-= "
-true"
-Environment
-= "
-dev"
+  tags =
+  {
+    Terraform = "true"
+    Environment = "dev"
+  }
 }
-}
-
 ```
 
 ## External NAT Gateway IPs
@@ -67,6 +44,7 @@ To that end, it is possible to assign existing IPs to the NAT Gateways.
 This prevents the destruction of the VPC from releasing those IPs, while making it possible that a re-created VPC uses the same IPs.
 
 To achieve this, allocate the IPs outside the VPC module declaration.
+
 ```hcl
 resource "aws_eip" "nat" {
   count = 3
@@ -86,18 +64,6 @@ parameter
 to
 this
 module.
-=======
-<div align="center">
-<img src="coalfire_logo.png" width="200">
-</div>
-
-# ACE-AWS-VPC-NFW
-
-## Submodule
-[Network Firewall](modules/aws-network-firewall/README.md)
-
-## Usage
->>>>>>> main
 
 ```hcl
 module "mgmt_vpc" {
@@ -176,148 +142,7 @@ There are variables provided for each subnet type:
 
 These variables are lists of objects.
 
-<<<<<<< HEAD
-This
-module
-supports
-three
-scenarios
-for
-creating
-NAT
-gateways.
-Each
-will
-be
-explained
-in
-further
-detail
-in
-the
-corresponding
-sections.
-
-*
-
-One
-NAT
-Gateway
-per
-subnet (
-default
-behavior)
-
-* `enable_nat_gateway = true`
-* `single_nat_gateway = false`
-* `one_nat_gateway_per_az = false`
-
-*
-
-Single
-NAT
-Gateway
-
-* `enable_nat_gateway = true`
-* `single_nat_gateway = true`
-* `one_nat_gateway_per_az = false`
-
-*
-
-One
-NAT
-Gateway
-per
-availability
-zone
-
-* `enable_nat_gateway = true`
-* `single_nat_gateway = false`
-* `one_nat_gateway_per_az = true`
-
-If
-both `single_nat_gateway`
-and `one_nat_gateway_per_az`
-are
-set
-to `true`
-,
-then `single_nat_gateway`
-takes
-precedence.
-
-### One NAT Gateway per subnet (default)
-
-By
-default,
-the
-module
-will
-determine
-the
-number
-of
-NAT
-Gateways
-to
-create
-based
-on
-the
-the `max()`
-of
-the
-private
-subnet
-lists (`database_subnets`
-, `elasticache_subnets`
-, `private_subnets`
-,
-and `redshift_subnets`)
-.
-The
-module **
-does
-not**
-take
-into
-account
-the
-number
-of `intra_subnets`
-,
-since
-the
-latter
-are
-designed
-to
-have
-no
-Internet
-access
-via
-NAT
-Gateway.
-For
-example,
-if
-your
-configuration
-looks
-like
-the
-following:
-
-```hcl
-database_subnets    = ["10.0.21.0/24", "10.0.22.0/24"]
-elasticache_subnets = ["10.0.31.0/24", "10.0.32.0/24"]
-private_subnets     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24", "10.0.4.0/24", "10.0.5.0/24"]
-redshift_subnets    = ["10.0.41.0/24", "10.0.42.0/24"]
-intra_subnets       = ["10.0.51.0/24", "10.0.52.0/24", "10.0.53.0/24"]
-=======
 Example of custom public routes:
->>>>>>> main
 ```
 public_custom_routes = [
     {
@@ -330,7 +155,7 @@ public_custom_routes = [
     }
   ]
 ```
-<<<<<<< HEAD
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
