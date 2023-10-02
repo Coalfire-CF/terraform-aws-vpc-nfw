@@ -78,7 +78,7 @@ resource "aws_route_table_association" "nfw_igw" {
 }
 
 resource "aws_route" "public_custom" {
-  count = length(var.public_custom_routes) > 0 ? length(var.public_custom_routes) * length(aws_route_table.public) : 0
+  count = length(var.public_custom_routes) && !var.deploy_aws_nfw > 0 ? length(var.public_custom_routes) * length(aws_route_table.public) : 0
 
   # Math result should mirror the number of subnets/route tables
   # The desired end goal if given 2 custom routes and 3 subnets/AZs/Route Table is to create a route for each table
@@ -90,15 +90,31 @@ resource "aws_route" "public_custom" {
   destination_prefix_list_id = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "destination_prefix_list_id", null)
 
   network_interface_id = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "network_interface_id", null)
-  gateway_id           = var.public_custom_routes[floor(count.index / length(aws_route_table.public))]["internet_route"] && !var.deploy_aws_nfw ? aws_internet_gateway.this[0].id : null
+  gateway_id           = var.public_custom_routes[floor(count.index / length(aws_route_table.public))]["internet_route"] ? aws_internet_gateway.this[0].id : null
   transit_gateway_id   = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "transit_gateway_id", null)
-  vpc_endpoint_id      = var.public_custom_routes[floor(count.index / length(aws_route_table.public))]["internet_route"] && var.deploy_aws_nfw ? module.aws_network_firewall[0].endpoint_id[index(aws_route_table.public, element(aws_route_table.public, count.index))] : null
 
   timeouts {
     create = "5m"
   }
+}
 
-  depends_on = [ module.aws_network_firewall ]
+resource "aws_route" "nfw_public_custom" {
+  count = length(var.public_custom_routes) && var.deploy_aws_nfw > 0 ? length(var.public_custom_routes) * length(aws_route_table.public) : 0
+
+  # Math result should mirror the number of subnets/route tables
+  # The desired end goal if given 2 custom routes and 3 subnets/AZs/Route Table is to create a route for each table
+  # E.g. if 3 AZs/subnets, then the result of math/logic should be 0, 1, 2, 0, 1, 2
+  # Because the element() function automatically wraps around the index (start from 0 if greater than list size), we combine it with the index function to ensure correct order
+  route_table_id = aws_route_table.public[index(aws_route_table.public, element(aws_route_table.public, count.index))].id
+
+  destination_cidr_block     = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "destination_cidr_block", null)
+  destination_prefix_list_id = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "destination_prefix_list_id", null)
+
+  vpc_endpoint_id      = var.public_custom_routes[floor(count.index / length(aws_route_table.public))]["internet_route"] ? module.aws_network_firewall[0].endpoint_id[index(aws_route_table.public, element(aws_route_table.public, count.index))] : null
+
+  timeouts {
+    create = "5m"
+  }
 }
 
 #################
