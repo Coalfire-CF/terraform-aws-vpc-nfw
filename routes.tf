@@ -78,7 +78,7 @@ resource "aws_route_table_association" "nfw_igw" {
 }
 
 resource "aws_route" "public_custom" {
-  count = length(var.public_custom_routes) && !var.deploy_aws_nfw > 0 ? length(var.public_custom_routes) * length(aws_route_table.public) : 0
+  count = length(var.public_custom_routes) > 0 && !var.deploy_aws_nfw ? length(var.public_custom_routes) * length(aws_route_table.public) : 0
 
   # Math result should mirror the number of subnets/route tables
   # The desired end goal if given 2 custom routes and 3 subnets/AZs/Route Table is to create a route for each table
@@ -99,7 +99,7 @@ resource "aws_route" "public_custom" {
 }
 
 resource "aws_route" "nfw_public_custom" {
-  count = length(var.public_custom_routes) && var.deploy_aws_nfw > 0 ? length(var.public_custom_routes) * length(aws_route_table.public) : 0
+  count = length(var.public_custom_routes) > 0 && var.deploy_aws_nfw ? length(var.public_custom_routes) * length(aws_route_table.public) : 0
 
   # Math result should mirror the number of subnets/route tables
   # The desired end goal if given 2 custom routes and 3 subnets/AZs/Route Table is to create a route for each table
