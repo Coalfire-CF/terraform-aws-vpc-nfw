@@ -33,7 +33,6 @@ resource "aws_route" "nfw_public_internet_gateway" {
   timeouts {
     create = "5m"
   }
-  depends_on = [ module.aws_network_firewall ]
 }
 
 resource "aws_route" "aws_nfw_public_internet" {
@@ -46,6 +45,7 @@ resource "aws_route" "aws_nfw_public_internet" {
   timeouts {
     create = "5m"
   }
+  depends_on = [ module.aws_network_firewall ]
 }
 
 resource "aws_route_table" "aws_nfw_igw_rtb" {
