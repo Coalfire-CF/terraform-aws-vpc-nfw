@@ -156,6 +156,8 @@ public_custom_routes = [
   ]
 ```
 
+The above are just mock examples, they are not expected to be functional and should NOT be used in production.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
