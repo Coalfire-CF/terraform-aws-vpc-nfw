@@ -27,7 +27,7 @@ These types of resources are supported:
 [Network Firewall](modules/aws-network-firewall/README.md)
 
 ## Usage
-
+```hcl
 module "mgmt_vpc" {
   source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
   providers = {
