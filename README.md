@@ -89,6 +89,7 @@ module "mgmt_vpc" {
 }
 ```
 
+
 ### AWS Networking deployment without AWS Network Firewall
 ```hcl
 module "mgmt_vpc" {
