@@ -1,5 +1,4 @@
-# ACE-AWS-VPC-NFW
-
+[Coalfire](coalfire_logo.png)
 
 Terraform
 module
@@ -306,6 +305,10 @@ behavior)
 * `enable_nat_gateway = true`
 * `single_nat_gateway = false`
 * `one_nat_gateway_per_az = false`
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3bec411 (updated logo)
 *
 
 Single
@@ -315,6 +318,10 @@ Gateway
 * `enable_nat_gateway = true`
 * `single_nat_gateway = true`
 * `one_nat_gateway_per_az = false`
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3bec411 (updated logo)
 *
 
 One
