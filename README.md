@@ -1,4 +1,4 @@
-[Coalfire](coalfire_logo.png)
+![Coalfire](coalfire_logo.png)
 
 Terraform
 module
