@@ -30,8 +30,7 @@ These types of resources are supported:
 
 ```hcl
 module "mgmt_vpc" {
-  # Note: Checkov recommends pointing to hash instead of tags since hashes are immutable unlike tags
-  source = "github.com/Coalfire-CF/ACE-AWS-VPC-prelim?ref=2402cf0f2576366286faba58b1f9d53569899319"
+  source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
   providers = {
     aws = aws.mgmt
   }
