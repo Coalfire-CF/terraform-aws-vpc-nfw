@@ -1,6 +1,21 @@
+# IDE
+.idea
+.idea/*
+.vscode
+.vscode/*
+*.iml
+.DS_Store
+
 .terraform
 *.tfstate*
 .kitchen
 terraform.tfstate
 terraform.tfvars
 Gemfile.lock
+
+# Ignore Infracost
+**.infracost
+
+# Checkov files
+.external_modules
+.external_modules/*
