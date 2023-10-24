@@ -1,5 +1,6 @@
+### NFW ###
 variable "prefix" {
-  description = "The descriptio for each environment, ie: bin-dev"
+  description = "The description for each environment, ie: bin-dev"
   type        = string
 }
 
@@ -17,25 +18,96 @@ variable "description" {
 
 variable "fivetuple_stateful_rule_group" {
   description = "Config for 5-tuple type stateful rule group"
-  default     = []
-  type        = any
+  type = list(object({
+    name        = string
+    description = string
+    capacity    = number
+    rule_config = list(object({
+      description           = string
+      protocol              = string
+      source_ipaddress      = string
+      source_port           = string
+      direction             = string
+      destination_port      = string
+      destination_ipaddress = string
+      sid                   = number
+      actions               = map(string)
+    }))
+  }))
+  default = []
 }
 
 variable "domain_stateful_rule_group" {
   description = "Config for domain type stateful rule group"
-  default     = []
-  type        = any
+  type = list(object({
+    name        = string
+    description = string
+    capacity    = number
+    domain_list = list(string)
+    actions     = string
+    protocols   = list(string)
+    rules_file  = optional(string, "")
+    rule_variables = optional(object({
+      ip_sets = list(object({
+        key    = string
+        ip_set = list(string)
+      }))
+      port_sets = list(object({
+        key       = string
+        port_sets = list(string)
+      }))
+      }), {
+      ip_sets   = []
+      port_sets = []
+    })
+  }))
+  default = []
 }
 
 variable "suricata_stateful_rule_group" {
   description = "Config for Suricata type stateful rule group"
-  default     = []
-  type        = any
+  type = list(object({
+    name        = string
+    description = string
+    capacity    = number
+    rules_file  = optional(string, "")
+    rule_variables = optional(object({
+      ip_sets = list(object({
+        key    = string
+        ip_set = list(string)
+      }))
+      port_sets = list(object({
+        key       = string
+        port_sets = list(string)
+      }))
+      }), {
+      ip_sets   = []
+      port_sets = []
+    })
+  }))
+  default = []
 }
 
 variable "stateless_rule_group" {
   description = "Config for stateless rule group"
-  type        = any
+  type = list(object({
+    name        = string
+    description = string
+    capacity    = number
+    rule_config = list(object({
+      protocols_number      = list(number)
+      source_ipaddress      = string
+      source_to_port        = string
+      destination_to_port   = string
+      destination_ipaddress = string
+      tcp_flag = object({
+        flags = list(string)
+        masks = list(string)
+      })
+      actions = map(string)
+    }))
+  }))
+  default = []
 }
 
 variable "firewall_name" {
@@ -78,13 +150,30 @@ variable "subnet_change_protection" {
   default     = false
 }
 
-variable "logging_config" {
-  description = "logging config for cloudwatch logs created for network firewall"
-  type        = map(any)
-  default     = {}
-}
-
 variable "stateful_managed_rule_groups_arns" {
   description = "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy#action"
+  type        = list(string)
   default     = []
+}
+
+variable "nfw_kms_key_id" {
+  description = "NFW KMS Key Id for encryption"
+  type        = string
+}
+
+variable "delete_protection" {
+  description = "Whether or not to enable deletion protection of NFW"
+  type        = bool
+  default     = true
+}
+
+### Logging ###
+variable "cloudwatch_log_group_retention_in_days" {
+  description = "Number of days to retain Cloudwatch logs"
+  type        = number
+  default     = 365
+}
+variable "cloudwatch_log_group_kms_key_id" {
+  description = "Customer KMS Key id for Cloudwatch Log encryption"
+  type        = string
 }
