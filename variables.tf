@@ -123,6 +123,7 @@ variable "delete_protection" {
 variable "nfw_kms_key_id" {
   description = "NFW KMS Key Id for encryption"
   type        = string
+  default     = null
 }
 
 ######
