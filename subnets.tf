@@ -20,12 +20,13 @@ resource "aws_subnet" "firewall" {
 ################
 resource "aws_subnet" "public" {
   #checkov:skip=CKV_AWS_130: "Ensure VPC subnets do not assign public IP by default" - This is a public subet.
-  count = length(var.public_subnets) > 0 && (!var.one_nat_gateway_per_az || length(var.public_subnets) >= length(var.azs)) ? length(var.public_subnets) : 0
 
-  vpc_id = local.vpc_id
-  cidr_block = var.public_subnets[
-    count.index
-  ]
+  #count = length(var.public_subnets) > 0 && (!var.one_nat_gateway_per_az || length(var.public_subnets) >= length(var.azs)) ? length(var.public_subnets) : 0
+  count = length(var.public_subnets) > 0 ? length(var.public_subnets) : 0
+
+
+  vpc_id                  = local.vpc_id
+  cidr_block              = var.public_subnets[count.index]
   availability_zone       = element(var.azs, count.index)
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
