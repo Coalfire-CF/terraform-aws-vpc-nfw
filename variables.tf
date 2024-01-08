@@ -208,7 +208,7 @@ variable "firewall_subnets" {
 
 variable "private_subnets" {
   description = "A list of private subnets inside the VPC"
-  default     = []
+  default     = {}
   type        = map(string)
 }
 
