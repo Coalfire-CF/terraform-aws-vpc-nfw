@@ -383,6 +383,24 @@ variable "igw_tags" {
   type        = map(string)
 }
 
+variable "public_subnet_tags" {
+  description = "Additional tags for the public subnets"
+  default     = {}
+  type        = map(string)
+}
+
+variable "firewall_subnet_name_tag" {
+  description = "Additional name tag for the firewall subnets"
+  default     = {}
+  type        = map(string)
+}
+
+variable "private_subnet_tags" {
+  description = "Additional tags for the private subnets"
+  default     = {}
+  type        = map(string)
+}
+
 variable "public_route_table_tags" {
   description = "Additional tags for the public route tables"
   default     = {}

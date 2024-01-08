@@ -40,7 +40,7 @@ resource "aws_subnet" "public" {
 #################
 # Private subnet
 #################
-resource "aws_subnet" "prikvate" {
+resource "aws_subnet" "private" {
   count = length(var.private_subnets) > 0 ? length(var.private_subnets) : 0
 
   vpc_id            = local.vpc_id
