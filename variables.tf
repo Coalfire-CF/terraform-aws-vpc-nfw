@@ -209,7 +209,7 @@ variable "firewall_subnets" {
 variable "private_subnets" {
   description = "A list of private subnets inside the VPC"
   default     = []
-  type        = list(string)
+  type        = map(string)
 }
 
 variable "database_subnets" {
