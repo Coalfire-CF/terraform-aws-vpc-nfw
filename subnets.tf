@@ -41,12 +41,12 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
   count = length(var.private_subnets) > 0 ? length(var.private_subnets) : 0
 
-  vpc_id = local.vpc_id
-  cidr_block = values(var.private_subnets[count.index])
+  vpc_id            = local.vpc_id
+  cidr_block        = element(values(var.private_subnets), count.index)
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
-    Name = lower(keys(var.private_subnets[count.index]))
+    "Name" = lower(element(keys(var.private_subnets), count.index))
     #"Name" = format("%s-${lower(element(values(var.private_subnet_name_tag), count.index))}-%s", var.name, element(var.azs, count.index))
     #"Name" = format("%s-%s-%s", var.name, lookup(var.private_subnet_name_tag, element(split(".", split("/", var.private_subnets[count.index])[0]), 3)), element(var.azs, count.index))
   }), var.tags, var.private_subnet_tags)
@@ -58,8 +58,8 @@ resource "aws_subnet" "private" {
 resource "aws_subnet" "database" {
   count = length(var.database_subnets) > 0 ? length(var.database_subnets) : 0
 
-  vpc_id = local.vpc_id
-  cidr_block = var.database_subnets[count.index]
+  vpc_id            = local.vpc_id
+  cidr_block        = var.database_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
@@ -85,8 +85,8 @@ resource "aws_db_subnet_group" "database" {
 resource "aws_subnet" "redshift" {
   count = length(var.redshift_subnets) > 0 ? length(var.redshift_subnets) : 0
 
-  vpc_id = local.vpc_id
-  cidr_block = var.redshift_subnets[count.index]
+  vpc_id            = local.vpc_id
+  cidr_block        = var.redshift_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
@@ -99,7 +99,7 @@ resource "aws_redshift_subnet_group" "redshift" {
 
   name        = var.name
   description = "Redshift subnet group for ${var.name}"
-  subnet_ids = [aws_subnet.redshift[*].id]
+  subnet_ids  = [aws_subnet.redshift[*].id]
 
   tags = merge(tomap({
     "Name" = format("%s", var.name)
@@ -112,8 +112,8 @@ resource "aws_redshift_subnet_group" "redshift" {
 resource "aws_subnet" "elasticache" {
   count = length(var.elasticache_subnets) > 0 ? length(var.elasticache_subnets) : 0
 
-  vpc_id = local.vpc_id
-  cidr_block = var.elasticache_subnets[count.index]
+  vpc_id            = local.vpc_id
+  cidr_block        = var.elasticache_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
@@ -135,8 +135,8 @@ resource "aws_elasticache_subnet_group" "elasticache" {
 resource "aws_subnet" "intra" {
   count = length(var.intra_subnets) > 0 ? length(var.intra_subnets) : 0
 
-  vpc_id = local.vpc_id
-  cidr_block = var.intra_subnets[count.index]
+  vpc_id            = local.vpc_id
+  cidr_block        = var.intra_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   # tags = merge(tomap("Name", format("%s-intra-%s", var.name, element(var.azs, count.index))), var.tags, var.intra_subnet_tags)
