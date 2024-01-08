@@ -179,21 +179,21 @@ output "aws_nfw_endpoint_ids" {
 output "database_route_table_ids" {
   description = "List of IDs of database route tables"
   value = [
-    coalescelist(aws_route_table.database[*].id, aws_route_table.private[*].id)
+    try(coalescelist(aws_route_table.database[*].id, aws_route_table.private[*].id), "")
   ]
 }
 
 output "redshift_route_table_ids" {
   description = "List of IDs of redshift route tables"
   value = [
-    coalescelist(aws_route_table.redshift[*].id, aws_route_table.private[*].id)
+    try(coalescelist(aws_route_table.redshift[*].id, aws_route_table.private[*].id), "")
   ]
 }
 
 output "elasticache_route_table_ids" {
   description = "List of IDs of elasticache route tables"
   value = [
-    coalescelist(aws_route_table.elasticache[*].id, aws_route_table.private[*].id)
+    try(coalescelist(aws_route_table.elasticache[*].id, aws_route_table.private[*].id), "")
   ]
 }
 
