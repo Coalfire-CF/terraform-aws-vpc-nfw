@@ -1,5 +1,5 @@
 resource "aws_networkfirewall_firewall" "this" {
-  name                = "${var.firewall_name}"
+  name                = var.firewall_name
   description         = coalesce(var.description, var.firewall_name)
   firewall_policy_arn = aws_networkfirewall_firewall_policy.this.arn
   vpc_id              = var.vpc_id
