@@ -42,12 +42,13 @@ resource "aws_subnet" "private" {
   count = length(var.private_subnets) > 0 ? length(var.private_subnets) : 0
 
   vpc_id = local.vpc_id
-  cidr_block = var.private_subnets[count.index]
+  cidr_block = values(var.private_subnets[count.index])
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
+    Name = lower(keys(var.private_subnets[count.index]))
     #"Name" = format("%s-${lower(element(values(var.private_subnet_name_tag), count.index))}-%s", var.name, element(var.azs, count.index))
-    "Name" = format("%s-%s-%s", var.name, lookup(var.private_subnet_name_tag, element(split(".", split("/", var.private_subnets[count.index])[0]), 3)), element(var.azs, count.index))
+    #"Name" = format("%s-%s-%s", var.name, lookup(var.private_subnet_name_tag, element(split(".", split("/", var.private_subnets[count.index])[0]), 3)), element(var.azs, count.index))
   }), var.tags, var.private_subnet_tags)
 }
 
