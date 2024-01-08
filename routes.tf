@@ -62,7 +62,7 @@ resource "aws_route" "aws_nfw_igw_rt" {
   count = var.deploy_aws_nfw ? length(var.firewall_subnets) : 0
 
   route_table_id         = aws_route_table.aws_nfw_igw_rtb[0].id
-  destination_cidr_block = var.public_subnets[count.index]
+  destination_cidr_block = element(values(var.private_subnets), count.index)
   vpc_endpoint_id        = module.aws_network_firewall[0].endpoint_id[count.index]
 
   timeouts {
