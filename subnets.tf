@@ -49,7 +49,6 @@ resource "aws_subnet" "private" {
 
   tags = merge(tomap({
     "Name" = format("%s-${lower(element(values(var.private_subnet_name_tag), count.index))}-%s", var.name, element(var.azs, count.index))
-    #"Name" = format("%s-${lower(var.private_subnet_name_tag[count.index])}-%s", var.name, element(var.azs, count.index))
   }), var.tags, var.private_subnet_tags)
 }
 
