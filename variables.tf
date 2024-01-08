@@ -196,14 +196,14 @@ variable "elasticache_subnet_suffix" {
 
 variable "public_subnets" {
   description = "A list of public subnets inside the VPC"
-  default     = []
-  type        = list(string)
+  default     = {}
+  type        = map(string)
 }
 
 variable "firewall_subnets" {
   description = "A list of firewall subnets inside the VPC"
-  default     = []
-  type        = list(string)
+  default     = {}
+  type        = map(string)
 }
 
 variable "private_subnets" {
@@ -213,21 +213,21 @@ variable "private_subnets" {
 }
 
 variable "database_subnets" {
-  type        = list(string)
   description = "A list of database subnets"
-  default     = []
+  default     = {}
+  type        = map(string)
 }
 
 variable "redshift_subnets" {
-  type        = list(string)
   description = "A list of redshift subnets"
-  default     = []
+  default     = {}
+  type        = map(string)
 }
 
 variable "elasticache_subnets" {
-  type        = list(string)
   description = "A list of elasticache subnets"
-  default     = []
+  default     = {}
+  type        = map(string)
 }
 
 variable "create_database_subnet_route_table" {
@@ -249,9 +249,9 @@ variable "create_elasticache_subnet_route_table" {
 }
 
 variable "intra_subnets" {
-  type        = list(string)
   description = "A list of intra subnets"
-  default     = []
+  default     = {}
+  type        = map(string)
 }
 
 variable "create_database_subnet_group" {
@@ -379,36 +379,6 @@ variable "vpc_tags" {
 
 variable "igw_tags" {
   description = "Additional tags for the internet gateway"
-  default     = {}
-  type        = map(string)
-}
-
-variable "public_subnet_tags" {
-  description = "Additional tags for the public subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "firewall_subnet_name_tag" {
-  description = "Additional name tag for the firewall subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "private_subnet_tags" {
-  description = "Additional tags for the private subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "private_subnet_name_tag" {
-  description = "Additional name tag for the private subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "intra_subnet_name_tag" {
-  description = "Additional name tag for the intranet subnets"
   default     = {}
   type        = map(string)
 }
