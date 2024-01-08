@@ -42,9 +42,7 @@ resource "aws_subnet" "private" {
   count = length(var.private_subnets) > 0 ? length(var.private_subnets) : 0
 
   vpc_id = local.vpc_id
-  cidr_block = var.private_subnets[
-    count.index
-  ]
+  cidr_block = var.private_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
@@ -59,9 +57,7 @@ resource "aws_subnet" "database" {
   count = length(var.database_subnets) > 0 ? length(var.database_subnets) : 0
 
   vpc_id = local.vpc_id
-  cidr_block = var.database_subnets[
-    count.index
-  ]
+  cidr_block = var.database_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
@@ -88,9 +84,7 @@ resource "aws_subnet" "redshift" {
   count = length(var.redshift_subnets) > 0 ? length(var.redshift_subnets) : 0
 
   vpc_id = local.vpc_id
-  cidr_block = var.redshift_subnets[
-    count.index
-  ]
+  cidr_block = var.redshift_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
@@ -103,9 +97,7 @@ resource "aws_redshift_subnet_group" "redshift" {
 
   name        = var.name
   description = "Redshift subnet group for ${var.name}"
-  subnet_ids = [
-    aws_subnet.redshift[*].id
-  ]
+  subnet_ids = [aws_subnet.redshift[*].id]
 
   tags = merge(tomap({
     "Name" = format("%s", var.name)
@@ -119,9 +111,7 @@ resource "aws_subnet" "elasticache" {
   count = length(var.elasticache_subnets) > 0 ? length(var.elasticache_subnets) : 0
 
   vpc_id = local.vpc_id
-  cidr_block = var.elasticache_subnets[
-    count.index
-  ]
+  cidr_block = var.elasticache_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
@@ -144,9 +134,7 @@ resource "aws_subnet" "intra" {
   count = length(var.intra_subnets) > 0 ? length(var.intra_subnets) : 0
 
   vpc_id = local.vpc_id
-  cidr_block = var.intra_subnets[
-    count.index
-  ]
+  cidr_block = var.intra_subnets[count.index]
   availability_zone = element(var.azs, count.index)
 
   # tags = merge(tomap("Name", format("%s-intra-%s", var.name, element(var.azs, count.index))), var.tags, var.intra_subnet_tags)
