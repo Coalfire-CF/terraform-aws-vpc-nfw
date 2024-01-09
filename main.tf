@@ -129,7 +129,7 @@ resource "aws_nat_gateway" "this" {
   count = var.enable_nat_gateway ? local.nat_gateway_count : 0
 
   allocation_id = element(local.nat_gateway_ips, (var.single_nat_gateway ? 0 : count.index))
-  subnet_id     = element(aws_subnet.public[*].id, (var.single_nat_gateway ? 0 : count.index))
+  subnet_id     = element(aws_subnet.public.*.id, (var.single_nat_gateway ? 0 : count.index))
 
   tags = merge(tomap({
     "Name" = format("%s-%s", var.name, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
