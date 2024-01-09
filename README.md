@@ -170,7 +170,7 @@ The variables can be further inspected to see what parameters and types are expe
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.31.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.15.0, < 6.0 |
 
 ## Modules
 
