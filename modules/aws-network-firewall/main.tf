@@ -1,5 +1,5 @@
 resource "aws_networkfirewall_firewall" "this" {
-  name                = "${var.prefix}-nfw-${var.firewall_name}"
+  name                = var.firewall_name
   description         = coalesce(var.description, var.firewall_name)
   firewall_policy_arn = aws_networkfirewall_firewall_policy.this.arn
   vpc_id              = var.vpc_id
@@ -39,7 +39,7 @@ resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
 
   rule_group {
     rules_source {
-      rules_string = file(var.suricata_stateful_rule_group[count.index]["rules_file"])
+      rules_string = try(file(var.suricata_stateful_rule_group[count.index]["rules_file"]), "")
     }
 
     dynamic "rule_variables" {
