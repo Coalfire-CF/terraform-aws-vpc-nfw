@@ -64,43 +64,43 @@ output "vpc_secondary_cidr_blocks" {
 
 output "firewall_subnets" {
   description = "List of IDs of firewall subnets"
-  value       = aws_subnet.firewall[*].id
+  value       = zipmap(aws_subnet.firewall[*].tags["Name"], aws_subnet.firewall[*].id)
 }
 
 output "firewall_subnets_cidr_blocks" {
   description = "List of cidr_blocks of firewall subnets"
-  value       = aws_subnet.firewall[*].cidr_block
+  value = zipmap(aws_subnet.firewall[*].tags["Name"], aws_subnet.firewall[*].cidr_block)
 }
 
 output "private_subnets" {
   description = "List of IDs of private subnets"
-  value       = aws_subnet.private[*].id
+  value       = zipmap(aws_subnet.private[*].tags["Name"], aws_subnet.private[*].id)
 }
 
 output "private_subnets_cidr_blocks" {
   description = "List of cidr_blocks of private subnets"
-  value       = aws_subnet.private[*].cidr_block
+  value = zipmap(aws_subnet.private[*].tags["Name"], aws_subnet.private[*].cidr_block)
 }
 
 output "public_subnets" {
   description = "List of IDs of public subnets"
-  value       = aws_subnet.public[*].id
+  value       = zipmap(aws_subnet.public[*].tags["Name"], aws_subnet.public[*].id)
 }
 
 output "public_subnets_cidr_blocks" {
   description = "List of cidr_blocks of public subnets"
-  value       = aws_subnet.public[*].cidr_block
+  value = zipmap(aws_subnet.public[*].tags["Name"], aws_subnet.public[*].cidr_block)
 }
 
 
 output "database_subnets" {
   description = "List of IDs of database subnets"
-  value       = aws_subnet.database[*].id
+  value       = zipmap(aws_subnet.database[*].tags["Name"], aws_subnet.database[*].id)
 }
 
 output "database_subnets_cidr_blocks" {
   description = "List of cidr_blocks of database subnets"
-  value       = aws_subnet.database[*].cidr_block
+  value = zipmap(aws_subnet.database[*].tags["Name"], aws_subnet.database[*].cidr_block)
 }
 
 output "database_subnet_group" {
@@ -112,12 +112,12 @@ output "database_subnet_group" {
 
 output "redshift_subnets" {
   description = "List of IDs of redshift subnets"
-  value       = [aws_subnet.redshift[*].id]
+  value = zipmap(aws_subnet.redshift[*].tags["Name"], aws_subnet.redshift[*].id)
 }
 
 output "redshift_subnets_cidr_blocks" {
   description = "List of cidr_blocks of redshift subnets"
-  value       = aws_subnet.redshift[*].cidr_block
+  value = zipmap(aws_subnet.redshift[*].tags["Name"], aws_subnet.redshift[*].cidr_block)
 }
 
 output "redshift_subnet_group" {
@@ -129,22 +129,22 @@ output "redshift_subnet_group" {
 
 output "elasticache_subnets" {
   description = "List of IDs of elasticache subnets"
-  value       = aws_subnet.elasticache[*].id
+  value = zipmap(aws_subnet.elasticache[*].tags["Name"], aws_subnet.elasticache[*].id)
 }
 
 output "elasticache_subnets_cidr_blocks" {
   description = "List of cidr_blocks of elasticache subnets"
-  value       = aws_subnet.elasticache[*].cidr_block
+  value = zipmap(aws_subnet.elasticache[*].tags["Name"], aws_subnet.elasticache[*].cidr_block)
 }
 
 output "intra_subnets" {
   description = "List of IDs of intra subnets"
-  value       = aws_subnet.intra[*].id
+  value = zipmap(aws_subnet.intra[*].tags["Name"], aws_subnet.intra[*].id)
 }
 
 output "intra_subnets_cidr_blocks" {
   description = "List of cidr_blocks of intra subnets"
-  value       = [aws_subnet.intra[*].cidr_block]
+  value = zipmap(aws_subnet.intra[*].tags["Name"], aws_subnet.intra[*].cidr_block)
 }
 
 output "elasticache_subnet_group" {
