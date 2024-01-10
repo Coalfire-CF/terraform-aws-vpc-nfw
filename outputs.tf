@@ -74,7 +74,8 @@ output "firewall_subnets_cidr_blocks" {
 
 output "private_subnets" {
   description = "List of IDs of private subnets"
-  value       = aws_subnet.private[*].id
+  value       = zipmap(aws_subnet.private[*].tags["Name"], aws_subnet.private[*].id)
+  #value       = aws_subnet.private[*].id
 }
 
 output "private_subnets_cidr_blocks" {
