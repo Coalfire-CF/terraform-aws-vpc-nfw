@@ -82,6 +82,16 @@ output "private_subnets_cidr_blocks" {
   value = zipmap(aws_subnet.private[*].tags["Name"], aws_subnet.private[*].cidr_block)
 }
 
+output "tgw_subnets" {
+  description = "List of IDs of tgw subnets"
+  value       = zipmap(aws_subnet.tgw[*].tags["Name"], aws_subnet.tgw[*].id)
+}
+
+output "tgw_subnets_cidr_blocks" {
+  description = "List of cidr_blocks of tgw subnets"
+  value = zipmap(aws_subnet.tgw[*].tags["Name"], aws_subnet.tgw[*].cidr_block)
+}
+
 output "public_subnets" {
   description = "List of IDs of public subnets"
   value       = zipmap(aws_subnet.public[*].tags["Name"], aws_subnet.public[*].id)
@@ -91,7 +101,6 @@ output "public_subnets_cidr_blocks" {
   description = "List of cidr_blocks of public subnets"
   value = zipmap(aws_subnet.public[*].tags["Name"], aws_subnet.public[*].cidr_block)
 }
-
 
 output "database_subnets" {
   description = "List of IDs of database subnets"
@@ -164,6 +173,11 @@ output "elasticache_subnet_group_name" {
 output "private_route_table_ids" {
   description = "List of IDs of private route tables"
   value       = aws_route_table.private[*].id
+}
+
+output "tgw_route_table_ids" {
+  description = "List of IDs of tgw route tables"
+  value       = aws_route_table.tgw[*].id
 }
 
 output "firewall_route_table_ids" {

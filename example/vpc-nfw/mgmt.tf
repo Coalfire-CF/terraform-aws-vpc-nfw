@@ -23,6 +23,13 @@ module "mgmt_vpc" {
     "5" = "Private"
   }
 
+  tgw_subnets = local.tgw_subnets
+  tgw_subnet_tags = {
+    "0" = "TGW"
+    "1" = "TGW"
+    "2" = "TGW"
+  }
+
   public_subnets       = local.public_subnets
   public_subnet_suffix = "dmz"
   public_custom_routes = [
@@ -44,7 +51,7 @@ module "mgmt_vpc" {
 
   flow_log_destination_type              = "cloud-watch-logs"
   cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = var.cloudwatch_kms_key_id
+  cloudwatch_log_group_kms_key_id        = aws_kms_key.cloudwatch_key.arn
 
   ### Network Firewall ###
   deploy_aws_nfw                        = true

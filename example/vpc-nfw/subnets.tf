@@ -51,6 +51,18 @@ module "mgmt_subnet_addrs" {
     {
       name     = "${var.resource_prefix}-private-1c"
       new_bits = 8
+    },
+    {
+      name     = "${var.resource_prefix}-tgw-1a"
+      new_bits = 4
+    },
+    {
+      name     = "${var.resource_prefix}-tgw-1b"
+      new_bits = 4
+    },
+    {
+      name     = "${var.resource_prefix}-tgw-1c"
+      new_bits = 4
     }
   ]
 }
