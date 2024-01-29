@@ -28,6 +28,8 @@ These types of resources are supported:
 [Network Firewall](modules/aws-network-firewall/README.md)
 
 ## Usage
+If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state.
+This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. 
 ```hcl
 module "mgmt_vpc" {
   source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
