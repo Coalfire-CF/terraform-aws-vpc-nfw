@@ -12,7 +12,7 @@ resource "aws_subnet" "firewall" {
 
   tags = merge(tomap({
     "Name" = format("%s-${lower(var.firewall_subnet_suffix)}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.firewall_subnet_name_tag)
+  }), var.tags)
 }
 
 ################
@@ -31,7 +31,7 @@ resource "aws_subnet" "public" {
 
   tags = merge(tomap({
     "Name" = format("%s-${lower(var.public_subnet_suffix)}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.public_subnet_tags)
+  }), var.tags)
 }
 
 #################
@@ -65,7 +65,7 @@ resource "aws_subnet" "tgw" {
 
   tags = merge(tomap({
     "Name" = format("%s-${lower(var.tgw_subnet_tags[count.index])}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.tgw_subnet_tags)
+  }), var.tags)
 }
 
 ##################
@@ -82,7 +82,7 @@ resource "aws_subnet" "database" {
 
   tags = merge(tomap({
     "Name" = format("%s-${var.database_subnet_suffix}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.database_subnet_tags)
+  }), var.tags)
 }
 
 resource "aws_db_subnet_group" "database" {
@@ -111,7 +111,7 @@ resource "aws_subnet" "redshift" {
 
   tags = merge(tomap({
     "Name" = format("%s-${var.redshift_subnet_suffix}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.redshift_subnet_tags)
+  }), var.tags)
 }
 
 resource "aws_redshift_subnet_group" "redshift" {
@@ -142,7 +142,7 @@ resource "aws_subnet" "elasticache" {
 
   tags = merge(tomap({
     "Name" = format("%s-${var.elasticache_subnet_suffix}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.elasticache_subnet_tags)
+  }), var.tags)
 }
 
 resource "aws_elasticache_subnet_group" "elasticache" {
@@ -168,5 +168,5 @@ resource "aws_subnet" "intra" {
   # tags = merge(tomap("Name", format("%s-intra-%s", var.name, element(var.azs, count.index))), var.tags, var.intra_subnet_tags)
   tags = merge(tomap({
     "Name" = format("%s-${var.intra_subnet_tags[count.index]}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.intra_subnet_tags)
+  }), var.tags)
 }
