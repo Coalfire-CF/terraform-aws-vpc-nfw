@@ -27,6 +27,15 @@ These types of resources are supported:
 ## Submodule
 [Network Firewall](modules/aws-network-firewall/README.md)
 
+## Assumptions
+
+* Networking resources, including VPCs, Transit Gateways and Network Firewalls, are designed to be deployed under a single state.
+* Outputs of this module can be referenced via terraform state in the following manner:
+  * `module.mgmt_vpc.private_subnets["mvp-mgmt-compute-us-gov-west-1a"]`
+  * `data.terraform_remote_state.network.outputs.public_subnets["mvp-mgmt-dmz-us-gov-west-1a"]`
+* This is designed to automatically reference the firewall subnets when opted to be created.
+
+
 ## Usage
 If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state.
 This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. 
