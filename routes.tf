@@ -45,7 +45,7 @@ resource "aws_route" "aws_nfw_public_internet" {
   timeouts {
     create = "5m"
   }
-  depends_on = [module.aws_network_firewall]
+  depends_on = [ module.aws_network_firewall ]
 }
 
 resource "aws_route_table" "aws_nfw_igw_rtb" {
@@ -62,7 +62,7 @@ resource "aws_route" "aws_nfw_igw_rt" {
   count = var.deploy_aws_nfw ? length(var.firewall_subnets) : 0
 
   route_table_id         = aws_route_table.aws_nfw_igw_rtb[0].id
-  destination_cidr_block = element(values(var.private_subnets), count.index)
+  destination_cidr_block = var.public_subnets[count.index]
   vpc_endpoint_id        = module.aws_network_firewall[0].endpoint_id[count.index]
 
   timeouts {
@@ -110,7 +110,7 @@ resource "aws_route" "nfw_public_custom" {
   destination_cidr_block     = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "destination_cidr_block", null)
   destination_prefix_list_id = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "destination_prefix_list_id", null)
 
-  vpc_endpoint_id = var.public_custom_routes[floor(count.index / length(aws_route_table.public))]["internet_route"] ? module.aws_network_firewall[0].endpoint_id[index(aws_route_table.public, element(aws_route_table.public, count.index))] : null
+  vpc_endpoint_id      = var.public_custom_routes[floor(count.index / length(aws_route_table.public))]["internet_route"] ? module.aws_network_firewall[0].endpoint_id[index(aws_route_table.public, element(aws_route_table.public, count.index))] : null
 
   timeouts {
     create = "5m"
@@ -151,6 +151,46 @@ resource "aws_route" "private_custom" {
   network_interface_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "network_interface_id", null)
   transit_gateway_id   = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "transit_gateway_id", null)
   vpc_endpoint_id      = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_endpoint_id", null)
+
+  timeouts {
+    create = "5m"
+  }
+}
+
+#################
+# TGW routes
+#################
+resource "aws_route_table" "tgw" {
+  count = local.max_subnet_length > 0 ? local.nat_gateway_count : 0
+
+  vpc_id = local.vpc_id
+
+  tags = merge(tomap({
+    "Name" = (var.single_nat_gateway ? "${var.name}-${var.tgw_subnet_suffix}" : format("%s-${var.tgw_subnet_suffix}-%s-rtb", var.name, element(var.azs, count.index)))
+  }), var.tags, var.tgw_route_table_tags)
+
+  lifecycle {
+    # When attaching VPN gateways it is common to define aws_vpn_gateway_route_propagation
+    # resources that manipulate the attributes of the routing table (typically for the tgw subnets)
+    ignore_changes = [propagating_vgws]
+  }
+}
+
+resource "aws_route" "tgw_custom" {
+  count = length(var.tgw_custom_routes) > 0 ? length(var.tgw_custom_routes) * length(aws_route_table.tgw) : 0
+
+  # Math result should mirror the number of subnets/route tables
+  # The desired end goal if given 2 custom routes and 3 subnets/AZs/Route Table is to create a route for each table
+  # E.g. if 3 AZs/subnets, then the result of math/logic should be 0, 1, 2, 0, 1, 2
+  # Because the element() function automatically wraps around the index (start from 0 if greater than list size), we combine it with the index function to ensure correct order
+  route_table_id = aws_route_table.tgw[index(aws_route_table.tgw, element(aws_route_table.tgw, count.index))].id
+
+  destination_cidr_block     = lookup(var.tgw_custom_routes[floor(count.index / length(aws_route_table.tgw))], "destination_cidr_block", null)
+  destination_prefix_list_id = lookup(var.tgw_custom_routes[floor(count.index / length(aws_route_table.tgw))], "destination_prefix_list_id", null)
+
+  network_interface_id = lookup(var.tgw_custom_routes[floor(count.index / length(aws_route_table.tgw))], "network_interface_id", null)
+  transit_gateway_id   = lookup(var.tgw_custom_routes[floor(count.index / length(aws_route_table.tgw))], "transit_gateway_id", null)
+  vpc_endpoint_id      = lookup(var.tgw_custom_routes[floor(count.index / length(aws_route_table.tgw))], "vpc_endpoint_id", null)
 
   timeouts {
     create = "5m"
@@ -359,6 +399,13 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = element(aws_subnet.private[*].id, count.index)
   route_table_id = element(aws_route_table.private[*].id, (var.single_nat_gateway ? 0 : count.index))
+}
+
+resource "aws_route_table_association" "tgw" {
+  count = length(var.tgw_subnets) > 0 ? length(var.tgw_subnets) : 0
+
+  subnet_id      = element(aws_subnet.tgw[*].id, count.index)
+  route_table_id = element(aws_route_table.tgw[*].id, (var.single_nat_gateway ? 0 : count.index))
 }
 
 resource "aws_route_table_association" "firewall" {

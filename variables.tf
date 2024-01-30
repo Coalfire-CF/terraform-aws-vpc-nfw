@@ -170,6 +170,12 @@ variable "private_subnet_suffix" {
   type        = string
 }
 
+variable "tgw_subnet_suffix" {
+  description = "Suffix to append to tgw subnets name"
+  default     = "tgw"
+  type        = string
+}
+
 variable "firewall_subnet_suffix" {
   description = "Suffix to append to firewall subnets name"
   default     = "firewall"
@@ -197,37 +203,36 @@ variable "elasticache_subnet_suffix" {
 variable "public_subnets" {
   description = "A list of public subnets inside the VPC"
   default     = {}
-  type        = map(string)
 }
 
 variable "firewall_subnets" {
   description = "A list of firewall subnets inside the VPC"
   default     = {}
-  type        = map(string)
 }
 
 variable "private_subnets" {
   description = "A list of private subnets inside the VPC"
   default     = {}
-  type        = map(string)
+}
+
+variable "tgw_subnets" {
+  description = "A list of tgw subnets inside the VPC"
+  default     = {}
 }
 
 variable "database_subnets" {
   description = "A list of database subnets"
   default     = {}
-  type        = map(string)
 }
 
 variable "redshift_subnets" {
   description = "A list of redshift subnets"
   default     = {}
-  type        = map(string)
 }
 
 variable "elasticache_subnets" {
   description = "A list of elasticache subnets"
   default     = {}
-  type        = map(string)
 }
 
 variable "create_database_subnet_route_table" {
@@ -401,6 +406,12 @@ variable "private_subnet_tags" {
   type        = map(string)
 }
 
+variable "tgw_subnet_tags" {
+  description = "Additional tags for the tgw subnets"
+  default     = {}
+  type        = map(string)
+}
+
 variable "public_route_table_tags" {
   description = "Additional tags for the public route tables"
   default     = {}
@@ -413,6 +424,11 @@ variable "firewall_route_table_tags" {
   type        = map(string)
 }
 
+variable "tgw_route_table_tags" {
+  description = "Additional tags for the tgw route tables"
+  default     = {}
+  type        = map(string)
+}
 
 variable "private_route_table_tags" {
   description = "Additional tags for the private route tables"
@@ -634,6 +650,20 @@ variable "intra_custom_routes" {
 
 variable "private_custom_routes" {
   description = "Custom routes for Private Subnets"
+  type = list(object({
+    destination_cidr_block     = optional(string, null)
+    destination_prefix_list_id = optional(string, null)
+    network_interface_id       = optional(string, null)
+    transit_gateway_id         = optional(string, null)
+    vpc_endpoint_id            = optional(string, null)
+  }))
+  default = []
+}
+
+
+
+variable "tgw_custom_routes" {
+  description = "Custom routes for TGW Subnets"
   type = list(object({
     destination_cidr_block     = optional(string, null)
     destination_prefix_list_id = optional(string, null)
