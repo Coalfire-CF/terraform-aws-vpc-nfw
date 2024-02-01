@@ -171,7 +171,7 @@ output "elasticache_subnet_group_name" {
 }
 
 output "private_route_table_ids" {
-  description = "List of IDs of private route tables"
+  description = "List of IDs of private route tables - including database route table IDs, as the database uses the private route tables"
   value       = aws_route_table.private[*].id
 }
 
@@ -190,12 +190,6 @@ output "aws_nfw_endpoint_ids" {
   value       = module.aws_network_firewall[*].endpoint_id
 }
 
-output "database_route_table_ids" {
-  description = "List of IDs of database route tables"
-  value = [
-    try(coalescelist(aws_route_table.database[*].id, aws_route_table.private[*].id), "")
-  ]
-}
 
 output "redshift_route_table_ids" {
   description = "List of IDs of redshift route tables"
