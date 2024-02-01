@@ -171,13 +171,6 @@ output "aws_nfw_endpoint_ids" {
   description = "List of IDs of AWS NFW endpoints"
   value = module.mgmt_vpc.aws_nfw_endpoint_ids
 }
-
-output "database_route_table_ids" {
-  description = "List of IDs of database route tables"
-    value = module.mgmt_vpc.database_route_table_ids
-
-}
-
 output "redshift_route_table_ids" {
   description = "List of IDs of redshift route tables"
   value = module.mgmt_vpc.redshift_route_table_ids
