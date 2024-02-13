@@ -14,11 +14,11 @@ module "mgmt_vpc" {
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   ##if using AWS workspaces https://docs.aws.amazon.com/workspaces/latest/adminguide/azs-workspaces.html
-  ## us-east-1 = use1-az2, use1-az4, use1-az6
-  ## us-west-2 = usw2-az1, usw2-az2, usw2-az3
-  ## us-gov-west-1 = usgw1-az1, usgw1-az2, usgw1-az3
-  ## us-gov-east-1 = usge1-az1, usge1-az2, usge1-az3
-  workspaces_azs = ["usgw1-az1", "usgw1-az2", "usgw1-az3"]
+  ## us-east-1 = us-east-1b, us-east-1c, us-east-1d
+  ## us-west-2 = us-west-2a, us-west-2b, us-west-2c
+  ## us-gov-west-1 = us-gov-west-1a, us-gov-west-1b, us-gov-west-1c
+  ## us-gov-east-1 = us-gov-east-1a, us-gov-east-1b, us-gov-east-1
+  workspaces_azs = ["us-gov-west-1a", "us-gov-west-1b", "us-gov-west-1c"]
   workspaces_subnets = local.workspaces_subnets
   workspaces_subnet_tags = {
     "0" = "workspaces"
