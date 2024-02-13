@@ -117,6 +117,49 @@ resource "aws_route" "nfw_public_custom" {
   }
 }
 
+
+
+#################
+# Workspaces routes
+#################
+resource "aws_route_table" "workspaces" {
+  count = local.max_subnet_length > 0 ? local.nat_gateway_count : 0
+
+  vpc_id = local.vpc_id
+
+  tags = merge(tomap({
+    "Name" = (var.single_nat_gateway ? "${var.name}-${var.workspaces_subnet_suffix}" : format("%s-${var.workspaces_subnet_suffix}-%s-rtb", var.name, element(var.workspaces_azs, count.index)))
+  }), var.tags, var.workspaces_route_table_tags)
+
+  lifecycle {
+    # When attaching VPN gateways it is common to define aws_vpn_gateway_route_propagation
+    # resources that manipulate the attributes of the routing table (typically for the private subnets)
+    ignore_changes = [propagating_vgws]
+  }
+}
+
+
+resource "aws_route" "workspaces_custom" {
+  count = length(var.workspaces_custom_routes) > 0 ? length(var.workspaces_custom_routes) * length(aws_route_table.workspaces) : 0
+
+  # Math result should mirror the number of subnets/route tables
+  # The desired end goal if given 2 custom routes and 3 subnets/AZs/Route Table is to create a route for each table
+  # E.g. if 3 AZs/subnets, then the result of math/logic should be 0, 1, 2, 0, 1, 2
+  # Because the element() function automatically wraps around the index (start from 0 if greater than list size), we combine it with the index function to ensure correct order
+  route_table_id = aws_route_table.workspaces[index(aws_route_table.workspaces, element(aws_route_table.workspaces, count.index))].id
+
+  destination_cidr_block     = lookup(var.workspaces_custom_routes[floor(count.index / length(aws_route_table.workspaces))], "destination_cidr_block", null)
+  destination_prefix_list_id = lookup(var.workspaces_custom_routes[floor(count.index / length(aws_route_table.workspaces))], "destination_prefix_list_id", null)
+
+  network_interface_id = lookup(var.workspaces_custom_routes[floor(count.index / length(aws_route_table.workspaces))], "network_interface_id", null)
+  transit_gateway_id   = lookup(var.workspaces_custom_routes[floor(count.index / length(aws_route_table.workspaces))], "transit_gateway_id", null)
+  vpc_endpoint_id      = lookup(var.workspaces_custom_routes[floor(count.index / length(aws_route_table.workspaces))], "vpc_endpoint_id", null)
+
+  timeouts {
+    create = "5m"
+  }
+}
+
 #################
 # Private routes
 #################
@@ -399,6 +442,13 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = element(aws_subnet.private[*].id, count.index)
   route_table_id = element(aws_route_table.private[*].id, (var.single_nat_gateway ? 0 : count.index))
+}
+
+resource "aws_route_table_association" "workspaces" {
+  count = length(var.workspaces_subnets) > 0 ? length(var.workspaces_subnets) : 0
+
+  subnet_id      = element(aws_subnet.workspaces[*].id, count.index)
+  route_table_id = element(aws_route_table.workspaces[*].id, (var.single_nat_gateway ? 0 : count.index))
 }
 
 resource "aws_route_table_association" "tgw" {

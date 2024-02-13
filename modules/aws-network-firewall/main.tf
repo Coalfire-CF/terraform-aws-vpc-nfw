@@ -22,6 +22,10 @@ resource "aws_networkfirewall_firewall" "this" {
   }
 
   tags = var.tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
@@ -74,6 +78,10 @@ resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
   }
 
   tags = merge(var.tags)
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_networkfirewall_rule_group" "domain_stateful_group" {
@@ -128,6 +136,10 @@ resource "aws_networkfirewall_rule_group" "domain_stateful_group" {
   }
 
   tags = merge(var.tags)
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
@@ -168,6 +180,10 @@ resource "aws_networkfirewall_rule_group" "fivetuple_stateful_group" {
   }
 
   tags = merge(var.tags)
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 
@@ -249,6 +265,10 @@ resource "aws_networkfirewall_rule_group" "stateless_group" {
 
 
   tags = merge(var.tags)
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 resource "aws_networkfirewall_firewall_policy" "this" {
   name = "${var.prefix}-nfw-policy-${var.firewall_name}"
@@ -281,6 +301,10 @@ resource "aws_networkfirewall_firewall_policy" "this" {
     }
   }
   tags = merge(var.tags)
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 ###################### Logging Config ######################

@@ -13,6 +13,19 @@ module "mgmt_vpc" {
 
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
+  ##if using AWS workspaces https://docs.aws.amazon.com/workspaces/latest/adminguide/azs-workspaces.html
+  ## us-east-1 = us-east-1b, us-east-1c, us-east-1d
+  ## us-west-2 = us-west-2a, us-west-2b, us-west-2c
+  ## us-gov-west-1 = us-gov-west-1a, us-gov-west-1b, us-gov-west-1c
+  ## us-gov-east-1 = us-gov-east-1a, us-gov-east-1b, us-gov-east-1
+  workspaces_azs = ["us-gov-west-1a", "us-gov-west-1b", "us-gov-west-1c"]
+  workspaces_subnets = local.workspaces_subnets
+  workspaces_subnet_tags = {
+    "0" = "workspaces"
+    "1" = "workspaces"
+    "2" = "workspaces"
+  }
+
   private_subnets = local.private_subnets
   private_subnet_tags = {
     "0" = "Compute"
@@ -31,7 +44,7 @@ module "mgmt_vpc" {
   }
 
   public_subnets       = local.public_subnets
-  public_subnet_suffix = "dmz"
+  public_subnet_suffix = "public"
 
 
   single_nat_gateway     = false
@@ -48,7 +61,6 @@ module "mgmt_vpc" {
   deploy_aws_nfw                        = true
   aws_nfw_prefix                        = var.resource_prefix
   aws_nfw_name                          = "mvp-test-nfw"
-  aws_nfw_stateless_rule_group          = local.stateless_rule_group_shrd_svcs
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group_shrd_svcs
   aws_nfw_domain_stateful_rule_group    = local.domain_stateful_rule_group_shrd_svcs
   aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
