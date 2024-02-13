@@ -36,6 +36,11 @@ These types of resources are supported:
 * This is designed to automatically reference the firewall subnets when opted to be created.
 * Automatically adds AWS region to the subnet name upon creation
 * The private route table IDs includes the rtb IDs from database subnets as well
+* __If you are deploying Workspaces you must deploy dedicated subnets for it `workspace_subnets`__
+  * This is required due to VPC residence requirements of regions and respective AZs
+  * Reference: https://docs.aws.amazon.com/workspaces/latest/adminguide/azs-workspaces.html
+
+
 
 ## Usage
 If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state.
@@ -54,7 +59,20 @@ module "mgmt_vpc" {
   cidr = var.mgmt_vpc_cidr
 
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-
+  
+  ##if using AWS workspaces https://docs.aws.amazon.com/workspaces/latest/adminguide/azs-workspaces.html
+  ## us-east-1 = us-east-1b, us-east-1c, us-east-1d
+  ## us-west-2 = us-west-2a, us-west-2b, us-west-2c
+  ## us-gov-west-1 = us-gov-west-1a, us-gov-west-1b, us-gov-west-1c
+  ## us-gov-east-1 = us-gov-east-1a, us-gov-east-1b, us-gov-east-1
+  workspaces_azs = ["us-gov-west-1a", "us-gov-west-1b", "us-gov-west-1c"]
+  workspaces_subnets = local.workspaces_subnets
+  workspaces_subnet_tags = {
+    "0" = "workspaces"
+    "1" = "workspaces"
+    "2" = "workspaces"
+  }
+  
   private_subnets = local.private_subnets # Map of Name -> CIDR
 
   public_subnets       = local.public_subnets # Map of Name -> CIDR
@@ -74,7 +92,6 @@ module "mgmt_vpc" {
   deploy_aws_nfw                        = var.deploy_aws_nfw
   aws_nfw_prefix                        = var.resource_prefix
   aws_nfw_name                          = "pak-nfw"
-  aws_nfw_stateless_rule_group          = local.stateless_rule_group_shrd_svcs
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group_shrd_svcs
   aws_nfw_domain_stateful_rule_group    = local.domain_stateful_rule_group_shrd_svcs
   aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs # Requires creation of local file with fw rules
@@ -221,6 +238,7 @@ The variables can be further inspected to see what parameters and types are expe
 | [aws_route.public_internet_gateway](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.redshift_custom](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route.tgw_custom](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
+| [aws_route.workspaces_custom](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route) | resource |
 | [aws_route_table.aws_nfw_igw_rtb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
 | [aws_route_table.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
 | [aws_route_table.elasticache](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
@@ -230,6 +248,7 @@ The variables can be further inspected to see what parameters and types are expe
 | [aws_route_table.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
 | [aws_route_table.redshift](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
 | [aws_route_table.tgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
+| [aws_route_table.workspaces](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table) | resource |
 | [aws_route_table_association.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_route_table_association.elasticache](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_route_table_association.firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
@@ -240,6 +259,7 @@ The variables can be further inspected to see what parameters and types are expe
 | [aws_route_table_association.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_route_table_association.redshift](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_route_table_association.tgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
+| [aws_route_table_association.workspaces](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route_table_association) | resource |
 | [aws_subnet.database](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.elasticache](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.firewall](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
@@ -248,6 +268,7 @@ The variables can be further inspected to see what parameters and types are expe
 | [aws_subnet.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.redshift](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_subnet.tgw](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
+| [aws_subnet.workspaces](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/subnet) | resource |
 | [aws_vpc.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
 | [aws_vpc_dhcp_options.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options) | resource |
 | [aws_vpc_dhcp_options_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options_association) | resource |
@@ -371,6 +392,12 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_vpc_tags"></a> [vpc\_tags](#input\_vpc\_tags) | Additional tags for the VPC | `map(string)` | `{}` | no |
 | <a name="input_vpn_gateway_id"></a> [vpn\_gateway\_id](#input\_vpn\_gateway\_id) | ID of VPN Gateway to attach to the VPC | `string` | `""` | no |
 | <a name="input_vpn_gateway_tags"></a> [vpn\_gateway\_tags](#input\_vpn\_gateway\_tags) | Additional tags for the VPN gateway | `map(string)` | `{}` | no |
+| <a name="input_workspaces_azs"></a> [workspaces\_azs](#input\_workspaces\_azs) | A list of workspaces availability zones in the region | `list(string)` | `[]` | no |
+| <a name="input_workspaces_custom_routes"></a> [workspaces\_custom\_routes](#input\_workspaces\_custom\_routes) | Custom routes for workspaces Subnets | <pre>list(object({<br>    destination_cidr_block     = optional(string, null)<br>    destination_prefix_list_id = optional(string, null)<br>    network_interface_id       = optional(string, null)<br>    transit_gateway_id         = optional(string, null)<br>    vpc_endpoint_id            = optional(string, null)<br>  }))</pre> | `[]` | no |
+| <a name="input_workspaces_route_table_tags"></a> [workspaces\_route\_table\_tags](#input\_workspaces\_route\_table\_tags) | Additional tags for the workspaces route tables | `map(string)` | `{}` | no |
+| <a name="input_workspaces_subnet_suffix"></a> [workspaces\_subnet\_suffix](#input\_workspaces\_subnet\_suffix) | Suffix to append to workspaces subnets name | `string` | `"workspaces"` | no |
+| <a name="input_workspaces_subnet_tags"></a> [workspaces\_subnet\_tags](#input\_workspaces\_subnet\_tags) | Additional tags for the workspaces subnets | `map(string)` | `{}` | no |
+| <a name="input_workspaces_subnets"></a> [workspaces\_subnets](#input\_workspaces\_subnets) | A list of workspaces subnets | `map` | `{}` | no |
 
 ## Outputs
 
