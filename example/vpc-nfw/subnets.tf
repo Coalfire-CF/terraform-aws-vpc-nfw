@@ -53,6 +53,18 @@ module "mgmt_subnet_addrs" {
       new_bits = 8
     },
     {
+      name     = "${var.resource_prefix}-workspaces-1a"
+      new_bits = 8
+    },
+    {
+      name     = "${var.resource_prefix}-workspaces-1b"
+      new_bits = 8
+    },
+    {
+      name     = "${var.resource_prefix}-workspaces-1c"
+      new_bits = 8
+    },
+    {
       name     = "${var.resource_prefix}-tgw-1a"
       new_bits = 12
     },

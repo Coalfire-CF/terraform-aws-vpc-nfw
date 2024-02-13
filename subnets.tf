@@ -52,6 +52,23 @@ resource "aws_subnet" "private" {
 }
 
 #################
+# Workspaces subnet
+#################
+resource "aws_subnet" "workspaces" {
+  count = length(var.workspaces_subnets) > 0 ? length(var.workspaces_subnets) : 0
+
+  vpc_id = local.vpc_id
+  cidr_block = var.workspaces_subnets[
+    count.index
+  ]
+  availability_zone = element(var.workspaces_azs, count.index)
+
+  tags = merge(tomap({
+    "Name" = format("%s-${lower(var.workspaces_subnet_tags[count.index])}-%s", var.name, element(var.workspaces_azs, count.index))
+  }), var.tags)
+}
+
+#################
 # TGW subnet
 #################
 resource "aws_subnet" "tgw" {
