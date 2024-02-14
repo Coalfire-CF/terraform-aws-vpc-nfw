@@ -284,8 +284,8 @@ variable "azs" {
 
 variable "workspaces_azs" {
   description = "A list of workspaces availability zones in the region"
-  default     = []
   type        = list(string)
+  default     = []
 }
 
 variable "enable_dns_hostnames" {

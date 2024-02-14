@@ -32,3 +32,20 @@ variable "deploy_aws_nfw" {
   type        = bool
   default     = false
 }
+
+
+##if using AWS workspaces https://docs.aws.amazon.com/workspaces/latest/adminguide/azs-workspaces.html
+## us-east-1 = us-east-1b, us-east-1c, us-east-1d
+## us-west-2 = us-west-2a, us-west-2b, us-west-2c
+## us-gov-west-1 = us-gov-west-1a, us-gov-west-1b, us-gov-west-1c
+## us-gov-east-1 = us-gov-east-1a, us-gov-east-1b, us-gov-east-1
+variable "workspaces_azs" {
+  description = "AZ list for matching of region to AZ"
+  type = map(string)
+  default = {
+    "us-east-1" = "us-east-1b, us-east-1c, us-east-1d"
+    "us-west-2" = "us-west-2a, us-west-2b, us-west-2c"
+    "us-gov-west-1" = "us-gov-west-1a, us-gov-west-1b, us-gov-west-1c"
+    "us-gov-east-1" = "us-gov-east-1a, us-gov-east-1b, us-gov-east-1"
+  }
+}
