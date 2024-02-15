@@ -13,7 +13,7 @@ module "mgmt_vpc" {
 
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
-  workspaces_azs = tolist(split(local.workspace_azs))
+  workspaces_azs = tolist(split(",","${local.workspace_azs}"))
   workspaces_subnets = local.workspaces_subnets
   workspaces_subnet_tags = {
     "0" = "workspaces"
