@@ -176,12 +176,6 @@ variable "tgw_subnet_suffix" {
   type        = string
 }
 
-variable "workspaces_subnet_suffix" {
-  description = "Suffix to append to workspaces subnets name"
-  default     = "workspaces"
-  type        = string
-}
-
 variable "firewall_subnet_suffix" {
   description = "Suffix to append to firewall subnets name"
   default     = "firewall"
@@ -231,11 +225,6 @@ variable "database_subnets" {
   default     = {}
 }
 
-variable "workspaces_subnets" {
-  description = "A list of workspaces subnets"
-  default     = {}
-}
-
 variable "redshift_subnets" {
   description = "A list of redshift subnets"
   default     = {}
@@ -278,12 +267,6 @@ variable "create_database_subnet_group" {
 
 variable "azs" {
   description = "A list of availability zones in the region"
-  default     = []
-  type        = list(string)
-}
-
-variable "workspaces_azs" {
-  description = "A list of workspaces availability zones in the region"
   default     = []
   type        = list(string)
 }
@@ -423,12 +406,6 @@ variable "private_subnet_tags" {
   type        = map(string)
 }
 
-variable "workspaces_subnet_tags" {
-  description = "Additional tags for the workspaces subnets"
-  default     = {}
-  type        = map(string)
-}
-
 variable "tgw_subnet_tags" {
   description = "Additional tags for the tgw subnets"
   default     = {}
@@ -455,12 +432,6 @@ variable "tgw_route_table_tags" {
 
 variable "private_route_table_tags" {
   description = "Additional tags for the private route tables"
-  default     = {}
-  type        = map(string)
-}
-
-variable "workspaces_route_table_tags" {
-  description = "Additional tags for the workspaces route tables"
   default     = {}
   type        = map(string)
 }
@@ -676,20 +647,6 @@ variable "intra_custom_routes" {
   }))
   default = []
 }
-
-
-variable "workspaces_custom_routes" {
-  description = "Custom routes for workspaces Subnets"
-  type = list(object({
-    destination_cidr_block     = optional(string, null)
-    destination_prefix_list_id = optional(string, null)
-    network_interface_id       = optional(string, null)
-    transit_gateway_id         = optional(string, null)
-    vpc_endpoint_id            = optional(string, null)
-  }))
-  default = []
-}
-
 
 variable "private_custom_routes" {
   description = "Custom routes for Private Subnets"
