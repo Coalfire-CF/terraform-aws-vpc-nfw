@@ -36,9 +36,9 @@ locals {
   domain_stateful_rule_group_shrd_svcs = [
     {
       capacity    = 1000
-      name        = "4ChanBlock"
-      description = "Stateful rule blocking 4chan.com"
-      domain_list = [".4chan.com"]
+      name        = "GoogleBlock"
+      description = "Stateful rule blocking google.com"
+      domain_list = [".cnn.com", ".google.com"]
       actions     = "DENYLIST"
       protocols   = ["HTTP_HOST", "TLS_SNI"]
       rule_variables = {
@@ -146,7 +146,72 @@ locals {
     }
   ]
 
-  #not required - example ruleset
+  stateless_rule_group_shrd_svcs = [
+    {
+      name        = "STATELESSEGRESSWEB"
+      capacity    = 1000
+      description = "Stateless rule to internet from VPCs"
+      rule_config = [
+        {
+          protocols_number      = [6]
+          source_ipaddress      = var.mgmt_vpc_cidr
+          source_to_port        = "ANY"
+          destination_to_port   = "ANY"
+          destination_ipaddress = "0.0.0.0/0"
+          tcp_flag = {
+            flags = ["SYN"]
+            masks = ["SYN", "ACK"]
+          }
+          actions = {
+            type = "pass"
+          }
+        }
+      ]
+    },
+    {
+      name        = "STATELESSRDPBASTION"
+      capacity    = 1000
+      description = "Stateless rule to allow RDP to Windows Bastion"
+      rule_config = [
+        for index, cidr in var.cidrs_for_remote_access : {
+          protocols_number      = [6]
+          source_ipaddress      = cidr
+          source_to_port        = 3389
+          destination_to_port   = 3389
+          destination_ipaddress = var.mgmt_vpc_cidr
+          tcp_flag = {
+            flags = ["SYN"]
+            masks = ["SYN", "ACK"]
+          }
+          actions = {
+            type = "pass"
+          }
+        }
+      ]
+    },
+    {
+      name        = "STATELESSSSHBASTION"
+      capacity    = 1000
+      description = "Stateless rule to allow SSH to Linux Bastion"
+      rule_config = [
+        for index, cidr in var.cidrs_for_remote_access : {
+          protocols_number      = [6]
+          source_ipaddress      = cidr
+          source_to_port        = 22
+          destination_to_port   = 22
+          destination_ipaddress = var.mgmt_vpc_cidr
+          tcp_flag = {
+            flags = ["SYN"]
+            masks = ["SYN", "ACK"]
+          }
+          actions = {
+            type = "pass"
+          }
+        }
+      ]
+    }
+  ]
+
   suricata_rule_group_shrd_svcs = [
     {
       capacity    = 1000
@@ -155,6 +220,5 @@ locals {
       rules_file  = "./test.rules.json"
     }
   ]
-
 
 }
