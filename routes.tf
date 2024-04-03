@@ -161,7 +161,7 @@ resource "aws_route" "private_custom" {
 # TGW routes
 #################
 resource "aws_route_table" "tgw" {
-  count = local.max_subnet_length > 0 ? local.nat_gateway_count : 0
+  count = local.max_subnet_length > 0 ? length(var.tgw_subnets) : 0
 
   vpc_id = local.vpc_id
 
