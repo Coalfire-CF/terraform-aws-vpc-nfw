@@ -170,6 +170,11 @@ output "elasticache_subnet_group_name" {
   ])), 0)
 }
 
+output "public_route_table_ids" {
+  description = "List of IDs of public route tables"
+  value       = aws_route_table.public[*].id
+}
+
 output "private_route_table_ids" {
   description = "List of IDs of private route tables - including database route table IDs, as the database uses the private route tables"
   value       = aws_route_table.private[*].id
