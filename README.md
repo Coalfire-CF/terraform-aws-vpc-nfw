@@ -56,9 +56,27 @@ module "mgmt_vpc" {
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   private_subnets = local.private_subnets # Map of Name -> CIDR
+  private_subnet_tags = {
+    "0" = "IAM"
+    "1" = "IAM"
+    "2" = "IAM"
+    "3" = "SIEM"
+    "4" = "SIEM"
+    "5" = "SIEM"
+  }
+
+  #tgw_subnets = local.tgw_subnets
+  #tgw_subnet_suffix = "TGW"
 
   public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
+  public_subnet_suffix = "PUBLC"
+
+  database_subnets = local.database_subnets
+  database_subnet_tags = {
+    "0" = "BACKEND"
+    "1" = "BACKEND"
+    "2" = "BACKEND"
+  }
 
   single_nat_gateway     = false
   enable_nat_gateway     = true
@@ -111,6 +129,7 @@ module "mgmt_vpc" {
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   private_subnets = local.private_subnets # Map of Name -> CIDR
+
 
   public_subnets       = local.public_subnets # Map of Name -> CIDR
   public_subnet_suffix = "public"
