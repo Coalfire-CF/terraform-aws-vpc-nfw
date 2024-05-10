@@ -64,7 +64,7 @@ resource "aws_subnet" "tgw" {
   availability_zone = element(var.azs, count.index)
 
   tags = merge(tomap({
-    "Name" = format("%s-${lower(var.tgw_subnet_tags[count.index])}-%s", var.name, element(var.azs, count.index))
+    "Name" = format("%s-${lower(var.tgw_subnet_suffix)}-%s", var.name, element(var.azs, count.index))
   }), var.tags)
 }
 
