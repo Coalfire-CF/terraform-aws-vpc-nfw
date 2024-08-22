@@ -177,3 +177,59 @@ variable "cloudwatch_log_group_kms_key_id" {
   description = "Customer KMS Key id for Cloudwatch Log encryption"
   type        = string
 }
+
+### TLS Outbound Inspection ###
+
+variable "tls_inspection_enabled" {
+  description = "Enable TLS Inspection"
+  type        = bool
+  default     = false
+}
+
+variable "tls_description" {
+  description = "Description for the TLS Inspection"
+  type        = string
+  default     = "TLS Oubound Inspection"
+}
+
+variable "tls_cert_arn" {
+  description = "TLS Certificate ARN"
+  type        = string
+  default     = ""
+}
+
+variable "tls_destination_cidr" {
+  description = "Destination CIDR for TLS Inspection"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+variable "tls_destination_from_port" {
+  description = "Destination Port for TLS Inspection"
+  type        = number
+  default     = 443
+}
+
+variable "tls_destination_to_port" {
+  description = "Destination Port for TLS Inspection"
+  type        = number
+  default     = 443
+}
+
+variable "tls_source_cidr" {
+  description = "Source CIDR for TLS Inspection"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+variable "tls_source_from_port" {
+  description = "Source Port for TLS Inspection"
+  type        = number
+  default     = 0
+}
+
+variable "tls_source_to_port" {
+  description = "Source Port for TLS Inspection"
+  type        = number
+  default     = 65535
+}
