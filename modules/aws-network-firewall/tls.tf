@@ -1,4 +1,4 @@
-resource "aws_networkfirewall_tls_inspection_configuration" "example" {
+resource "aws_networkfirewall_tls_inspection_configuration" "tls_inspection" {
   count = var.tls_inspection_enabled ? 1 : 0
 
   # General
@@ -38,3 +38,4 @@ resource "aws_networkfirewall_tls_inspection_configuration" "example" {
     }
   }
 }
+
