@@ -84,6 +84,10 @@ module "mgmt_vpc" {
   firewall_subnets       = local.firewall_subnets
   firewall_subnet_suffix = "firewall"
 
+  # TLS Outbound Inspection
+  enable_tls_inspection = var.enable_tls_inspection # deploy_aws_nfw must be set to true to enable this
+  tls_cert_arn          = var.tls_cert_arn
+
   /* Add Additional tags here */
   tags = {
     Owner       = var.resource_prefix
