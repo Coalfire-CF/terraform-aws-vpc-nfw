@@ -126,6 +126,18 @@ variable "nfw_kms_key_id" {
   default     = null
 }
 
+variable "enable_tls_inspection" {
+  description = "enable nfw tls inspection true/false. deploy_aws_nfw must be true to enable this"
+  type        = bool
+  default     = false
+}
+
+variable "tls_cert_arn" {
+  description = "TLS Certificate ARN"
+  type        = string
+  default     = ""
+}
+
 ######
 # VPC
 ######
