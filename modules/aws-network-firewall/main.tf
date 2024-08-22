@@ -160,7 +160,11 @@ resource "aws_networkfirewall_rule_group" "fivetuple_stateful_group" {
           }
           rule_option {
             keyword  = "sid"
-            settings = ["${stateful_rule.value.sid}; msg:\"${try(stateful_rule.value.description, "")}\""]
+            settings = ["${stateful_rule.value.sid}"]
+          }
+          rule_option {
+            keyword  = "msg"
+            settings = ["\"${try(stateful_rule.value.description, "")}\""]
           }
         }
       }
