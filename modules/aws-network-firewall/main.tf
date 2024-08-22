@@ -266,6 +266,9 @@ resource "aws_networkfirewall_firewall_policy" "this" {
     stateless_default_actions          = ["aws:${var.stateless_default_actions}"]
     stateless_fragment_default_actions = ["aws:${var.stateless_fragment_default_actions}"]
 
+    # TLS Inspection
+    tls_inspection_configuration_arn = try(aws_networkfirewall_tls_inspection_configuration.tls_inspection[0].arn, "")
+
     #Stateless Rule Group Reference
     dynamic "stateless_rule_group_reference" {
       for_each = local.this_stateless_group_arn
@@ -284,6 +287,7 @@ resource "aws_networkfirewall_firewall_policy" "this" {
       }
     }
   }
+
   tags = merge(var.tags)
 }
 
