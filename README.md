@@ -87,6 +87,7 @@ module "mgmt_vpc" {
   # TLS Outbound Inspection
   enable_tls_inspection = var.enable_tls_inspection # deploy_aws_nfw must be set to true to enable this
   tls_cert_arn          = var.tls_cert_arn
+  tls_destination_cidrs = var.tls_destination_cidrs # Set these to the NAT gateways to filter outbound traffic without affecting the hosted VPN
 
   /* Add Additional tags here */
   tags = {
