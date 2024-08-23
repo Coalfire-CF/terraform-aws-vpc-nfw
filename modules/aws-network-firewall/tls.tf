@@ -27,7 +27,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "tls_inspection" {
           to_port   = var.tls_destination_to_port
         }
         destination {
-          address_definition = var.tls_destination_cidr
+          address_definition = var.tls_destination_cidr 
         }
         source_ports {
           from_port = var.tls_source_from_port
