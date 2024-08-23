@@ -20,24 +20,44 @@ resource "aws_networkfirewall_tls_inspection_configuration" "tls_inspection" {
         revoked_status_action = "REJECT"
         unknown_status_action = "PASS"
       }
-      scope {
-        protocols = [6]
-        destination_ports {
-          from_port = var.tls_destination_from_port
-          to_port   = var.tls_destination_to_port
-        }
-        destination {
-          address_definition = var.tls_destination_cidr 
-        }
-        source_ports {
-          from_port = var.tls_source_from_port
-          to_port   = var.tls_source_to_port
-        }
-        source {
-          address_definition = var.tls_source_cidr
+      dynamic "scope" {
+        for_each = var.tls_destination_cidrs
+        content {
+          protocols = [6]
+          destination_ports {
+            from_port = var.tls_destination_from_port
+            to_port   = var.tls_destination_to_port
+          }
+          destination {
+            address_definition = scope.value
+          }
+          source_ports {
+            from_port = var.tls_source_from_port
+            to_port   = var.tls_source_to_port
+          }
+          source {
+            address_definition = var.tls_source_cidr
+          }
         }
       }
+
+      #   scope {
+      #     protocols = [6]
+      #     destination_ports {
+      #       from_port = var.tls_destination_from_port
+      #       to_port   = var.tls_destination_to_port
+      #     }
+      #     destination {
+      #       address_definition = var.tls_destination_cidr 
+      #     }
+      #     source_ports {
+      #       from_port = var.tls_source_from_port
+      #       to_port   = var.tls_source_to_port
+      #     }
+      #     source {
+      #       address_definition = var.tls_source_cidr
+      #     }
+      #   }
     }
   }
 }
-
