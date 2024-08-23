@@ -186,7 +186,7 @@ The variables can be further inspected to see what parameters and types are expe
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.15.0, < 6.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.64.0 |
 
 ## Modules
 
@@ -374,6 +374,13 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_tgw_subnet_tags"></a> [tgw\_subnet\_tags](#input\_tgw\_subnet\_tags) | Additional tags for the tgw subnets | `map(string)` | `{}` | no |
 | <a name="input_tgw_subnets"></a> [tgw\_subnets](#input\_tgw\_subnets) | A list of tgw subnets inside the VPC | `map` | `{}` | no |
 | <a name="input_tls_cert_arn"></a> [tls\_cert\_arn](#input\_tls\_cert\_arn) | TLS Certificate ARN | `string` | `""` | no |
+| <a name="input_tls_description"></a> [tls\_description](#input\_tls\_description) | Description for the TLS Inspection | `string` | `"TLS Oubound Inspection"` | no |
+| <a name="input_tls_destination_cidr"></a> [tls\_destination\_cidr](#input\_tls\_destination\_cidr) | Destination CIDR for TLS Inspection | `string` | `""` | no |
+| <a name="input_tls_destination_from_port"></a> [tls\_destination\_from\_port](#input\_tls\_destination\_from\_port) | Destination Port for TLS Inspection | `number` | `443` | no |
+| <a name="input_tls_destination_to_port"></a> [tls\_destination\_to\_port](#input\_tls\_destination\_to\_port) | Destination Port for TLS Inspection | `number` | `443` | no |
+| <a name="input_tls_source_cidr"></a> [tls\_source\_cidr](#input\_tls\_source\_cidr) | Source CIDR for TLS Inspection | `string` | `"0.0.0.0/0"` | no |
+| <a name="input_tls_source_from_port"></a> [tls\_source\_from\_port](#input\_tls\_source\_from\_port) | Source Port for TLS Inspection | `number` | `0` | no |
+| <a name="input_tls_source_to_port"></a> [tls\_source\_to\_port](#input\_tls\_source\_to\_port) | Source Port for TLS Inspection | `number` | `65535` | no |
 | <a name="input_vpc_tags"></a> [vpc\_tags](#input\_vpc\_tags) | Additional tags for the VPC | `map(string)` | `{}` | no |
 | <a name="input_vpn_gateway_id"></a> [vpn\_gateway\_id](#input\_vpn\_gateway\_id) | ID of VPN Gateway to attach to the VPC | `string` | `""` | no |
 | <a name="input_vpn_gateway_tags"></a> [vpn\_gateway\_tags](#input\_vpn\_gateway\_tags) | Additional tags for the VPN gateway | `map(string)` | `{}` | no |
