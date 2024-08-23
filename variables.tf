@@ -126,6 +126,10 @@ variable "nfw_kms_key_id" {
   default     = null
 }
 
+################
+# TLS Inspection
+################
+
 variable "enable_tls_inspection" {
   description = "enable nfw tls inspection true/false. deploy_aws_nfw must be true to enable this"
   type        = bool
@@ -136,6 +140,48 @@ variable "tls_cert_arn" {
   description = "TLS Certificate ARN"
   type        = string
   default     = ""
+}
+
+variable "tls_description" {
+  description = "Description for the TLS Inspection"
+  type        = string
+  default     = "TLS Oubound Inspection"
+}
+
+variable "tls_destination_cidr" {
+  description = "Destination CIDR for TLS Inspection"
+  type        = string
+  default     = ""
+}
+
+variable "tls_destination_from_port" {
+  description = "Destination Port for TLS Inspection"
+  type        = number
+  default     = 443
+}
+
+variable "tls_destination_to_port" {
+  description = "Destination Port for TLS Inspection"
+  type        = number
+  default     = 443
+}
+
+variable "tls_source_cidr" {
+  description = "Source CIDR for TLS Inspection"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+variable "tls_source_from_port" {
+  description = "Source Port for TLS Inspection"
+  type        = number
+  default     = 0
+}
+
+variable "tls_source_to_port" {
+  description = "Source Port for TLS Inspection"
+  type        = number
+  default     = 65535
 }
 
 ######

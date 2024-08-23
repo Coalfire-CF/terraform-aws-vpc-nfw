@@ -15,7 +15,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "tls_inspection" {
   # TLS Inspection
   tls_inspection_configuration {
     server_certificate_configuration {
-     certificate_authority_arn = var.tls_cert_arn
+      certificate_authority_arn = var.tls_cert_arn
       check_certificate_revocation_status {
         revoked_status_action = "REJECT"
         unknown_status_action = "PASS"
