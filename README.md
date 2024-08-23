@@ -375,7 +375,7 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_tgw_subnets"></a> [tgw\_subnets](#input\_tgw\_subnets) | A list of tgw subnets inside the VPC | `map` | `{}` | no |
 | <a name="input_tls_cert_arn"></a> [tls\_cert\_arn](#input\_tls\_cert\_arn) | TLS Certificate ARN | `string` | `""` | no |
 | <a name="input_tls_description"></a> [tls\_description](#input\_tls\_description) | Description for the TLS Inspection | `string` | `"TLS Oubound Inspection"` | no |
-| <a name="input_tls_destination_cidr"></a> [tls\_destination\_cidr](#input\_tls\_destination\_cidr) | Destination CIDR for TLS Inspection | `string` | `""` | no |
+| <a name="input_tls_destination_cidrs"></a> [tls\_destination\_cidrs](#input\_tls\_destination\_cidrs) | Destination CIDRs for TLS Inspection | `list(string)` | <pre>[<br>  "0.0.0.0/0"<br>]</pre> | no |
 | <a name="input_tls_destination_from_port"></a> [tls\_destination\_from\_port](#input\_tls\_destination\_from\_port) | Destination Port for TLS Inspection | `number` | `443` | no |
 | <a name="input_tls_destination_to_port"></a> [tls\_destination\_to\_port](#input\_tls\_destination\_to\_port) | Destination Port for TLS Inspection | `number` | `443` | no |
 | <a name="input_tls_source_cidr"></a> [tls\_source\_cidr](#input\_tls\_source\_cidr) | Source CIDR for TLS Inspection | `string` | `"0.0.0.0/0"` | no |
