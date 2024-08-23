@@ -107,7 +107,7 @@ module "aws_network_firewall" {
   tls_inspection_enabled    = var.enable_tls_inspection
   tls_cert_arn              = var.tls_cert_arn
   tls_description           = var.tls_description
-  tls_destination_cidr      = var.tls_destination_cidr
+  tls_destination_cidrs     = var.tls_destination_cidrs
   tls_destination_to_port   = var.tls_destination_to_port
   tls_destination_from_port = var.tls_destination_from_port
   tls_source_cidr           = var.tls_source_cidr

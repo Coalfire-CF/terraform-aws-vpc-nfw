@@ -148,10 +148,10 @@ variable "tls_description" {
   default     = "TLS Oubound Inspection"
 }
 
-variable "tls_destination_cidr" {
-  description = "Destination CIDR for TLS Inspection"
-  type        = string
-  default     = ""
+variable "tls_destination_cidrs" {
+  description = "Destination CIDRs for TLS Inspection"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
 }
 
 variable "tls_destination_from_port" {
