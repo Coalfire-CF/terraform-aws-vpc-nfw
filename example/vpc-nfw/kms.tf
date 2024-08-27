@@ -81,7 +81,7 @@ resource "aws_kms_alias" "cloudwatch_key_alias" {
 
 data "aws_iam_policy_document" "cloudwatch_key" {
 
-    statement {
+  statement {
     sid    = "Allow use of the key"
     effect = "Allow"
     actions = [
@@ -94,7 +94,7 @@ data "aws_iam_policy_document" "cloudwatch_key" {
     resources = ["*"]
   }
 
- statement {
+  statement {
     effect = "Allow"
     actions = [
       "kms:Encrypt",

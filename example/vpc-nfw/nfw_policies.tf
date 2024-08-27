@@ -1,35 +1,35 @@
 locals {
   rdp_remote_access_policy_shrd_svcs = flatten([
-      for index, cidr in var.cidrs_for_remote_access : {
-        description           = "All Ingress RDP traffic"
-        protocol              = "TCP"
-        source_ipaddress      = cidr
-        source_port           = "ANY"
-        direction             = "FORWARD"
-        destination_ipaddress = var.mgmt_vpc_cidr
-        destination_port      = 3389
-        sid                   = index + 1
-        actions = {
-          type = "pass"
-        }
+    for index, cidr in var.cidrs_for_remote_access : {
+      description           = "All Ingress RDP traffic"
+      protocol              = "TCP"
+      source_ipaddress      = cidr
+      source_port           = "ANY"
+      direction             = "FORWARD"
+      destination_ipaddress = var.mgmt_vpc_cidr
+      destination_port      = 3389
+      sid                   = index + 1
+      actions = {
+        type = "pass"
       }
+    }
 
   ])
 
   ssh_remote_access_policy_shrd_svcs = flatten([
-      for index, cidr in var.cidrs_for_remote_access : {
-        description           = "All Ingress SSH traffic"
-        protocol              = "SSH"
-        source_ipaddress      = cidr
-        source_port           = "ANY"
-        direction             = "FORWARD"
-        destination_ipaddress = var.mgmt_vpc_cidr
-        destination_port      = 22
-        sid                   = index + 1
-        actions = {
-          type = "pass"
-        }
+    for index, cidr in var.cidrs_for_remote_access : {
+      description           = "All Ingress SSH traffic"
+      protocol              = "SSH"
+      source_ipaddress      = cidr
+      source_port           = "ANY"
+      direction             = "FORWARD"
+      destination_ipaddress = var.mgmt_vpc_cidr
+      destination_port      = 22
+      sid                   = index + 1
+      actions = {
+        type = "pass"
       }
+    }
 
   ])
 
