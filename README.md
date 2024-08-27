@@ -84,6 +84,11 @@ module "mgmt_vpc" {
   firewall_subnets       = local.firewall_subnets
   firewall_subnet_suffix = "firewall"
 
+  # TLS Outbound Inspection
+  enable_tls_inspection = var.enable_tls_inspection # deploy_aws_nfw must be set to true to enable this
+  tls_cert_arn          = var.tls_cert_arn
+  tls_destination_cidrs = var.tls_destination_cidrs # Set these to the NAT gateways to filter outbound traffic without affecting the hosted VPN
+
   /* Add Additional tags here */
   tags = {
     Owner       = var.resource_prefix
@@ -182,7 +187,7 @@ The variables can be further inspected to see what parameters and types are expe
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 5.15.0, < 6.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.64.0 |
 
 ## Modules
 
@@ -318,6 +323,7 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_enable_dynamodb_endpoint"></a> [enable\_dynamodb\_endpoint](#input\_enable\_dynamodb\_endpoint) | Should be true if you want to provision a DynamoDB endpoint to the VPC | `bool` | `false` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | Should be true if you want to provision NAT Gateways for each of your private networks | `bool` | `false` | no |
 | <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | Should be true if you want to provision an S3 endpoint to the VPC | `bool` | `false` | no |
+| <a name="input_enable_tls_inspection"></a> [enable\_tls\_inspection](#input\_enable\_tls\_inspection) | enable nfw tls inspection true/false. deploy\_aws\_nfw must be true to enable this | `bool` | `false` | no |
 | <a name="input_enable_vpn_gateway"></a> [enable\_vpn\_gateway](#input\_enable\_vpn\_gateway) | Should be true if you want to create a new VPN Gateway resource and attach it to the VPC | `bool` | `false` | no |
 | <a name="input_external_nat_ip_ids"></a> [external\_nat\_ip\_ids](#input\_external\_nat\_ip\_ids) | List of EIP IDs to be assigned to the NAT Gateways (used in combination with reuse\_nat\_ips) | `list(string)` | `[]` | no |
 | <a name="input_firewall_custom_routes"></a> [firewall\_custom\_routes](#input\_firewall\_custom\_routes) | Custom routes for Firewall Subnets | `list(map(string))` | `[]` | no |
@@ -368,6 +374,14 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_tgw_subnet_suffix"></a> [tgw\_subnet\_suffix](#input\_tgw\_subnet\_suffix) | Suffix to append to tgw subnets name | `string` | `"tgw"` | no |
 | <a name="input_tgw_subnet_tags"></a> [tgw\_subnet\_tags](#input\_tgw\_subnet\_tags) | Additional tags for the tgw subnets | `map(string)` | `{}` | no |
 | <a name="input_tgw_subnets"></a> [tgw\_subnets](#input\_tgw\_subnets) | A list of tgw subnets inside the VPC | `map` | `{}` | no |
+| <a name="input_tls_cert_arn"></a> [tls\_cert\_arn](#input\_tls\_cert\_arn) | TLS Certificate ARN | `string` | `""` | no |
+| <a name="input_tls_description"></a> [tls\_description](#input\_tls\_description) | Description for the TLS Inspection | `string` | `"TLS Oubound Inspection"` | no |
+| <a name="input_tls_destination_cidrs"></a> [tls\_destination\_cidrs](#input\_tls\_destination\_cidrs) | Destination CIDRs for TLS Inspection | `list(string)` | <pre>[<br>  "0.0.0.0/0"<br>]</pre> | no |
+| <a name="input_tls_destination_from_port"></a> [tls\_destination\_from\_port](#input\_tls\_destination\_from\_port) | Destination Port for TLS Inspection | `number` | `443` | no |
+| <a name="input_tls_destination_to_port"></a> [tls\_destination\_to\_port](#input\_tls\_destination\_to\_port) | Destination Port for TLS Inspection | `number` | `443` | no |
+| <a name="input_tls_source_cidr"></a> [tls\_source\_cidr](#input\_tls\_source\_cidr) | Source CIDR for TLS Inspection | `string` | `"0.0.0.0/0"` | no |
+| <a name="input_tls_source_from_port"></a> [tls\_source\_from\_port](#input\_tls\_source\_from\_port) | Source Port for TLS Inspection | `number` | `0` | no |
+| <a name="input_tls_source_to_port"></a> [tls\_source\_to\_port](#input\_tls\_source\_to\_port) | Source Port for TLS Inspection | `number` | `65535` | no |
 | <a name="input_vpc_tags"></a> [vpc\_tags](#input\_vpc\_tags) | Additional tags for the VPC | `map(string)` | `{}` | no |
 | <a name="input_vpn_gateway_id"></a> [vpn\_gateway\_id](#input\_vpn\_gateway\_id) | ID of VPN Gateway to attach to the VPC | `string` | `""` | no |
 | <a name="input_vpn_gateway_tags"></a> [vpn\_gateway\_tags](#input\_vpn\_gateway\_tags) | Additional tags for the VPN gateway | `map(string)` | `{}` | no |
