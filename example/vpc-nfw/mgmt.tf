@@ -55,6 +55,12 @@ module "mgmt_vpc" {
   firewall_subnets       = local.firewall_subnets
   firewall_subnet_suffix = "firewall"
 
+ ### TLS Inspection ###
+  enable_tls_inspection = var.enable_tls_inspection
+  tls_cert_arn          = var.tls_cert_arn
+  tls_description       = "TLS Inspection"
+  tls_destination_cidrs = var.tls_destination_cidrs
+
   /* Add Additional tags here */
   tags = {
     Owner       = var.resource_prefix
