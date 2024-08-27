@@ -91,7 +91,7 @@ module "aws_network_firewall" {
   vpc_id            = local.vpc_id
   delete_protection = var.delete_protection
 
-  # Networking
+  # Firewall Policies
   stateless_rule_group          = var.aws_nfw_stateless_rule_group
   fivetuple_stateful_rule_group = var.aws_nfw_fivetuple_stateful_rule_group
   suricata_stateful_rule_group  = var.aws_nfw_suricata_stateful_rule_group
