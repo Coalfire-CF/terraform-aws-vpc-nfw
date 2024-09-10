@@ -31,8 +31,11 @@ module "mgmt_vpc" {
   }
 
   public_subnets       = local.public_subnets
-  public_subnet_suffix = "dmz"
-
+  public_subnet_tags = {
+    "0" = "public"
+    "1" = "public"
+    "2" = "public"
+  }
 
   single_nat_gateway     = false
   enable_nat_gateway     = true

@@ -19,8 +19,8 @@ resource "aws_subnet" "firewall" {
 # Public subnet
 ################
 resource "aws_subnet" "public" {
-  #checkov:skip=CKV_AWS_130: "Ensure VPC subnets do not assign public IP by default" - This is a public subet.
-  count = length(var.public_subnets) > 0 && (!var.one_nat_gateway_per_az || length(var.public_subnets) >= length(var.azs)) ? length(var.public_subnets) : 0
+  #checkov:skip=CKV_AWS_130: "Ensure VPC subnets do not assign public IP by default" - This is a public subnet.
+  count = length(var.public_subnets) > 0 ? length(var.public_subnets) : 0
 
   vpc_id = local.vpc_id
   cidr_block = var.public_subnets[
@@ -30,7 +30,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = var.map_public_ip_on_launch
 
   tags = merge(tomap({
-    "Name" = format("%s-${lower(var.public_subnet_suffix)}-%s", var.name, element(var.azs, count.index))
+    "Name" = format("%s-${lower(var.private_subnet_tags[count.index])}-%s", var.name, element(var.azs, count.index))
   }), var.tags)
 }
 
