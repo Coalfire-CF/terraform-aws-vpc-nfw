@@ -294,7 +294,7 @@ resource "aws_networkfirewall_firewall_policy" "this" {
 ###################### Logging Config ######################
 
 resource "aws_cloudwatch_log_group" "nfw" {
-  name = "/aws/network-firewall"
+  name = "/aws/network-firewall/${var.firewall_name}"
 
   tags = merge(var.tags)
 
