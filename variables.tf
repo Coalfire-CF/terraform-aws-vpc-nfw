@@ -467,8 +467,7 @@ variable "firewall_subnet_name_tag" {
 
 variable "private_subnet_tags" {
   description = "Additional tags for the private subnets"
-  default     = {}
-  type        = map(string)
+  type        = list(string)
 }
 
 variable "tgw_subnet_tags" {
