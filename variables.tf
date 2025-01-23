@@ -261,36 +261,43 @@ variable "elasticache_subnet_suffix" {
 variable "public_subnets" {
   description = "A list of public subnets inside the VPC"
   default     = {}
+  type        = map
 }
 
 variable "firewall_subnets" {
   description = "A list of firewall subnets inside the VPC"
   default     = {}
+  type        = map
 }
 
 variable "private_subnets" {
   description = "A list of private subnets inside the VPC"
   default     = {}
+  type        = map
 }
 
 variable "tgw_subnets" {
   description = "A list of tgw subnets inside the VPC"
   default     = {}
+  type        = map
 }
 
 variable "database_subnets" {
   description = "A list of database subnets"
   default     = {}
+  type        = map
 }
 
 variable "redshift_subnets" {
   description = "A list of redshift subnets"
   default     = {}
+  type        = map
 }
 
 variable "elasticache_subnets" {
   description = "A list of elasticache subnets"
   default     = {}
+  type        = map
 }
 
 variable "create_database_subnet_route_table" {
