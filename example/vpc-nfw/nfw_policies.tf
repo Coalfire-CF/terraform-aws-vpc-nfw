@@ -9,7 +9,7 @@ locals {
         {
           description           = "All WEB Internet traffic"
           protocol              = "IP"
-          source_ipaddress      = module.shared_vpc.vpc_cidr_block
+          source_ipaddress      = module.mgmt_vpc.vpc_cidr_block
           source_port           = "ANY"
           direction             = "FORWARD"
           destination_ipaddress = "ANY"
