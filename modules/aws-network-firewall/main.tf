@@ -263,6 +263,19 @@ resource "aws_networkfirewall_firewall_policy" "this" {
   }
 
   firewall_policy {
+
+    # Stateful
+    stateful_default_actions = var.stateful_default_actions
+
+    dynamic "stateful_engine_options" {
+      for_each = length(var.stateful_engine_options) > 0 ? [var.stateful_engine_options] : []
+
+      content {
+        rule_order              = try(stateful_engine_options.value.rule_order, null)
+        stream_exception_policy = try(stateful_engine_options.value.stream_exception_policy, null)
+      }
+    }
+
     stateless_default_actions          = ["aws:${var.stateless_default_actions}"]
     stateless_fragment_default_actions = ["aws:${var.stateless_fragment_default_actions}"]
 

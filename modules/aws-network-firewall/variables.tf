@@ -233,3 +233,15 @@ variable "tls_source_to_port" {
   type        = number
   default     = 65535
 }
+
+variable "stateful_default_actions" {
+  description = "Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a rule_order value of `STRICT_ORDER`. You can specify one of either or neither values of `aws:drop_strict` or `aws:drop_established`, as well as any combination of `aws:alert_strict` and `aws:alert_established`"
+  type        = list(string)
+  default     = []
+}
+
+variable "stateful_engine_options" {
+  description = "A configuration block that defines options on how the policy handles stateful rules. See [Stateful Engine Options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy#stateful-engine-options) for details"
+  type        = any
+  default     = {}
+}
