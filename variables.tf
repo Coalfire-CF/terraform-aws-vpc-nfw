@@ -441,6 +441,18 @@ variable "tags" {
   type        = map(string)
 }
 
+variable "private_eks_tags" {
+  description = "A map of tags to add to all privage subnets resources to support EKS"
+  default     = {}
+  type        = map(string)
+}
+
+variable "public_eks_tags" {
+  description = "A map of tags to add to all public subnets resources to support EKS"
+  default     = {}
+  type        = map(string)
+}
+
 variable "vpc_tags" {
   description = "Additional tags for the VPC"
   default     = {}
