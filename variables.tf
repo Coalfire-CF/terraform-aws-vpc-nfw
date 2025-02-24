@@ -731,6 +731,7 @@ variable "private_custom_routes" {
     destination_prefix_list_id = optional(string, null)
     network_interface_id       = optional(string, null)
     transit_gateway_id         = optional(string, null)
+    vpc_peering_connection_id  = optional(string, null)
     vpc_endpoint_id            = optional(string, null)
   }))
   default = []
