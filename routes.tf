@@ -151,6 +151,7 @@ resource "aws_route" "private_custom" {
   network_interface_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "network_interface_id", null)
   transit_gateway_id   = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "transit_gateway_id", null)
   vpc_endpoint_id      = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_endpoint_id", null)
+  vpc_peering_connection_id      = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_peering_connection_id", null)
 
   timeouts {
     create = "5m"
