@@ -136,49 +136,32 @@ resource "aws_route_table" "private" {
   }
 }
 
+locals {
+  vpc_peering_connection_id = lookup(var.private_custom_routes[floor(0/ length(aws_route_table.private))], "vpc_peering_connection_id", null)
+  vpc_peering_connection_id1 = "test12345"
+  private_rtb_length = length(aws_route_table.private)
+}
+
 resource "aws_route" "private_custom" {
   count = length(var.private_custom_routes) > 0 ? length(var.private_custom_routes) * length(aws_route_table.private) : 0
-  
-  route_table_id = aws_route_table.private[count.index % length(aws_route_table.private)].id
-  
-  # Set the destination - either CIDR block or prefix list
-  destination_cidr_block     = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "destination_cidr_block", null)
-  destination_prefix_list_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "destination_prefix_list_id", null)
-  
-  # Dynamically set exactly one target type based on what's in the map
-  dynamic "timeouts" {
-    for_each = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "create_timeout", null) != null ? [1] : []
-    content {
-      create = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "create_timeout", "5m")
-    }
-  }
 
-  # Set only one of these - determined by the input variable
-  
-  nat_gateway_id = (
-    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "nat_gateway_id") ? 
-    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].nat_gateway_id : null
-  )
-  
-  network_interface_id = (
-    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "network_interface_id") ? 
-    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].network_interface_id : null
-  )
-  
-  transit_gateway_id = (
-    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "transit_gateway_id") ? 
-    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].transit_gateway_id : null
-  )
-  
-  vpc_endpoint_id = (
-    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "vpc_endpoint_id") ? 
-    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].vpc_endpoint_id : null
-  )
-  
-  vpc_peering_connection_id = (
-    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "vpc_peering_connection_id") ? 
-    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].vpc_peering_connection_id : null
-  )
+  # Math result should mirror the number of subnets/route tables
+  # The desired end goal if given 2 custom routes and 3 subnets/AZs/Route Table is to create a route for each table
+  # E.g. if 3 AZs/subnets, then the result of math/logic should be 0, 1, 2, 0, 1, 2
+  # Because the element() function automatically wraps around the index (start from 0 if greater than list size), we combine it with the index function to ensure correct order
+  route_table_id = aws_route_table.private[count.index % length(aws_route_table.private)].id
+
+  destination_cidr_block = var.private_custom_routes[floor(count.index / length(aws_route_table.private))].destination_cidr_block
+  destination_prefix_list_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "destination_prefix_list_id", null)
+
+  network_interface_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "network_interface_id", null)
+  transit_gateway_id   = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "transit_gateway_id", null)
+  vpc_endpoint_id      = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_endpoint_id", null)
+  vpc_peering_connection_id   = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_peering_connection_id", null)
+
+  timeouts {
+    create = "5m"
+  }
 }
 
 #################
