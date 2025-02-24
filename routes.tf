@@ -141,10 +141,11 @@ resource "aws_route" "private_custom" {
   
   route_table_id = aws_route_table.private[count.index % length(aws_route_table.private)].id
   
+  # Set the destination - either CIDR block or prefix list
   destination_cidr_block     = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "destination_cidr_block", null)
   destination_prefix_list_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "destination_prefix_list_id", null)
   
-  # Only set one of these target attributes based on what's provided
+  # Dynamically set exactly one target type based on what's in the map
   dynamic "timeouts" {
     for_each = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "create_timeout", null) != null ? [1] : []
     content {
@@ -152,16 +153,32 @@ resource "aws_route" "private_custom" {
     }
   }
 
-  carrier_gateway_id        = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "carrier_gateway_id", null)
-  core_network_arn          = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "core_network_arn", null)
-  egress_only_gateway_id    = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "egress_only_gateway_id", null)
-  gateway_id                = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "gateway_id", null)
-  local_gateway_id          = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "local_gateway_id", null)
-  nat_gateway_id            = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "nat_gateway_id", null)
-  network_interface_id      = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "network_interface_id", null)
-  transit_gateway_id        = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "transit_gateway_id", null)
-  vpc_endpoint_id           = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_endpoint_id", null)
-  vpc_peering_connection_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_peering_connection_id", null)
+  # Set only one of these - determined by the input variable
+  
+  nat_gateway_id = (
+    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "nat_gateway_id") ? 
+    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].nat_gateway_id : null
+  )
+  
+  network_interface_id = (
+    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "network_interface_id") ? 
+    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].network_interface_id : null
+  )
+  
+  transit_gateway_id = (
+    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "transit_gateway_id") ? 
+    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].transit_gateway_id : null
+  )
+  
+  vpc_endpoint_id = (
+    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "vpc_endpoint_id") ? 
+    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].vpc_endpoint_id : null
+  )
+  
+  vpc_peering_connection_id = (
+    contains(keys(var.private_custom_routes[floor(count.index / length(aws_route_table.private))]), "vpc_peering_connection_id") ? 
+    var.private_custom_routes[floor(count.index / length(aws_route_table.private))].vpc_peering_connection_id : null
+  )
 }
 
 #################
