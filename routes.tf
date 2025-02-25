@@ -136,12 +136,6 @@ resource "aws_route_table" "private" {
   }
 }
 
-locals {
-  vpc_peering_connection_id = lookup(var.private_custom_routes[floor(0/ length(aws_route_table.private))], "vpc_peering_connection_id", null)
-  vpc_peering_connection_id1 = "test12345"
-  private_rtb_length = length(aws_route_table.private)
-}
-
 resource "aws_route" "private_custom" {
   count = length(var.private_custom_routes) > 0 ? length(var.private_custom_routes) * length(aws_route_table.private) : 0
 
