@@ -81,7 +81,7 @@ resource "aws_subnet" "database" {
 
   tags = merge(tomap({
     "Name" = format("%s-${var.database_subnet_suffix}-%s", var.name, element(var.azs, count.index))
-  }), var.tags)
+  }), var.database_subnet_tags, var.tags)
 }
 
 resource "aws_db_subnet_group" "database" {

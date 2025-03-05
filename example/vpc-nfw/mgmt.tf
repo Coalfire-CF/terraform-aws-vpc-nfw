@@ -48,15 +48,18 @@ module "mgmt_vpc" {
   deploy_aws_nfw                        = true
   aws_nfw_prefix                        = var.resource_prefix
   aws_nfw_name                          = "mvp-test-nfw"
-  aws_nfw_stateless_rule_group          = local.stateless_rule_group_shrd_svcs
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group_shrd_svcs
-  aws_nfw_domain_stateful_rule_group    = local.domain_stateful_rule_group_shrd_svcs
-  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
   nfw_kms_key_id                        = aws_kms_key.nfw_key.arn
 
   # When deploying NFW, firewall_subnets must be specified
   firewall_subnets       = local.firewall_subnets
   firewall_subnet_suffix = "firewall"
+
+ ### TLS Inspection ###
+  enable_tls_inspection = var.enable_tls_inspection
+  tls_cert_arn          = var.tls_cert_arn
+  tls_description       = "TLS Inspection"
+  tls_destination_cidrs = var.tls_destination_cidrs
 
   /* Add Additional tags here */
   tags = {

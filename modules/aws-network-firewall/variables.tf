@@ -177,3 +177,71 @@ variable "cloudwatch_log_group_kms_key_id" {
   description = "Customer KMS Key id for Cloudwatch Log encryption"
   type        = string
 }
+
+### TLS Outbound Inspection ###
+
+variable "tls_inspection_enabled" {
+  description = "Enable TLS Inspection"
+  type        = bool
+  default     = false
+}
+
+variable "tls_description" {
+  description = "Description for the TLS Inspection"
+  type        = string
+  default     = "TLS Oubound Inspection"
+}
+
+variable "tls_cert_arn" {
+  description = "TLS Certificate ARN"
+  type        = string
+  default     = ""
+}
+
+variable "tls_destination_cidrs" {
+  description = "Destination CIDRs for TLS Inspection"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]
+}
+
+variable "tls_destination_from_port" {
+  description = "Destination Port for TLS Inspection"
+  type        = number
+  default     = 443
+}
+
+variable "tls_destination_to_port" {
+  description = "Destination Port for TLS Inspection"
+  type        = number
+  default     = 443
+}
+
+variable "tls_source_cidr" {
+  description = "Source CIDR for TLS Inspection"
+  type        = string
+  default     = "0.0.0.0/0"
+}
+
+variable "tls_source_from_port" {
+  description = "Source Port for TLS Inspection"
+  type        = number
+  default     = 0
+}
+
+variable "tls_source_to_port" {
+  description = "Source Port for TLS Inspection"
+  type        = number
+  default     = 65535
+}
+
+variable "stateful_default_actions" {
+  description = "Set of actions to take on a packet if it does not match any stateful rules in the policy. This can only be specified if the policy has a `stateful_engine_options` block with a rule_order value of `STRICT_ORDER`. You can specify one of either or neither values of `aws:drop_strict` or `aws:drop_established`, as well as any combination of `aws:alert_strict` and `aws:alert_established`"
+  type        = list(string)
+  default     = []
+}
+
+variable "stateful_engine_options" {
+  description = "A configuration block that defines options on how the policy handles stateful rules. See [Stateful Engine Options](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall_policy#stateful-engine-options) for details"
+  type        = any
+  default     = {}
+}

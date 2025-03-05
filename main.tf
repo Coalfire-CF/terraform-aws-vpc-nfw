@@ -85,18 +85,34 @@ module "aws_network_firewall" {
 
   count = var.deploy_aws_nfw ? 1 : 0
 
-  firewall_name                          = var.aws_nfw_name
-  prefix                                 = var.aws_nfw_prefix
-  stateless_rule_group                   = var.aws_nfw_stateless_rule_group
-  fivetuple_stateful_rule_group          = var.aws_nfw_fivetuple_stateful_rule_group
-  suricata_stateful_rule_group           = var.aws_nfw_suricata_stateful_rule_group
-  domain_stateful_rule_group             = var.aws_nfw_domain_stateful_rule_group
-  subnet_mapping                         = local.nfw_subnets
-  vpc_id                                 = local.vpc_id
+  # General
+  firewall_name     = var.aws_nfw_name
+  prefix            = var.aws_nfw_prefix
+  vpc_id            = local.vpc_id
+  delete_protection = var.delete_protection
+
+  # Firewall Policies
+  stateless_rule_group          = var.aws_nfw_stateless_rule_group
+  fivetuple_stateful_rule_group = var.aws_nfw_fivetuple_stateful_rule_group
+  suricata_stateful_rule_group  = var.aws_nfw_suricata_stateful_rule_group
+  domain_stateful_rule_group    = var.aws_nfw_domain_stateful_rule_group
+  subnet_mapping                = local.nfw_subnets
+
+  # Encryption and Logging
   nfw_kms_key_id                         = var.nfw_kms_key_id
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention_in_days
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
-  delete_protection                      = var.delete_protection
+
+  # TLS Inspection
+  tls_inspection_enabled    = var.enable_tls_inspection
+  tls_cert_arn              = var.tls_cert_arn
+  tls_description           = var.tls_description
+  tls_destination_cidrs     = var.tls_destination_cidrs
+  tls_destination_to_port   = var.tls_destination_to_port
+  tls_destination_from_port = var.tls_destination_from_port
+  tls_source_cidr           = var.tls_source_cidr
+  tls_source_to_port        = var.tls_source_to_port
+  tls_source_from_port      = var.tls_source_from_port
 }
 
 ##############

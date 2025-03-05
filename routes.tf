@@ -14,7 +14,7 @@ resource "aws_route_table" "public" {
 resource "aws_route" "public_internet_gateway" {
   count = var.deploy_aws_nfw ? 0 : length(var.public_subnets)
 
-  route_table_id         = aws_route_table.public[0].id
+  route_table_id         = aws_route_table.public[count.index].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.this[0].id
 
@@ -45,7 +45,7 @@ resource "aws_route" "aws_nfw_public_internet" {
   timeouts {
     create = "5m"
   }
-  depends_on = [ module.aws_network_firewall ]
+  depends_on = [module.aws_network_firewall]
 }
 
 resource "aws_route_table" "aws_nfw_igw_rtb" {
@@ -110,7 +110,7 @@ resource "aws_route" "nfw_public_custom" {
   destination_cidr_block     = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "destination_cidr_block", null)
   destination_prefix_list_id = lookup(var.public_custom_routes[floor(count.index / length(aws_route_table.public))], "destination_prefix_list_id", null)
 
-  vpc_endpoint_id      = var.public_custom_routes[floor(count.index / length(aws_route_table.public))]["internet_route"] ? module.aws_network_firewall[0].endpoint_id[index(aws_route_table.public, element(aws_route_table.public, count.index))] : null
+  vpc_endpoint_id = var.public_custom_routes[floor(count.index / length(aws_route_table.public))]["internet_route"] ? module.aws_network_firewall[0].endpoint_id[index(aws_route_table.public, element(aws_route_table.public, count.index))] : null
 
   timeouts {
     create = "5m"
