@@ -326,3 +326,13 @@ output "default_vpc_main_route_table_id" {
     ""
   ])), 0)
 }
+
+output "vpc_endpoints" {
+  description = "Map of VPC endpoint IDs"
+  value       = var.create_vpc_endpoints ? module.vpc_endpoints.vpc_endpoint_ids : {}
+}
+
+output "vpc_endpoint_security_groups" {
+  description = "Map of security group IDs created for VPC endpoints"
+  value       = var.create_vpc_endpoints ? module.vpc_endpoints.security_groups : {}
+}

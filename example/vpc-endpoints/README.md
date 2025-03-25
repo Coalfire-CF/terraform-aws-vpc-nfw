@@ -5,6 +5,7 @@ This submodule extends the main AWS VPC module to support the creation and manag
 ## Features
 
 - Support for all VPC endpoint types: Gateway, Interface, and GatewayLoadBalancer
+- FIPS endpoint support for compliant AWS services (important for GovCloud and regulated environments)
 - Create dedicated security groups for Interface endpoints
 - Configure security group rules for ingress and egress traffic
 - Automatic service name resolution using AWS VPC endpoint service data source
@@ -53,6 +54,7 @@ module "vpc" {
   
   # Enable VPC endpoints
   create_vpc_endpoints   = true
+  enable_fips_endpoints  = true  # Use FIPS endpoints where available
   
   # Define VPC endpoints
   vpc_endpoints = {
@@ -94,6 +96,7 @@ module "vpc" {
 | Name | Description | Type | Default |
 |------|-------------|------|---------|
 | `create_vpc_endpoints` | Whether to create VPC endpoints | `bool` | `false` |
+| `enable_fips_endpoints` | Whether to use FIPS endpoints where available | `bool` | `false` |
 | `vpc_id` | ID of the VPC where endpoints will be created | `string` | n/a |
 | `subnet_ids` | List of subnet IDs for interface endpoints | `list(string)` | `[]` |
 | `route_table_ids` | List of route table IDs for gateway endpoints | `list(string)` | `[]` |
@@ -153,6 +156,38 @@ variable "security_groups" {
 2. For Gateway endpoints (like S3 and DynamoDB), you must provide `route_table_ids`.
 3. For Interface endpoints, you must provide `subnet_ids` and may need security groups.
 4. If `service_name` is not provided, the module will attempt to construct it based on the endpoint key and current region.
+5. When `enable_fips_endpoints` is set to `true`, the module will attempt to use FIPS-enabled endpoints for applicable services.
+6. FIPS endpoints are available for many AWS services but the availability may vary by region, especially in GovCloud.
+7. Not all services that support PrivateLink necessarily have FIPS endpoints available - the module will fall back to standard endpoints if FIPS variants are not found.
+
+## Working with FIPS Endpoints
+
+FIPS (Federal Information Processing Standards) endpoints are important for workloads that require FIPS 140-2 compliance. These endpoints are available in specific AWS regions, particularly AWS GovCloud.
+
+To use FIPS endpoints:
+
+1. Set `enable_fips_endpoints = true` when calling the VPC module
+2. The module will automatically attempt to find FIPS versions of supported services
+3. If a FIPS endpoint is found for a requested service, it will be used instead of the standard endpoint
+
+Example of how FIPS endpoints appear in different regions:
+- Standard endpoint: `com.amazonaws.us-east-1.ssm`
+- FIPS endpoint: `com.amazonaws.us-east-1.ssm-fips`
+- GovCloud FIPS endpoint: `com.amazonaws.us-gov-west-1.ssm-fips`
+
+The module supports FIPS endpoints for all AWS services that offer PrivateLink FIPS endpoints as listed in the [AWS PrivateLink documentation](https://docs.aws.amazon.com/vpc/latest/privatelink/aws-services-privatelink-support.html), including but not limited to:
+
+- Systems Manager (SSM)
+- Key Management Service (KMS)
+- CloudWatch Logs
+- CloudWatch Monitoring
+- EC2 Messages
+- SSM Messages
+- Simple Queue Service (SQS)
+- Simple Notification Service (SNS)
+- Secrets Manager
+- Lambda
+- And many more...
 
 ## Common VPC Endpoint Services
 

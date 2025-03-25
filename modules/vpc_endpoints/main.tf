@@ -75,17 +75,53 @@ resource "aws_security_group_rule" "egress" {
 
 # Get VPC endpoint service details if needed
 data "aws_vpc_endpoint_service" "this" {
-  for_each = var.create_vpc_endpoints ? {
-    for endpoint_key, endpoint in var.vpc_endpoints :
-      endpoint_key => endpoint if endpoint.service_name == null
-  } : {}
+  for_each = var.create_vpc_endpoints ? merge(
+    {
+      for endpoint_key, endpoint in var.vpc_endpoints :
+        endpoint_key => endpoint if endpoint.service_name == null
+    },
+    # Add FIPS variants when enabled
+    var.enable_fips_endpoints ? {
+      for endpoint_key, endpoint in var.vpc_endpoints :
+        "${endpoint_key}-fips" => endpoint if endpoint.service_name == null &&
+        contains([
+          # Standard AWS services that support FIPS endpoints via PrivateLink
+          # Based on: https://docs.aws.amazon.com/vpc/latest/privatelink/aws-services-privatelink-support.html
+          "access-analyzer", "acm", "acm-pca", "api.ecr", "api.sagemaker", "application-autoscaling",
+          "appsync", "athena", "autoscaling", "autoscaling-plans", "backup", "batch", "cassandra",
+          "clouddirectory", "cloudformation", "cloudtrail", "codebuild", "codecommit", "codedeploy",
+          "codepipeline", "codestar-connections", "config", "databrew", "dataexchange", "datasync",
+          "dms", "drs", "ds", "ec2", "ec2messages", "ecr.api", "ecr.dkr", "ecs", "ecs-agent",
+          "ecs-telemetry", "elasticbeanstalk", "elasticbeanstalk-health", "elasticfilesystem",
+          "elasticloadbalancing", "elasticmapreduce", "email-smtp", "events", "execute-api",
+          "firehose", "fis", "fsx", "glacier", "glue", "grafana", "greengrass", "groundstation",
+          "healthlake", "inspector", "iot", "iot.data", "iotwireless", "kafka", "kafka-bootstrap",
+          "kinesis-firehose", "kinesis-streams", "kms", "lakeformation", "lambda", "license-manager",
+          "logs", "macie2", "managedblockchain", "monitoring", "notebook", "outposts", "profile",
+          "qldb.session", "rds", "rds-data", "redshift", "redshift-data", "rekognition", "repostspace",
+          "resource-groups", "runtime.lex", "runtime-v2.lex", "runtime.sagemaker", "s3", "sagemaker.api",
+          "secretsmanager", "securityhub", "servicecatalog", "servicecatalog-appregistry", "sms", "sns",
+          "sqs", "ssm", "ssmmessages", "states", "storagegateway", "sts", "synthetics", "textract",
+          "transcribe", "transfer", "transfer.server", "wafv2", "workspaces"
+        ], endpoint_key)
+    } : {}
+  ) : {}
 
-  service = each.key
+  service = replace(each.key, "-fips", "")
 
   # If we're looking up the service, we need to filter by the right service type
   filter {
     name   = "service-type"
-    values = [var.vpc_endpoints[each.key].service_type]
+    values = [var.vpc_endpoints[replace(each.key, "-fips", "")].service_type]
+  }
+
+  # Use FIPS filter when looking up FIPS endpoints
+  dynamic "filter" {
+    for_each = endswith(each.key, "-fips") ? [1] : []
+    content {
+      name   = "service-name"
+      values = ["*fips*"]
+    }
   }
 }
 
@@ -113,7 +149,9 @@ resource "aws_vpc_endpoint" "this" {
   service_name = each.value.service_name != null ? each.value.service_name : (
     startswith(each.key, "s3") || startswith(each.key, "dynamodb") ?
       "com.amazonaws.${data.aws_region.current.name}.${each.key}" :
-      data.aws_vpc_endpoint_service.this[each.key].service_name
+      var.enable_fips_endpoints && can(data.aws_vpc_endpoint_service.this["${each.key}-fips"]) ?
+        data.aws_vpc_endpoint_service.this["${each.key}-fips"].service_name :
+        data.aws_vpc_endpoint_service.this[each.key].service_name
   )
   vpc_endpoint_type = each.value.service_type
 

@@ -4,6 +4,12 @@ variable "create_vpc_endpoints" {
   default     = false
 }
 
+variable "enable_fips_endpoints" {
+  description = "Whether to use FIPS endpoints where available. Typically used for GovCloud and other regulated environments."
+  type        = bool
+  default     = false
+}
+
 variable "vpc_id" {
   description = "ID of the VPC where endpoints will be created"
   type        = string

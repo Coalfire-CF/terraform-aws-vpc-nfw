@@ -77,6 +77,32 @@ resource "aws_internet_gateway" "this" {
   }), var.tags, var.igw_tags)
 }
 
+
+###################
+# VPC Endpoints
+###################
+module "vpc_endpoints" {
+  source = "./modules/vpc-endpoint"
+
+  create_vpc_endpoints = var.create_vpc_endpoints
+  enable_fips_endpoints = var.enable_fips_endpoints
+  vpc_id               = aws_vpc.this.id
+
+  # Default to private subnets for interface endpoints if available
+  subnet_ids           = [for subnet in aws_subnet.private : subnet.id]
+
+  # Use all route tables for gateway endpoints
+  route_table_ids      = concat(
+    [for rt in aws_route_table.private : rt.id],
+    [for rt in aws_route_table.public : rt.id]
+  )
+
+  vpc_endpoints        = var.vpc_endpoints
+  security_groups      = var.vpc_endpoint_security_groups
+
+  tags                 = var.tags
+}
+
 ###################
 # Network Firewall
 ###################
