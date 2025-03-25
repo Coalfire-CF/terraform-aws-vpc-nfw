@@ -1,4 +1,8 @@
-module "mgmt_vpc_w_endpoints" {
+##############################################
+# Example usage of VPC module with endpoints
+##############################################
+
+module "mgmt_vpc" {
   source = "../../."
   providers = {
     aws = aws.mgmt
@@ -61,6 +65,7 @@ module "mgmt_vpc_w_endpoints" {
 
   ### VPC Endpoints ###
   create_vpc_endpoints   = true
+  enable_fips_endpoints  = true  # Use FIPS endpoints in GovCloud region
 
   vpc_endpoints = {
     # S3 Gateway endpoint
