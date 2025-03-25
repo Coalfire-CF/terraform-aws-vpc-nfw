@@ -314,7 +314,6 @@ variable "create_elasticache_subnet_route_table" {
 variable "intra_subnets" {
   description = "A list of intra subnets"
   default     = {}
-  type        = map(string)
 }
 
 variable "create_database_subnet_group" {
