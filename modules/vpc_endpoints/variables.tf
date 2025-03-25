@@ -10,6 +10,18 @@ variable "enable_fips_endpoints" {
   default     = false
 }
 
+variable "associate_with_private_route_tables" {
+  description = "Whether to associate Gateway endpoints with private route tables"
+  type        = bool
+  default     = true
+}
+
+variable "associate_with_public_route_tables" {
+  description = "Whether to associate Gateway endpoints with public route tables"
+  type        = bool
+  default     = false
+}
+
 variable "vpc_id" {
   description = "ID of the VPC where endpoints will be created"
   type        = string
@@ -22,7 +34,13 @@ variable "subnet_ids" {
 }
 
 variable "route_table_ids" {
-  description = "List of route table IDs to associate with gateway endpoints"
+  description = "List of private route table IDs to associate with gateway endpoints"
+  type        = list(string)
+  default     = []
+}
+
+variable "public_route_table_ids" {
+  description = "List of public route table IDs to associate with gateway endpoints"
   type        = list(string)
   default     = []
 }

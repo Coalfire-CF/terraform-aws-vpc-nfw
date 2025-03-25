@@ -1,7 +1,3 @@
-##############################################
-# Example usage of VPC module with endpoints
-##############################################
-
 module "mgmt_vpc" {
   source = "../../."
   providers = {
@@ -66,6 +62,10 @@ module "mgmt_vpc" {
   ### VPC Endpoints ###
   create_vpc_endpoints   = true
   enable_fips_endpoints  = true  # Use FIPS endpoints in GovCloud region
+
+  # Control where gateway endpoints are associated
+  associate_endpoints_with_private_route_tables = true  # Associate with private subnets (default)
+  associate_endpoints_with_public_route_tables = false  # Don't associate with public subnets
 
   vpc_endpoints = {
     # S3 Gateway endpoint

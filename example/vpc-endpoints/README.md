@@ -6,6 +6,7 @@ This submodule extends the main AWS VPC module to support the creation and manag
 
 - Support for all VPC endpoint types: Gateway, Interface, and GatewayLoadBalancer
 - FIPS endpoint support for compliant AWS services (important for GovCloud and regulated environments)
+- Granular control over endpoint associations with route tables (private vs public)
 - Create dedicated security groups for Interface endpoints
 - Configure security group rules for ingress and egress traffic
 - Automatic service name resolution using AWS VPC endpoint service data source
@@ -56,6 +57,10 @@ module "vpc" {
   create_vpc_endpoints   = true
   enable_fips_endpoints  = true  # Use FIPS endpoints where available
   
+  # Control route table associations
+  associate_endpoints_with_private_route_tables = true  # Default behavior
+  associate_endpoints_with_public_route_tables = false  # Don't associate with public subnets
+  
   # Define VPC endpoints
   vpc_endpoints = {
     # S3 Gateway endpoint
@@ -97,9 +102,12 @@ module "vpc" {
 |------|-------------|------|---------|
 | `create_vpc_endpoints` | Whether to create VPC endpoints | `bool` | `false` |
 | `enable_fips_endpoints` | Whether to use FIPS endpoints where available | `bool` | `false` |
+| `associate_with_private_route_tables` | Whether to associate Gateway endpoints with private route tables | `bool` | `true` |
+| `associate_with_public_route_tables` | Whether to associate Gateway endpoints with public route tables | `bool` | `false` |
 | `vpc_id` | ID of the VPC where endpoints will be created | `string` | n/a |
 | `subnet_ids` | List of subnet IDs for interface endpoints | `list(string)` | `[]` |
-| `route_table_ids` | List of route table IDs for gateway endpoints | `list(string)` | `[]` |
+| `route_table_ids` | List of private route table IDs for gateway endpoints | `list(string)` | `[]` |
+| `public_route_table_ids` | List of public route table IDs for gateway endpoints | `list(string)` | `[]` |
 
 ### VPC Endpoints Configuration
 
