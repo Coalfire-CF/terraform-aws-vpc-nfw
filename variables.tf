@@ -371,18 +371,6 @@ variable "external_nat_ip_ids" {
   default     = []
 }
 
-variable "enable_dynamodb_endpoint" {
-  description = "Should be true if you want to provision a DynamoDB endpoint to the VPC"
-  default     = false
-  type        = bool
-}
-
-variable "enable_s3_endpoint" {
-  description = "Should be true if you want to provision an S3 endpoint to the VPC"
-  default     = false
-  type        = bool
-}
-
 variable "map_public_ip_on_launch" {
   description = "Should be false if you do not want to auto-assign public IP on launch"
   default     = true
@@ -642,16 +630,6 @@ variable "default_vpc_tags" {
   description = "Additional tags for the Default VPC"
   default     = {}
   type        = map(string)
-}
-variable "dynamodb_endpoint_type" {
-  description = "DynamoDB VPC endpoint type"
-  type        = string
-  default     = "Gateway"
-}
-variable "s3_endpoint_type" {
-  description = "S3 VPC endpoint type"
-  type        = string
-  default     = "Gateway"
 }
 
 variable "cloudwatch_log_group_retention_in_days" {
