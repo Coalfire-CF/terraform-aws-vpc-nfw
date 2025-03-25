@@ -182,3 +182,35 @@ resource "aws_vpc_endpoint" "this" {
 }
 
 data "aws_region" "current" {}
+
+# Associate with private route tables if enabled
+resource "aws_vpc_endpoint_route_table_association" "private_route_tables" {
+  for_each = var.create_vpc_endpoints && var.associate_with_private_route_tables ? {
+    for pair in setproduct(
+      [for ep_key, ep in aws_vpc_endpoint.this : ep.id if ep.vpc_endpoint_type == "Gateway"],
+      var.route_table_ids
+    ) : "${pair[0]}_${pair[1]}" => {
+      endpoint_id = pair[0]
+      rtb_id     = pair[1]
+    }
+  } : {}
+
+  vpc_endpoint_id = each.value.endpoint_id
+  route_table_id  = each.value.rtb_id
+}
+
+# Associate with public route tables if enabled
+resource "aws_vpc_endpoint_route_table_association" "public_route_tables" {
+  for_each = var.create_vpc_endpoints && var.associate_with_public_route_tables ? {
+    for pair in setproduct(
+      [for ep_key, ep in aws_vpc_endpoint.this : ep.id if ep.vpc_endpoint_type == "Gateway"],
+      var.public_route_table_ids
+    ) : "${pair[0]}_${pair[1]}" => {
+      endpoint_id = pair[0]
+      rtb_id     = pair[1]
+    }
+  } : {}
+
+  vpc_endpoint_id = each.value.endpoint_id
+  route_table_id  = each.value.rtb_id
+}

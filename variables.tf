@@ -746,6 +746,18 @@ variable "enable_fips_endpoints" {
   default     = false
 }
 
+variable "associate_endpoints_with_private_route_tables" {
+  description = "Whether to associate Gateway endpoints with private route tables"
+  type        = bool
+  default     = true
+}
+
+variable "associate_endpoints_with_public_route_tables" {
+  description = "Whether to associate Gateway endpoints with public route tables"
+  type        = bool
+  default     = false
+}
+
 variable "vpc_endpoints" {
   description = "Map of VPC endpoint definitions to create"
   type = map(object({

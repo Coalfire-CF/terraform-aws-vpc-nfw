@@ -86,16 +86,16 @@ module "vpc_endpoints" {
 
   create_vpc_endpoints = var.create_vpc_endpoints
   enable_fips_endpoints = var.enable_fips_endpoints
+  associate_with_private_route_tables = var.associate_endpoints_with_private_route_tables
+  associate_with_public_route_tables = var.associate_endpoints_with_public_route_tables
   vpc_id               = aws_vpc.this.id
 
   # Default to private subnets for interface endpoints if available
   subnet_ids           = [for subnet in aws_subnet.private : subnet.id]
 
-  # Use all route tables for gateway endpoints
-  route_table_ids      = concat(
-    [for rt in aws_route_table.private : rt.id],
-    [for rt in aws_route_table.public : rt.id]
-  )
+  # Route tables for gateway endpoints
+  route_table_ids      = [for rt in aws_route_table.private : rt.id]
+  public_route_table_ids = [for rt in aws_route_table.public : rt.id]
 
   vpc_endpoints        = var.vpc_endpoints
   security_groups      = var.vpc_endpoint_security_groups
