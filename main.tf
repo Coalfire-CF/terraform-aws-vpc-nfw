@@ -2,11 +2,51 @@ locals {
   max_subnet_length = max(length(var.private_subnets), length(var.elasticache_subnets), length(var.database_subnets), length(var.redshift_subnets), length(var.firewall_subnets), length(var.tgw_subnets))
   nat_gateway_count = var.single_nat_gateway ? 1 : (var.one_nat_gateway_per_az ? length(var.azs) : local.max_subnet_length)
 
-  nfw_subnets = [for s in aws_subnet.firewall : s.id]
+  # Extract AZ information from subnet names if not specified in subnet_az_mapping
+  subnet_name_to_az = {
+    for subnet_name, cidr in var.public_subnets :
+    subnet_name => lookup(var.subnet_az_mapping, subnet_name,
+      # Default to extracting AZ from subnet name (e.g., "-1a", "-1b" suffix)
+      # or fallback to AZ by index if no pattern match
+      can(regex("-[0-9][a-z]$", subnet_name)) ?
+        element(var.azs, index(sort(var.azs), replace(regex("-([0-9][a-z])$", subnet_name), "-", ""))) :
+        element(var.azs, index(keys(var.public_subnets), subnet_name) % length(var.azs))
+    )
+  }
 
-  # Use `local.vpc_id` to give a hint to Terraform that subnets should be deleted before secondary CIDR blocks can be free!
-  vpc_id = element(
-  concat(aws_vpc_ipv4_cidr_block_association.this[*].vpc_id, aws_vpc.this[*].id, tolist([""])), 0)
+  # Get unique list of AZs used by public subnets
+  public_subnet_azs = distinct(values(local.subnet_name_to_az))
+
+  # Create a map of AZ to firewall subnet index
+  az_to_firewall_subnet_index = {
+    for i, az in var.azs :
+    az => i < length(var.firewall_subnets) ? i : i % length(var.firewall_subnets)
+  }
+
+  # Map public subnets to firewall endpoint IDs
+  public_subnet_to_fw_endpoint = var.deploy_aws_nfw ? {
+    for subnet_name, cidr in var.public_subnets :
+    subnet_name => element(module.aws_network_firewall[0].endpoint_id,
+                          lookup(local.az_to_firewall_subnet_index, lookup(local.subnet_name_to_az, subnet_name, var.azs[0]), 0))
+  } : {}
+
+  # Create AZ to route table ID mapping
+  az_to_route_table_id = var.deploy_aws_nfw ? {
+    for az_index, az in var.azs :
+    az => lookup(aws_route_table.public, az_index, null) != null ? aws_route_table.public[az_index].id : null
+  } : {}
+
+  # Use `local.vpc_id` to give a hint to Terraform that subnets should be deleted before secondary CIDR blocks can be free
+  vpc_id = element(concat(aws_vpc_ipv4_cidr_block_association.this[*].vpc_id, aws_vpc.this[*].id, tolist([""])), 0)
+
+  # Map of AZ to list of public subnet IDs in that AZ
+  az_to_public_subnet_ids = {
+    for az in local.public_subnet_azs :
+    az => [
+      for i, subnet_name in keys(var.public_subnets) :
+      aws_subnet.public[i].id if lookup(local.subnet_name_to_az, subnet_name, "") == az
+    ]
+  }
 }
 
 ######

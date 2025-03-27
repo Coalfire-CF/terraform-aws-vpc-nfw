@@ -16,16 +16,29 @@ module "mgmt_subnet_addrs" {
       name     = "${var.resource_prefix}-firewall-1c"
       new_bits = 8
     },
+    # Multiple public subnets per AZ
     {
-      name     = "${var.resource_prefix}-public-1a"
+      name     = "${var.resource_prefix}-public-web-1a"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-public-1b"
+      name     = "${var.resource_prefix}-public-alb-1a"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-public-1c"
+      name     = "${var.resource_prefix}-public-web-1b"
+      new_bits = 8
+    },
+    {
+      name     = "${var.resource_prefix}-public-alb-1b"
+      new_bits = 8
+    },
+    {
+      name     = "${var.resource_prefix}-public-web-1c"
+      new_bits = 8
+    },
+    {
+      name     = "${var.resource_prefix}-public-alb-1c"
       new_bits = 8
     },
     {

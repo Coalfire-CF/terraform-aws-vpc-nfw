@@ -1,20 +1,25 @@
 ################
 # Publiс routes
 ################
+
+# Create one route table per AZ when using Network Firewall
 resource "aws_route_table" "public" {
-  count = length(var.public_subnets) > 0 ? length(var.public_subnets) : 0
+  count = var.deploy_aws_nfw ? length(var.azs) : 1
 
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (format("%s-public-%s-rtb", var.name, element(var.azs, count.index)))
+    "Name" = var.deploy_aws_nfw ?
+      format("%s-public-%s-rtb", var.name, element(var.azs, count.index)) :
+      format("%s-public-rtb", var.name)
   }), var.tags, var.public_route_table_tags)
 }
 
+# Default route via Internet Gateway when not using Network Firewall
 resource "aws_route" "public_internet_gateway" {
-  count = var.deploy_aws_nfw ? 0 : length(var.public_subnets)
+  count = var.deploy_aws_nfw ? 0 : 1
 
-  route_table_id         = aws_route_table.public[count.index].id
+  route_table_id         = aws_route_table.public[0].id
   destination_cidr_block = "0.0.0.0/0"
   gateway_id             = aws_internet_gateway.this[0].id
 
@@ -35,12 +40,14 @@ resource "aws_route" "nfw_public_internet_gateway" {
   }
 }
 
+# Route via Network Firewall when enabled
 resource "aws_route" "aws_nfw_public_internet" {
-  count = var.deploy_aws_nfw ? length(var.public_subnets) : 0
+  count = var.deploy_aws_nfw ? length(var.azs) : 0
 
   route_table_id         = aws_route_table.public[count.index].id
   destination_cidr_block = "0.0.0.0/0"
-  vpc_endpoint_id        = module.aws_network_firewall[0].endpoint_id[count.index]
+  vpc_endpoint_id        = element(module.aws_network_firewall[0].endpoint_id,
+                                  count.index < length(var.firewall_subnets) ? count.index : count.index % length(var.firewall_subnets))
 
   timeouts {
     create = "5m"
@@ -443,6 +450,7 @@ resource "aws_route_table_association" "intra" {
   route_table_id = element(aws_route_table.intra[*].id, 0)
 }
 
+# Associate public subnets with the appropriate route table
 resource "aws_route_table_association" "public" {
   count = var.deploy_aws_nfw ? 0 : length(var.public_subnets)
 
@@ -454,11 +462,14 @@ resource "aws_route_table_association" "public" {
   ]
 }
 
+# For Network Firewall, associate each public subnet with the route table for its AZ
 resource "aws_route_table_association" "nfw_public" {
   count = var.deploy_aws_nfw ? length(var.public_subnets) : 0
 
-  subnet_id      = element(aws_subnet.public[*].id, count.index)
-  route_table_id = aws_route_table.public[count.index].id
+  subnet_id = element(aws_subnet.public[*].id, count.index)
+  route_table_id = aws_route_table.public[
+    index(var.azs, lookup(local.subnet_name_to_az, element(keys(var.public_subnets), count.index), var.azs[0]))
+  ].id
 
   depends_on = [
     aws_subnet.public

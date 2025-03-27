@@ -754,3 +754,9 @@ variable "redshift_custom_routes" {
   }))
   default = []
 }
+
+variable "subnet_az_mapping" {
+  description = "Optional explicit mapping of subnets to AZs - defaults to distributing across AZs"
+  type        = map(string)
+  default     = {}
+}
