@@ -1,0 +1,33 @@
+# Allow TCP traffic
+pass tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"Allow inbound HTTP"; flow:established; sid:101; rev:1;)
+pass tcp $EXTERNAL_NET any -> $HOME_NET 443 (msg:"Allow inbound HTTPS"; flow:established; sid:102; rev:1;)
+# Amazon domains
+pass http $HOME_NET any -> $EXTERNAL_NET 80 (http.host; dotprefix; content:".amazonaws.com"; endswith; msg:"Pass HTTP to .amazonaws.com"; sid:1001; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".amazonaws.com"; endswith; msg:"Pass TLS to .amazonaws.com"; sid:1002; rev:1;)
+# Microsoft domains
+pass http $HOME_NET any -> $EXTERNAL_NET 80 (http.host; dotprefix; content:".microsoft.com"; endswith; msg:"Pass HTTP to .microsoft.com"; sid:1003; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".microsoft.com"; endswith; msg:"Pass TLS to .microsoft.com"; sid:1004; rev:1;)
+pass http $HOME_NET any -> $EXTERNAL_NET 80 (http.host; dotprefix; content:".windowsupdate.com"; endswith; msg:"Pass HTTP to .windowsupdate.com"; sid:1005; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".windowsupdate.com"; endswith; msg:"Pass TLS to .windowsupdate.com"; sid:1006; rev:1;)
+# Elastic Domains
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".elastic-cloud.com"; endswith; msg:"Pass TLS to .elastic-cloud.com"; sid:1007; rev:1;)
+
+# Nessus Update Servers
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".nessus.org"; endswith; msg:"Pass TLS to .nessus.org"; sid:1008; rev:1;)
+
+# Trend Update Servers
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".trendmicro.com"; endswith; msg:"Pass TLS to .trendmicro.com"; sid:1009; rev:1;)
+
+# Splunk Updates Servers
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".splunk.com"; endswith; msg:"Pass TLS to .splunk.com"; sid:1010; rev:1;)
+
+# Jira Update Servers
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".atlassian.com"; endswith; msg:"Pass TLS to .atlassian.com"; sid:1011; rev:1;)
+
+# Drop other traffic
+drop ip $EXTERNAL_NET any -> $HOME_NET any (msg:"Drop all other IP traffic"; ip_proto:!TCP; sid:1997; rev:1;)
+drop tcp $EXTERNAL_NET any -> $HOME_NET any (msg:"Drop all other non-TCP traffic";  sid:1998; rev:1;)
+# Drop all other traffic
+# drop tcp any any -> any any (msg:"Deny all other TCP traffic"; sid: ; rev:1;)
+# Drop TLS1.1 or lower traffic
+reject tls any any -> any any (msg:"TLS 1.0 or 1.1"; ssl_version:tls1.0,tls1.1; sid:1999;)
