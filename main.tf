@@ -3,26 +3,21 @@ locals {
   nat_gateway_count = var.single_nat_gateway ? 1 : (var.one_nat_gateway_per_az ? length(var.azs) : local.max_subnet_length)
 
   # Extract AZ information from subnet names if not specified in subnet_az_mapping
+  # Add these new locals to your existing locals block
   subnet_name_to_az = {
     for subnet_name, cidr in var.public_subnets :
-    subnet_name => lookup(var.subnet_az_mapping, subnet_name,
-      # Default to extracting AZ from subnet name (e.g., "-1a", "-1b" suffix)
-      # or fallback to AZ by index if no pattern match
-      can(regex("-[0-9][a-z]$", subnet_name)) ?
-        element(var.azs, index(sort(var.azs), replace(regex("-([0-9][a-z])$", subnet_name), "-", ""))) :
-        element(var.azs, index(keys(var.public_subnets), subnet_name) % length(var.azs))
-    )
+    subnet_name => can(regex("-[0-9][a-z]$", subnet_name)) ?
+      element(var.azs, index(sort(var.azs), replace(regex("-([0-9][a-z])$", subnet_name), "-", ""))) :
+      element(var.azs, index(keys(var.public_subnets), subnet_name) % length(var.azs))
   }
 
-  # Get unique list of AZs used by public subnets
   public_subnet_azs = distinct(values(local.subnet_name_to_az))
 
-  # Create a map of AZ to firewall subnet index
   az_to_firewall_subnet_index = {
     for i, az in var.azs :
     az => i < length(var.firewall_subnets) ? i : i % length(var.firewall_subnets)
   }
-
+  
   # Map public subnets to firewall endpoint IDs
   public_subnet_to_fw_endpoint = var.deploy_aws_nfw ? {
     for subnet_name, cidr in var.public_subnets :
