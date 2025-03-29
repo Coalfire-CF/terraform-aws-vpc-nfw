@@ -1,38 +1,16 @@
 # Get VPC endpoint service details if needed
 data "aws_vpc_endpoint_service" "this" {
-  for_each = var.create_vpc_endpoints ? merge(
-    {
-      for endpoint_key, endpoint in var.vpc_endpoints :
-        endpoint_key => endpoint if lookup(endpoint, "service_name", null) == null
-    },
-    # Add FIPS variants when enabled
-    var.enable_fips_endpoints ? {
-      for endpoint_key, endpoint in var.vpc_endpoints :
-        "${endpoint_key}-fips" => endpoint if lookup(endpoint, "service_name", null) == null &&
-        contains([
-          # Standard AWS services that support FIPS endpoints via PrivateLink
-          "s3", "dynamodb", "ec2", "ecs", "sqs", "lambda", "kms", "secretsmanager",
-          "ssm", "logs", "monitoring", "elasticloadbalancing", "events", "elasticache",
-          "elasticfilesystem", "codebuild", "guardduty", "guardduty-data", "network-firewall"
-        ], endpoint_key)
-    } : {}
-  ) : {}
+  for_each = var.create_vpc_endpoints ? {
+    for endpoint_key, endpoint in var.vpc_endpoints :
+      endpoint_key => endpoint if lookup(endpoint, "service_name", null) == null
+  } : {}
 
-  service = replace(each.key, "-fips", "")
+  service = each.key
 
   # If we're looking up the service, we need to filter by the right service type
   filter {
     name   = "service-type"
-    values = [lookup(var.vpc_endpoints[replace(each.key, "-fips", "")], "service_type", "Gateway")]
-  }
-
-  # Use FIPS filter when looking up FIPS endpoints
-  dynamic "filter" {
-    for_each = endswith(each.key, "-fips") ? [1] : []
-    content {
-      name   = "service-name"
-      values = ["*fips*"]
-    }
+    values = [lookup(var.vpc_endpoints[each.key], "service_type", "Gateway")]
   }
 }
 
@@ -133,14 +111,13 @@ resource "aws_vpc_endpoint" "this" {
 
   vpc_id       = var.vpc_id
   service_name = lookup(each.value, "service_name", null) != null ? each.value.service_name : (
-    startswith(each.key, "s3") || startswith(each.key, "dynamodb") ?
-      "com.amazonaws.${data.aws_region.current.name}.${each.key}" :
-      var.enable_fips_endpoints && contains(keys(data.aws_vpc_endpoint_service.this), "${each.key}-fips") ?
-        data.aws_vpc_endpoint_service.this["${each.key}-fips"].service_name :
-        contains(keys(data.aws_vpc_endpoint_service.this), each.key) ?
-          data.aws_vpc_endpoint_service.this[each.key].service_name :
-          "com.amazonaws.${data.aws_region.current.name}.${each.key}"
+  startswith(each.key, "s3") || startswith(each.key, "dynamodb") ?
+    "com.amazonaws.${data.aws_region.current.name}.${each.key}" :
+    contains(keys(data.aws_vpc_endpoint_service.this), each.key) ?
+      data.aws_vpc_endpoint_service.this[each.key].service_name :
+      "com.amazonaws.${data.aws_region.current.name}.${each.key}"
   )
+
   vpc_endpoint_type = lookup(each.value, "service_type", "Gateway")
 
   # Interface-specific settings

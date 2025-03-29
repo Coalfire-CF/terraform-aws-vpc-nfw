@@ -740,12 +740,6 @@ variable "create_vpc_endpoints" {
   default     = false
 }
 
-variable "enable_fips_endpoints" {
-  description = "Whether to use FIPS endpoints where available. Typically used for GovCloud and other regulated environments."
-  type        = bool
-  default     = false
-}
-
 variable "associate_with_private_route_tables" {
   description = "Whether to associate Gateway endpoints with private route tables"
   type        = bool
