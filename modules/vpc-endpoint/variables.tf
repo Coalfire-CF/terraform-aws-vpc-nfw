@@ -39,6 +39,12 @@ variable "route_table_ids" {
   default     = []
 }
 
+variable "private_route_table_ids" {
+  description = "List of private route table IDs to associate with Gateway endpoints"
+  type        = list(string)
+  default     = []
+}
+
 variable "public_route_table_ids" {
   description = "List of public route table IDs to associate with gateway endpoints"
   type        = list(string)
@@ -62,7 +68,7 @@ variable "vpc_endpoints" {
   default = {}
 }
 
-variable "security_groups" {
+variable "vpc_endpoint_security_groups" {
   description = "Map of security groups to create for VPC endpoints"
   type = map(object({
     name        = string

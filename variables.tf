@@ -746,13 +746,13 @@ variable "enable_fips_endpoints" {
   default     = false
 }
 
-variable "associate_endpoints_with_private_route_tables" {
+variable "associate_with_private_route_tables" {
   description = "Whether to associate Gateway endpoints with private route tables"
   type        = bool
   default     = true
 }
 
-variable "associate_endpoints_with_public_route_tables" {
+variable "associate_with_public_route_tables" {
   description = "Whether to associate Gateway endpoints with public route tables"
   type        = bool
   default     = false
@@ -803,4 +803,10 @@ variable "vpc_endpoint_security_groups" {
     tags = optional(map(string), {})
   }))
   default = {}
+}
+
+variable "subnet_az_mapping" {
+  description = "Optional explicit mapping of subnets to AZs - defaults to distributing across AZs"
+  type        = map(string)
+  default     = {}
 }
