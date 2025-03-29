@@ -1,14 +1,3 @@
-locals {
-  max_subnet_length = max(length(var.private_subnets), length(var.elasticache_subnets), length(var.database_subnets), length(var.redshift_subnets), length(var.firewall_subnets), length(var.tgw_subnets))
-  nat_gateway_count = var.single_nat_gateway ? 1 : (var.one_nat_gateway_per_az ? length(var.azs) : local.max_subnet_length)
-
-  nfw_subnets = [for s in aws_subnet.firewall : s.id]
-
-  # Use `local.vpc_id` to give a hint to Terraform that subnets should be deleted before secondary CIDR blocks can be free!
-  vpc_id = element(
-  concat(aws_vpc_ipv4_cidr_block_association.this[*].vpc_id, aws_vpc.this[*].id, tolist([""])), 0)
-}
-
 ######
 # VPC
 ######
@@ -86,19 +75,20 @@ module "vpc_endpoints" {
 
   create_vpc_endpoints = var.create_vpc_endpoints
   enable_fips_endpoints = var.enable_fips_endpoints
-  associate_with_private_route_tables = var.associate_endpoints_with_private_route_tables
-  associate_with_public_route_tables = var.associate_endpoints_with_public_route_tables
+  associate_with_private_route_tables = var.associate_with_private_route_tables
+  associate_with_public_route_tables = var.associate_with_public_route_tables
   vpc_id               = aws_vpc.this.id
 
   # Default to private subnets for interface endpoints if available
-  subnet_ids           = [for subnet in aws_subnet.private : subnet.id]
+  subnet_ids           = length(aws_subnet.private) > 0 ? [for subnet in aws_subnet.private : subnet.id] : null
 
-  # Route tables for gateway endpoints
-  route_table_ids      = [for rt in aws_route_table.private : rt.id]
+  # Use private_route_table_ids variable instead of directly accessing route tables
+  private_route_table_ids = [for rt in aws_route_table.private : rt.id]
+  route_table_ids = [for rt in aws_route_table.private : rt.id]
   public_route_table_ids = [for rt in aws_route_table.public : rt.id]
 
   vpc_endpoints        = var.vpc_endpoints
-  security_groups      = var.vpc_endpoint_security_groups
+  vpc_endpoint_security_groups = var.vpc_endpoint_security_groups
 
   tags                 = var.tags
 }

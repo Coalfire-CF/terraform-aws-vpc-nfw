@@ -55,11 +55,10 @@ module "vpc" {
   
   # Enable VPC endpoints
   create_vpc_endpoints   = true
-  enable_fips_endpoints  = true  # Use FIPS endpoints where available
   
   # Control route table associations
-  associate_endpoints_with_private_route_tables = true  # Default behavior
-  associate_endpoints_with_public_route_tables = false  # Don't associate with public subnets
+  associate_with_private_route_tables = true  # Default behavior
+  associate_with_public_route_tables = false  # Don't associate with public subnets
   
   # Define VPC endpoints
   vpc_endpoints = {

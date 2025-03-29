@@ -61,7 +61,6 @@ module "mgmt_vpc" {
 
   ### VPC Endpoints ###
   create_vpc_endpoints   = true
-  enable_fips_endpoints  = true  # Use FIPS endpoints in GovCloud region
 
   # Control where gateway endpoints are associated
   associate_endpoints_with_private_route_tables = true  # Associate with private subnets (default)
@@ -82,33 +81,10 @@ module "mgmt_vpc" {
       tags                = { Name = "${var.resource_prefix}-dynamodb-endpoint" }
     }
 
-    # SSM Interface endpoint
-    ssm = {
-      service_type        = "Interface"
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ssm-endpoint" }
-    }
-
-    # SSM Messages Interface endpoint
-    ssmmessages = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ssmmessages"
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ssmmessages-endpoint" }
-    }
-
-    # EC2 Messages Interface endpoint
-    ec2messages = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ec2messages"
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ec2messages-endpoint" }
-    }
-
     # KMS Interface endpoint (for encryption operations)
     kms = {
       service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.kms"
+      service_name        = "com.amazonaws.${var.aws_region}.kms-fips"
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-kms-endpoint" }
     }
