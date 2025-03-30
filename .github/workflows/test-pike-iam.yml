@@ -1,0 +1,65 @@
+name: VPC Network Firewall Test
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+
+# Add permission for GitHub OIDC token
+permissions:
+  id-token: write  # Required for OIDC authentication
+  contents: read   # Required to checkout the repository
+
+env:
+  AWS_CSM_ENABLED: 'true'
+
+jobs:
+  terratest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120  # Increased timeout for the entire job
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.5.7'  # Using 1.5.7 to match ~>1.5.5 requirement
+
+#      - name: Configure AWS credentials for GovCloud
+#        uses: aws-actions/configure-aws-credentials@v4
+#        with:
+#          role-to-assume: arn:aws-us-gov:iam::358745275192:role/github-action-test-role
+#          role-session-name: GitHub_to_AWS_FederatedOIDC
+#          aws-region: us-gov-west-1
+#          # Add this to improve authentication stability
+#          role-duration-seconds: 3600
+#
+#      - name: Verify AWS credentials
+#        run: |
+#          echo "Verifying AWS credentials..."
+#          aws sts get-caller-identity
+#          echo "Checking available VPCs..."
+#          aws ec2 describe-vpcs --region us-gov-west-1 --max-items 5
+#          echo "Checking IAM permissions..."
+#          aws iam list-role-policies --role-name github-action-test-role || echo "Cannot list role policies"
+
+      - name: IAM Pike Scan
+        if: always()
+        run: |
+          go install github.com/jameswoolfenden/pike@latest
+          pike scan -o terraform -d . > /tmp/pike-iam-check.tf
+
+      - name: Upload Pike IAM scan
+        if: Always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pike-iam-logs
+          path: /tmp/pike-iam-check.tf
+          retention-days: 5
