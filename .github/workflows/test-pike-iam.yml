@@ -54,7 +54,7 @@ jobs:
         if: always()
         run: |
           go install github.com/jameswoolfenden/pike@latest
-          pike scan -o terraform -d . > /tmp/pike-iam-check.tf
+          pike scan -o terraform -d example/vpc-endpoints > /tmp/pike-iam-check.tf
 
       - name: Upload Pike IAM scan
         if: Always()
