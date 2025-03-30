@@ -2,7 +2,7 @@ module "mgmt_subnet_addrs" {
   source  = "hashicorp/subnets/cidr"
   version = "v1.0.0"
 
-  base_cidr_block = var.mgmt_vpc_cidr
+  base_cidr_block = var.vpc_cidr
   networks = [
     {
       name     = "${var.resource_prefix}-firewall-1a"
@@ -17,15 +17,15 @@ module "mgmt_subnet_addrs" {
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-public-1a"
+      name     = "${var.resource_prefix}-public-alb-1a"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-public-1b"
+      name     = "${var.resource_prefix}-public-alb-1b"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-public-1c"
+      name     = "${var.resource_prefix}-public-alb-1c"
       new_bits = 8
     },
     {
