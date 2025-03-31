@@ -39,7 +39,7 @@ resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
 
   rule_group {
     rules_source {
-      rules_string = try(file(coalesce(var.suricata_stateful_rule_group[count.index]["rules_file"]), "./nfw-base-suricata-rules.json"))
+      rules_string = try(file(var.suricata_stateful_rule_group[count.index]["rules_file"]), file("./nfw-base-suricata-rules.json"))
     }
 
     dynamic "rule_variables" {
