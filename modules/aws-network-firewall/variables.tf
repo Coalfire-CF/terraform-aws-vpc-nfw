@@ -70,7 +70,7 @@ variable "suricata_stateful_rule_group" {
     name        = string
     description = string
     capacity    = number
-    rules_file  = optional(string, "")
+    rules_file  = optional(string, null)
     rule_variables = optional(object({
       ip_sets = list(object({
         key    = string
