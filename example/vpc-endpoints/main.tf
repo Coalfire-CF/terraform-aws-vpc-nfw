@@ -19,6 +19,13 @@ module "vpc" {
     "5" = "Private"
   }
 
+  vpce_subnets = local.vpce_subnets
+  vpce_subnet_tags = {
+    "0" = "vpce"
+    "1" = "vpce"
+    "2" = "vpce"
+  }
+
   tgw_subnets = local.tgw_subnets
   tgw_subnet_tags = {
     "0" = "TGW"
@@ -28,9 +35,9 @@ module "vpc" {
 
   public_subnets       = local.public_subnets
   public_subnet_tags = {
-    "0" = "public-alb"
-    "1" = "public-alb"
-    "2" = "public-alb"
+    "0" = "public"
+    "1" = "public"
+    "2" = "public"
   }
 
   single_nat_gateway     = false
