@@ -85,7 +85,6 @@ module "vpc_endpoints" {
   source = "./modules/vpc-endpoint"
 
   create_vpc_endpoints = var.create_vpc_endpoints
-  enable_fips_endpoints = var.enable_fips_endpoints
   associate_with_private_route_tables = var.associate_with_private_route_tables
   associate_with_public_route_tables = var.associate_with_public_route_tables
   vpc_id               = aws_vpc.this.id
