@@ -70,7 +70,7 @@ variable "suricata_stateful_rule_group" {
     name        = string
     description = string
     capacity    = number
-    rules_file  = optional(string, null)
+    rules_file  = optional(string, "")
     rule_variables = optional(object({
       ip_sets = list(object({
         key    = string
@@ -85,7 +85,16 @@ variable "suricata_stateful_rule_group" {
       port_sets = []
     })
   }))
-  default = []
+  default = [{
+    name        = "DefaultSuricataDenyAll"
+    description = "Default Deny All Rules for NFW"
+    capacity    = 1000
+    rules_file  = "./nfw-base-suricata-rules.json"
+    rule_variables = {
+      ip_sets   = []
+      port_sets = []
+    }
+  }]
 }
 
 variable "stateless_rule_group" {
