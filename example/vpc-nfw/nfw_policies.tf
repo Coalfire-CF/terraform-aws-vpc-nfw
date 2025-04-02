@@ -23,4 +23,13 @@ locals {
     }
   ]
 
+  suricata_rule_group_shrd_svcs = [
+    {
+      capacity    = 1000
+      name        = "SuricataDenyAll"
+      description = "DenyAllRules"
+      rules_file  = file("./suricata.json")
+    }
+  ]
+
 }

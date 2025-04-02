@@ -97,9 +97,30 @@ module "mgmt_vpc" {
   }
 }
 ```
+## Replacing the Default Deny All NFW Policy
+
+#### There will be a default Deny All NFW policy that is applied `module.mgmt_vpc.module.aws_network_firewall.nfw-base-suricata-rule.json`. If you are having networking problems, please follow the example below of how to pass a customized ruleset to the module. Any customized ruleset will overwrite the default policy.
+
+1. Copy the `test.rules.json` file to the directory running terraform and name give it a name. For this example I will use `suricata.json`.
+2. Populate this json file in a similar format to the `test.rules.json`, adding ports and domains that you need open based on tooling or client need.
+3. In your `nfw-policies.tf` file, create a local variable called `suricata_rule_group_shrd_svcs` and populate values like this example:
+```
+  suricata_rule_group_shrd_svcs = [
+    {
+      capacity    = 1000
+      name        = "SuricataDenyAll"
+      description = "DenyAllRules"
+      rules_file  = file("./suricata.json")
+    }
+  ]
+```
+4. In the file that you reference the module, add a line similar to the one shown in this example. This will pass your custom Suricata ruleset to the module, overwriting the default ruleset.
+```  
+aws_nfw_suricata_stateful_rule_group = local.suricata_rule_group_shrd_svcs
+```
 
 
-### AWS Networking deployment without AWS Network Firewall
+## AWS Networking deployment without AWS Network Firewall
 ```hcl
 module "mgmt_vpc" {
   source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
