@@ -80,8 +80,8 @@ resource "aws_vpc_security_group_egress_rule" "egress" {
 
   security_group_id = aws_security_group.endpoint_sg[each.value.sg_key].id
 
-  from_port   = each.value.rule.from_port
-  to_port     = each.value.rule.to_port
+  from_port   = each.value.rule.protocl == "-1" ? null : each.value.rule.from_port
+  to_port     = each.value.rule.protocl == "-1" ? null : each.value.rule.to_port
   ip_protocol = each.value.rule.protocol
   description = try(each.value.rule.description, null)
 
