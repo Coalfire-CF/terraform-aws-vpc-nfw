@@ -1,6 +1,7 @@
 # Allow TCP traffic
 pass tcp $EXTERNAL_NET any -> $HOME_NET 80 (msg:"Allow inbound HTTP"; flow:established; sid:101; rev:1;)
 pass tcp $EXTERNAL_NET any -> $HOME_NET 443 (msg:"Allow inbound HTTPS"; flow:established; sid:102; rev:1;)
+pass tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"Allow inbound SSH"; flow:established; sid:103; rev:1;)
 # Amazon domains
 pass http $HOME_NET any -> $EXTERNAL_NET 80 (http.host; dotprefix; content:".amazonaws.com"; endswith; msg:"Pass HTTP to .amazonaws.com"; sid:1001; rev:1;)
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".amazonaws.com"; endswith; msg:"Pass TLS to .amazonaws.com"; sid:1002; rev:1;)
