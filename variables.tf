@@ -6,6 +6,7 @@ variable "deploy_aws_nfw" {
   description = "enable nfw true/false"
   type        = bool
   default     = false
+  required    = true
 }
 
 variable "aws_nfw_prefix" {
@@ -18,6 +19,7 @@ variable "aws_nfw_name" {
   description = "AWS NFW Name"
   type        = string
   default     = ""
+  required    = true
 }
 
 variable "aws_nfw_stateless_rule_group" {
@@ -191,6 +193,7 @@ variable "name" {
   description = "Name to be used on all the resources as identifier"
   default     = ""
   type        = string
+  required    = true
 }
 
 variable "cidr" {
@@ -220,12 +223,7 @@ variable "public_subnet_suffix" {
   description = "Suffix to append to public subnets name"
   default     = "public"
   type        = string
-}
 
-variable "private_subnet_suffix" {
-  description = "Suffix to append to private subnets name"
-  default     = "private"
-  type        = string
 }
 
 variable "tgw_subnet_suffix" {
@@ -271,6 +269,8 @@ variable "firewall_subnets" {
 variable "private_subnets" {
   description = "A list of private subnets inside the VPC"
   default     = {}
+    required    = true
+
 }
 
 variable "tgw_subnets" {
@@ -461,6 +461,8 @@ variable "private_subnet_tags" {
   description = "Additional tags for the private subnets"
   default     = {}
   type        = map(string)
+    required    = true
+
 }
 
 variable "tgw_subnet_tags" {
