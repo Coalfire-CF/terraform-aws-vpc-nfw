@@ -99,62 +99,21 @@ module "vpc" {
     }
   }
 
-  # Define security groups for VPC endpoints
+ # Define a common security group for the VPC endpoints
   vpc_endpoint_security_groups = {
-    # Security group for SSM-related endpoints
-    ssm_endpoints_sg = {
-      name        = "${var.resource_prefix}-ssm-endpoints-sg"
-      description = "Security group for SSM and related VPC endpoints"
-      ingress_rules = [
-        {
-          description = "HTTPS from VPC"
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = [var.vpc_cidr]
-        }
-      ]
-      egress_rules = [
-        {
-          description = "Allow all outbound"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      ]
-      tags = {
-        Name = "${var.resource_prefix}-ssm-endpoints-sg"
-      }
-    },
-
-    # Security group for KMS endpoint
-    kms_endpoint_sg = {
-      name        = "${var.resource_prefix}-kms-endpoint-sg"
-      description = "Security group for KMS VPC endpoint"
-      ingress_rules = [
-        {
-          description = "HTTPS from VPC"
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = [var.vpc_cidr]
-        }
-      ]
-      egress_rules = [
-        {
-          description = "Allow all outbound"
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      ]
-      tags = {
-        Name = "${var.resource_prefix}-kms-endpoint-sg"
+      common_sg = {
+        name        = "common-endpoint-sg"
+        description = "Common security group for all VPC endpoints"
+        ingress_rules = [
+          {
+            from_port   = 443
+            to_port     = 443
+            protocol    = "tcp"
+            cidr_blocks = ["10.0.0.0/16"] # should just allow your vpc_cidr
+          }
+        ]
       }
     }
-  }
 
   tags = {
     Owner       = var.resource_prefix
