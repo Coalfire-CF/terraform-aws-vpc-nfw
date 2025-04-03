@@ -75,21 +75,21 @@ module "vpc" {
     }
   }
   
-  # Define security groups for VPC endpoints
+  # Define a common security group for the VPC endpoints
   vpc_endpoint_security_groups = {
-    ssm_sg = {
-      name        = "ssm-endpoint-sg"
-      description = "Security group for SSM VPC endpoint"
-      ingress_rules = [
-        {
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = ["10.0.0.0/16"]
-        }
-      ]
+      common_sg = {
+        name        = "common-endpoint-sg"
+        description = "Common security group for all VPC endpoints"
+        ingress_rules = [
+          {
+            from_port   = 443
+            to_port     = 443
+            protocol    = "tcp"
+            cidr_blocks = ["10.0.0.0/16"]
+          }
+        ]
+      }
     }
-  }
 }
 ```
 
