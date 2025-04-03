@@ -370,18 +370,6 @@ variable "external_nat_ip_ids" {
   default     = []
 }
 
-variable "enable_dynamodb_endpoint" {
-  description = "Should be true if you want to provision a DynamoDB endpoint to the VPC"
-  default     = false
-  type        = bool
-}
-
-variable "enable_s3_endpoint" {
-  description = "Should be true if you want to provision an S3 endpoint to the VPC"
-  default     = false
-  type        = bool
-}
-
 variable "map_public_ip_on_launch" {
   description = "Should be false if you do not want to auto-assign public IP on launch"
   default     = true
@@ -642,16 +630,6 @@ variable "default_vpc_tags" {
   default     = {}
   type        = map(string)
 }
-variable "dynamodb_endpoint_type" {
-  description = "DynamoDB VPC endpoint type"
-  type        = string
-  default     = "Gateway"
-}
-variable "s3_endpoint_type" {
-  description = "S3 VPC endpoint type"
-  type        = string
-  default     = "Gateway"
-}
 
 variable "cloudwatch_log_group_retention_in_days" {
   description = "Number of days to retain Cloudwatch logs"
@@ -753,4 +731,75 @@ variable "redshift_custom_routes" {
     vpc_endpoint_id            = optional(string, null)
   }))
   default = []
+}
+
+variable "create_vpc_endpoints" {
+  description = "Whether to create VPC endpoints"
+  type        = bool
+  default     = false
+}
+
+variable "associate_with_private_route_tables" {
+  description = "Whether to associate Gateway endpoints with private route tables"
+  type        = bool
+  default     = true
+}
+
+variable "associate_with_public_route_tables" {
+  description = "Whether to associate Gateway endpoints with public route tables"
+  type        = bool
+  default     = false
+}
+
+variable "vpc_endpoints" {
+  description = "Map of VPC endpoint definitions to create"
+  type = map(object({
+    service_name        = optional(string)       # If not provided, standard AWS service name will be constructed
+    service_type        = string                 # "Interface", "Gateway", or "GatewayLoadBalancer"
+    private_dns_enabled = optional(bool, true)   # Only applicable for Interface endpoints
+    auto_accept         = optional(bool, false)
+    policy              = optional(string)       # JSON policy document
+    security_group_ids  = optional(list(string), [])
+    tags                = optional(map(string), {})
+    subnet_ids          = optional(list(string)) # Override default subnet_ids if needed
+    # Required only for GatewayLoadBalancer endpoints
+    ip_address_type     = optional(string)       # "ipv4" or "dualstack"
+  }))
+  default = {}
+}
+
+variable "vpc_endpoint_security_groups" {
+  description = "Map of security groups to create for VPC endpoints"
+  type = map(object({
+    name        = string
+    description = optional(string, "Security group for VPC endpoint")
+    ingress_rules = optional(list(object({
+      description      = optional(string)
+      from_port        = number
+      to_port          = number
+      protocol         = string
+      cidr_blocks      = optional(list(string), [])
+      ipv6_cidr_blocks = optional(list(string), [])
+      security_groups  = optional(list(string), [])
+      self             = optional(bool, false)
+    })), [])
+    egress_rules = optional(list(object({
+      description      = optional(string)
+      from_port        = number
+      to_port          = number
+      protocol         = string
+      cidr_blocks      = optional(list(string), [])
+      ipv6_cidr_blocks = optional(list(string), [])
+      security_groups  = optional(list(string), [])
+      self             = optional(bool, false)
+    })), [])
+    tags = optional(map(string), {})
+  }))
+  default = {}
+}
+
+variable "subnet_az_mapping" {
+  description = "Optional explicit mapping of subnets to AZs - defaults to distributing across AZs"
+  type        = map(string)
+  default     = {}
 }

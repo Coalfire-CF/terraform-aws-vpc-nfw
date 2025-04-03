@@ -1,0 +1,47 @@
+name: Required IAM generator
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+
+# Add permission for GitHub OIDC token
+permissions:
+  id-token: write  # Required for OIDC authentication
+  contents: read   # Required to checkout the repository
+
+env:
+  AWS_CSM_ENABLED: 'true'
+
+jobs:
+  terratest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120  # Increased timeout for the entire job
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.5.7'  # Using 1.5.7 to match ~>1.5.5 requirement
+
+      - name: IAM Pike Scan
+        if: always()
+        run: |
+          go install github.com/jameswoolfenden/pike@latest
+          pike scan -o terraform -d example/vpc-endpoints > /tmp/pike-iam-check.tf
+
+      - name: Upload Pike IAM scan
+        if: Always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pike-iam-logs
+          path: /tmp/pike-iam-check.tf
+          retention-days: 5
