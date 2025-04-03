@@ -126,88 +126,21 @@ module "vpc" {
     }
   }
    
+  # Define a common security group for the VPC endpoints
   vpc_endpoint_security_groups = {
-    s3_sg = {
-      name        = "test-s3-sg"
-      description = "Security group for s3 VPC endpoint"
-      ingress_rules = [
-        {
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = [var.mgmt_vpc_cidr]
-        }
-      ]
-      egress_rules = [
-        {
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      ]
+      common_sg = {
+        name        = "common-endpoint-sg"
+        description = "Common security group for all VPC endpoints"
+        ingress_rules = [
+          {
+            from_port   = 443
+            to_port     = 443
+            protocol    = "tcp"
+            cidr_blocks = ["10.0.0.0/16"] # should just allow your vpc_cidr
+          }
+        ]
+      }
     }
-    dynamodb_sg = {
-      name        = "test-dynamodb-sg"
-      description = "Security group for dynamodb VPC endpoint"
-      ingress_rules = [
-        {
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = [var.mgmt_vpc_cidr]
-        }
-      ]
-      egress_rules = [
-        {
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      ]
-    }
-    secretsmanager_sg = {
-      name        = "test-secretsmanager-sg"
-      description = "Security group for secretsmanager VPC endpoint"
-      ingress_rules = [
-        {
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = [var.mgmt_vpc_cidr]
-        }
-      ]
-      egress_rules = [
-        {
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      ]
-    }
-    kms_sg = {
-      name        = "test-kms-sg"
-      description = "Security group for kms VPC endpoint"
-      ingress_rules = [
-        {
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = [var.mgmt_vpc_cidr]
-        }
-      ]
-      egress_rules = [
-        {
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      ]
-    }
-  }
 
 }
 ```

@@ -63,7 +63,7 @@ variable "vpc_endpoints" {
 }
 
 variable "vpc_endpoint_security_groups" {
-  description = "Map of security groups to create for VPC endpoints"
+  description = "Map of security groups to create for VPC endpoints. These security groups will be automatically applied to all Interface type VPC endpoints."
   type = map(object({
     name        = string
     description = optional(string, "Security group for VPC endpoint")
