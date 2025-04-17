@@ -118,6 +118,10 @@ module "mgmt_vpc" {
 ```  
 aws_nfw_suricata_stateful_rule_group = local.suricata_rule_group_shrd_svcs
 ```
+5. After you have built your packer images, come back and remove the following line:
+```  
+pass tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"Allow inbound SSH - ONLY FOR PACKER DISABLE AFTER IMAGES ARE BUILT"; flow:established; sid:103; rev:1;)
+```
 
 
 ## AWS Networking deployment without AWS Network Firewall
