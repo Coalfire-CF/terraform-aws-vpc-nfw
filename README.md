@@ -203,11 +203,10 @@ Some variables expose different expected values based on sensible assumptions.  
 The variables can be further inspected to see what parameters and types are expected.
 
 
+
 ## Tree
 ```
 .
-|-- .gitignore
-|-- .terraform.lock.hcl
 |-- CONTRIBUTING.md
 |-- LICENSE
 |-- README.md
@@ -215,35 +214,33 @@ The variables can be further inspected to see what parameters and types are expe
 |-- endpoints.tf
 |-- example
 |   `-- vpc-nfw
-|      |-- .terraform.lock.hcl
-|      |-- README.md
-|      |-- data.tf
-|      |-- kms.tf
-|      |-- locals.tf
-|      |-- mgmt.tf
-|      |-- nfw_policies.tf
-|      |-- outputs.tf
-|      |-- providers.tf
-|      |-- required_providers.tf
-|      |-- subnets.tf
-|      |-- test.rules.json
-|      |-- tstate.tf
-|      |-- variables.tf
-|      `-- vars.auto.tfvars
+|       |-- README.md
+|       |-- data.tf
+|       |-- kms.tf
+|       |-- locals.tf
+|       |-- mgmt.tf
+|       |-- nfw_policies.tf
+|       |-- outputs.tf
+|       |-- providers.tf
+|       |-- required_providers.tf
+|       |-- subnets.tf
+|       |-- test.rules.json
+|       |-- tstate.tf
+|       |-- variables.tf
+|       `-- vars.auto.tfvars
 |-- flowlog.tf
 |-- main.tf
 |-- modules
 |   `-- aws-network-firewall
-|      |-- .terraform.lock.hcl
-|      |-- README.md
-|      |-- coalfire_logo.png
-|      |-- locals.tf
-|      |-- main.tf
-|      |-- nfw-base-suricata-rules.json
-|      |-- output.tf
-|      |-- required_providers.tf
-|      |-- tls.tf
-|      `-- variables.tf
+|       |-- README.md
+|       |-- coalfire_logo.png
+|       |-- locals.tf
+|       |-- main.tf
+|       |-- nfw-base-suricata-rules.json
+|       |-- output.tf
+|       |-- required_providers.tf
+|       |-- tls.tf
+|       `-- variables.tf
 |-- outputs.tf
 |-- required_providers.tf
 |-- routes.tf
