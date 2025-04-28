@@ -51,12 +51,17 @@ jobs:
               continue
             fi
             
-            # Generate tree structure for each include directory
-            tree_output=""
+            # Generate the tree structure in the correct format
+            tree_output=".\n"
             for dir in $include_dirs; do
               if [ -d "$dir" ]; then
-                dir_tree=$(tree -tf --noreport -I '*~|.git|node_modules' --charset ascii "$dir" | 
-                           sed -e 's/| \+/  /g' -e 's/[|`]-\+/ */g' -e 's:\(* \)\(\(.*/\)\([^/]\+\)\):\1[\4](\2):g')
+                # Use tree command with specific formatting options
+                dir_tree=$(tree -tf --noreport -I '*~|.git|node_modules|.github' --charset ascii "$dir" | 
+                          tail -n +2 | # Skip the first line which is the directory name
+                          sed -e 's/│   / /g' -e 's/├── / * /g' -e 's/└── / * /g' -e 's/    / /g' |
+                          sed -e 's:\([^ ]*\)$:[\1](\1):g' | # Convert filenames to markdown links
+                          sed -e 's: \[\./\([^]]*\)\](\./\1): [\1](./\1):g' # Clean up the links
+                         )
                 tree_output="${tree_output}${dir_tree}\n"
               fi
             done
@@ -66,14 +71,32 @@ jobs:
             
             # Update the file with the new tree structure
             if grep -q "^## ${chapter}" "$file_name"; then
-              # Replace content between this section and the next section
-              awk -v chapter="$chapter" -v tree="$formatted_tree" '
-              BEGIN {p=1; found=0}
-              $0 ~ "^## " chapter {print; p=0; print tree; found=1; next}
-              $0 ~ /^##[^#]/ {if (p==0) {p=1}}
-              p==1 {print}
-              END {if (found==0) {print "## " chapter; print tree}}
-              ' "$file_name" > temp.md && mv temp.md "$file_name"
+              # Find the line number of the Tree section
+              start_line=$(grep -n "^## ${chapter}" "$file_name" | cut -d':' -f1)
+              
+              # Find the line number of the next section or EOF
+              end_line=$(tail -n +$((start_line+1)) "$file_name" | grep -n "^##" | head -1 | cut -d':' -f1)
+              if [ -z "$end_line" ]; then
+                # If no next section, use the end of file
+                end_line=$(wc -l < "$file_name")
+              else
+                # Adjust end_line to be relative to the whole file
+                end_line=$((start_line + end_line))
+              fi
+              
+              # Create a temporary file with content before the Tree section
+              head -n $start_line "$file_name" > temp.md
+              
+              # Add the new tree structure
+              echo -e "## ${chapter}\n${formatted_tree}" >> temp.md
+              
+              # Add content after the Tree section
+              if [ $end_line -lt $(wc -l < "$file_name") ]; then
+                tail -n +$end_line "$file_name" >> temp.md
+              fi
+              
+              # Replace the original file
+              mv temp.md "$file_name"
             else
               # If the section doesn't exist, add it at the end
               echo -e "\n## ${chapter}\n${formatted_tree}" >> "$file_name"
