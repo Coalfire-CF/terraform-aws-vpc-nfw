@@ -9,9 +9,6 @@ else
   chapter="Tree"
 fi
 
-# Generate the basic tree structure (without including hidden files by default)
-tree_output=$(tree -I ".git|node_modules|.github" --noreport --charset ascii .)
-
 # Format the file_names variable
 file_names=$(echo "$file_names" | tr ',' ' ')
 
@@ -22,46 +19,28 @@ for file_name in $file_names; do
     continue
   fi
   
+  # Generate the tree structure using find and sort instead of tree command
+  directory_tree=$(
+    find . -type f -not -path "*/\.*" -not -path "*/node_modules/*" | 
+    sort | 
+    sed -e 's/[^-][^\/]*\//  |/g' -e 's/|\([^ ]\)/|-- \1/g' |
+    sed '1s/^/.\n/'
+  )
+  
   # Create the final markdown tree block
-  final_tree="## ${chapter}\n\`\`\`\n${tree_output}\n\`\`\`"
+  final_tree="## ${chapter}\n\`\`\`\n${directory_tree}\n\`\`\`"
   
   # Update the file with the new tree structure
   if grep -q "^## ${chapter}" "$file_name"; then
-    # Find the line number of the Tree section
-    start_line=$(grep -n "^## ${chapter}" "$file_name" | cut -d':' -f1)
-    
-    # Find the line number of the next section or EOF
-    next_section=$(tail -n +$((start_line+1)) "$file_name" | grep -n "^##" | head -1)
-    if [ -z "$next_section" ]; then
-      # If no next section, use the end of file
-      end_line=$(wc -l < "$file_name")
-    else
-      # Extract just the line number
-      next_section_line=$(echo "$next_section" | cut -d':' -f1)
-      # Adjust to be relative to the whole file
-      end_line=$((start_line + next_section_line - 1))
-    fi
-    
-    # Create a temporary file with content before the Tree section
-    head -n $((start_line-1)) "$file_name" > temp_before.md
-    
-    # Create a temporary file with content after the Tree section
-    if [ $end_line -lt $(wc -l < "$file_name") ]; then
-      tail -n +$end_line "$file_name" > temp_after.md
-    else
-      # Create an empty file if there's nothing after
-      touch temp_after.md
-    fi
-    
-    # Combine everything together
-    {
-      cat temp_before.md
-      echo -e "\n${final_tree}\n"
-      cat temp_after.md
-    } > "$file_name"
-    
-    # Clean up temporary files
-    rm temp_before.md temp_after.md
+    # Find the section and replace it
+    awk -v chapter="$chapter" -v tree="$final_tree" '
+    BEGIN {p=1; found=0}
+    $0 ~ "^## "chapter"$" {print tree; p=0; found=1; next}
+    $0 ~ /^## / && p==0 {p=1}
+    p==1 {print}
+    END {if (found==0) print "\n" tree}
+    ' "$file_name" > "$file_name.new"
+    mv "$file_name.new" "$file_name"
   else
     # If the section doesn't exist, add it at the end
     echo -e "\n${final_tree}" >> "$file_name"
