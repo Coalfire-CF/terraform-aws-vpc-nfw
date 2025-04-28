@@ -207,42 +207,46 @@ The variables can be further inspected to see what parameters and types are expe
 ## Tree
 ```
 .
-  |-- CONTRIBUTING.md
-  |-- LICENSE
-  |-- README.md
-  |-- coalfire_logo.png
-  |-- endpoints.tf
-  |  |  |-- README.md
-  |  |  |-- data.tf
-  |  |  |-- kms.tf
-  |  |  |-- locals.tf
-  |  |  |-- mgmt.tf
-  |  |  |-- nfw_policies.tf
-  |  |  |-- outputs.tf
-  |  |  |-- providers.tf
-  |  |  |-- required_providers.tf
-  |  |  |-- subnets.tf
-  |  |  |-- test.rules.json
-  |  |  |-- tstate.tf
-  |  |  |-- variables.tf
-  |  |  |-- vars.auto.tfvars
-  |-- flowlog.tf
-  |-- main.tf
-  |  |  |-- README.md
-  |  |  |-- coalfire_logo.png
-  |  |  |-- locals.tf
-  |  |  |-- main.tf
-  |  |  |-- nfw-base-suricata-rules.json
-  |  |  |-- output.tf
-  |  |  |-- required_providers.tf
-  |  |  |-- tls.tf
-  |  |  |-- variables.tf
-  |-- outputs.tf
-  |-- required_providers.tf
-  |-- routes.tf
-  |-- subnets.tf
-  |-- update-readme-tree.sh
-  |-- variables.tf
+|-- CONTRIBUTING.md
+|-- LICENSE
+|-- README.md
+|-- coalfire_logo.png
+|-- endpoints.tf
+|-- example
+|   |-- vpc-nfw
+|       |-- README.md
+|       |-- data.tf
+|       |-- kms.tf
+|       |-- locals.tf
+|       |-- mgmt.tf
+|       |-- nfw_policies.tf
+|       |-- outputs.tf
+|       |-- providers.tf
+|       |-- required_providers.tf
+|       |-- subnets.tf
+|       |-- test.rules.json
+|       |-- tstate.tf
+|       |-- variables.tf
+|       |-- vars.auto.tfvars
+|-- flowlog.tf
+|-- main.tf
+|-- modules
+|   |-- aws-network-firewall
+|       |-- README.md
+|       |-- coalfire_logo.png
+|       |-- locals.tf
+|       |-- main.tf
+|       |-- nfw-base-suricata-rules.json
+|       |-- output.tf
+|       |-- required_providers.tf
+|       |-- tls.tf
+|       |-- variables.tf
+|-- outputs.tf
+|-- required_providers.tf
+|-- routes.tf
+|-- subnets.tf
+|-- update-readme-tree.sh
+|-- variables.tf
 ```
 ## Requirements
 
