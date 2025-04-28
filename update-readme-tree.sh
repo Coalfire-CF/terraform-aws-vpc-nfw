@@ -9,6 +9,9 @@ else
   chapter="Tree"
 fi
 
+# Generate tree and replace backticks with regular pipes
+tree_output=$(tree -I ".git|node_modules|.github" --noreport --charset ascii . | sed "s/\`/|/g")
+
 # Format the file_names variable
 file_names=$(echo "$file_names" | tr ',' ' ')
 
@@ -19,16 +22,8 @@ for file_name in $file_names; do
     continue
   fi
   
-  # Generate the tree structure using find and sort instead of tree command
-  directory_tree=$(
-    find . -type f -not -path "*/\.*" -not -path "*/node_modules/*" | 
-    sort | 
-    sed -e 's/[^-][^\/]*\//  |/g' -e 's/|\([^ ]\)/|-- \1/g' |
-    sed '1s/^/.\n/'
-  )
-  
   # Create the final markdown tree block
-  final_tree="## ${chapter}\n\`\`\`\n${directory_tree}\n\`\`\`"
+  final_tree="## ${chapter}\n\`\`\`\n${tree_output}\n\`\`\`"
   
   # Update the file with the new tree structure
   if grep -q "^## ${chapter}" "$file_name"; then
