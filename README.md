@@ -490,3 +490,48 @@ The variables can be further inspected to see what parameters and types are expe
 ### Copyright
 
 Copyright © 2024 Coalfire Systems Inc.
+
+## Tree
+```
+.
+ * [CONTRIBUTING.md](./CONTRIBUTING.md)
+ * [LICENSE](./LICENSE)
+ * [README.md](./README.md)
+ * [coalfire_logo.png](./coalfire_logo.png)
+ * [endpoints.tf](./endpoints.tf)
+ * [example](./example)
+   * [vpc-nfw](./example/vpc-nfw)
+   * [README.md](./example/vpc-nfw/README.md)
+   * [data.tf](./example/vpc-nfw/data.tf)
+   * [kms.tf](./example/vpc-nfw/kms.tf)
+   * [locals.tf](./example/vpc-nfw/locals.tf)
+   * [mgmt.tf](./example/vpc-nfw/mgmt.tf)
+   * [nfw_policies.tf](./example/vpc-nfw/nfw_policies.tf)
+   * [outputs.tf](./example/vpc-nfw/outputs.tf)
+   * [providers.tf](./example/vpc-nfw/providers.tf)
+   * [required_providers.tf](./example/vpc-nfw/required_providers.tf)
+   * [subnets.tf](./example/vpc-nfw/subnets.tf)
+   * [test.rules.json](./example/vpc-nfw/test.rules.json)
+   * [tstate.tf](./example/vpc-nfw/tstate.tf)
+   * [variables.tf](./example/vpc-nfw/variables.tf)
+   * [vars.auto.tfvars](./example/vpc-nfw/vars.auto.tfvars)
+ * [flowlog.tf](./flowlog.tf)
+ * [main.tf](./main.tf)
+ * [modules](./modules)
+   * [aws-network-firewall](./modules/aws-network-firewall)
+   * [README.md](./modules/aws-network-firewall/README.md)
+   * [coalfire_logo.png](./modules/aws-network-firewall/coalfire_logo.png)
+   * [locals.tf](./modules/aws-network-firewall/locals.tf)
+   * [main.tf](./modules/aws-network-firewall/main.tf)
+   * [nfw-base-suricata-rules.json](./modules/aws-network-firewall/nfw-base-suricata-rules.json)
+   * [output.tf](./modules/aws-network-firewall/output.tf)
+   * [required_providers.tf](./modules/aws-network-firewall/required_providers.tf)
+   * [tls.tf](./modules/aws-network-firewall/tls.tf)
+   * [variables.tf](./modules/aws-network-firewall/variables.tf)
+ * [outputs.tf](./outputs.tf)
+ * [required_providers.tf](./required_providers.tf)
+ * [routes.tf](./routes.tf)
+ * [subnets.tf](./subnets.tf)
+ * [variables.tf](./variables.tf)
+ * [update-readme-tree.sh](./update-readme-tree.sh)
+```
