@@ -13,7 +13,7 @@ jobs:
       - name: Install tree
         run: sudo apt-get update && sudo apt-get install -y tree
       
-      # Create the tree script that respects readmetreerc.yml
+      # Create the tree script with exact formatting
       - name: Create tree script
         run: |
           cat > update-readme-tree.sh <<'EOF'
@@ -30,76 +30,109 @@ jobs:
             include_dirs="."
           fi
           
-          # Default to README.md if no file names specified
-          if [ -z "$file_names" ]; then
-            file_names="README.md"
-          fi
+          # Generate tree structure with the exact format required
+          tree_output=$(tree -a -I ".git|node_modules|.github" --noreport --charset ascii .)
           
-          # Default to "Tree" if no chapter specified
-          if [ -z "$chapter" ]; then
-            chapter="Tree"
-          fi
+          # Format the tree with asterisks instead of pipe characters and create proper markdown links
+          formatted_tree=$(echo "$tree_output" | 
+            # Replace the first line with just a dot
+            sed '1s/^.*$/\./' |
+            # Replace the tree symbols with proper bullet points and indentation
+            sed -E 's/├── / * /g' | 
+            sed -E 's/│   /   /g' | 
+            sed -E 's/└── / * /g' | 
+            sed -E 's/    /   /g' |
+            # Convert filenames to markdown links but keep only the filename in the link text
+            awk '{
+              if (NR > 1) {  # Skip the first line which is just "."
+                line=$0;
+                # Extract the path and create a markdown link
+                path=line;
+                gsub(/^[ ]*\* /, "", path);  # Remove the bullet and spaces
+                
+                # Check if it is a directory (ends with a directory name)
+                if (path ~ /\/$/) {
+                  # Remove the trailing slash for display
+                  display_path=path;
+                  gsub(/\/$/, "", display_path);
+                  
+                  # Create the link
+                  replacement=" * [" display_path "](./" path ")";
+                  # Remove the trailing slash in the link URL
+                  gsub(/\)\/\)/, "))", replacement);
+                  
+                  # Replace the original line with the link
+                  sub(/^[ ]*\* [^ ]+/, replacement, line);
+                } else {
+                  # Get just the filename for display
+                  split(path, parts, "/");
+                  filename=parts[length(parts)];
+                  
+                  # Create the link
+                  replacement=" * [" filename "](./" path ")";
+                  
+                  # Replace the original line with the link
+                  sub(/^[ ]*\* [^ ]+/, replacement, line);
+                }
+                print line;
+              } else {
+                print $0;  # Print the first line unchanged
+              }
+            }'
+          )
           
-          # Default to "." if no include directories specified
-          if [ -z "$include_dirs" ]; then
-            include_dirs="."
-          fi
-          
+          # For each file specified in the config
           for file_name in $file_names; do
             if [ ! -f "$file_name" ]; then
               echo "File $file_name not found, skipping."
               continue
             fi
             
-            # Generate the tree structure in the correct format
-            tree_output=".\n"
-            for dir in $include_dirs; do
-              if [ -d "$dir" ]; then
-                # Use tree command with specific formatting options
-                dir_tree=$(tree -tf --noreport -I '*~|.git|node_modules|.github' --charset ascii "$dir" | 
-                          tail -n +2 | # Skip the first line which is the directory name
-                          sed -e 's/│   / /g' -e 's/├── / * /g' -e 's/└── / * /g' -e 's/    / /g' |
-                          sed -e 's:\([^ ]*\)$:[\1](\1):g' | # Convert filenames to markdown links
-                          sed -e 's: \[\./\([^]]*\)\](\./\1): [\1](./\1):g' # Clean up the links
-                         )
-                tree_output="${tree_output}${dir_tree}\n"
-              fi
-            done
+            # Create the final markdown tree block
+            final_tree="## ${chapter}\n\`\`\`\n${formatted_tree}\n\`\`\`"
             
-            # Format the tree output
-            formatted_tree="\`\`\`\n${tree_output}\`\`\`"
-            
-            # Update the file with the new tree structure
+            # Update the README.md file
             if grep -q "^## ${chapter}" "$file_name"; then
               # Find the line number of the Tree section
               start_line=$(grep -n "^## ${chapter}" "$file_name" | cut -d':' -f1)
               
               # Find the line number of the next section or EOF
-              end_line=$(tail -n +$((start_line+1)) "$file_name" | grep -n "^##" | head -1 | cut -d':' -f1)
-              if [ -z "$end_line" ]; then
+              next_section=$(tail -n +$((start_line+1)) "$file_name" | grep -n "^##" | head -1)
+              if [ -z "$next_section" ]; then
                 # If no next section, use the end of file
                 end_line=$(wc -l < "$file_name")
               else
-                # Adjust end_line to be relative to the whole file
-                end_line=$((start_line + end_line))
+                # Extract just the line number
+                next_section_line=$(echo "$next_section" | cut -d':' -f1)
+                # Adjust to be relative to the whole file
+                end_line=$((start_line + next_section_line))
               fi
               
               # Create a temporary file with content before the Tree section
-              head -n $start_line "$file_name" > temp.md
+              head -n $start_line "$file_name" > temp_before.md
+              # Remove the actual "## Tree" line
+              sed -i '$ d' temp_before.md
               
-              # Add the new tree structure
-              echo -e "## ${chapter}\n${formatted_tree}" >> temp.md
-              
-              # Add content after the Tree section
+              # Create a temporary file with content after the Tree section
               if [ $end_line -lt $(wc -l < "$file_name") ]; then
-                tail -n +$end_line "$file_name" >> temp.md
+                tail -n +$end_line "$file_name" > temp_after.md
+              else
+                # Create an empty file if there's nothing after
+                touch temp_after.md
               fi
               
-              # Replace the original file
-              mv temp.md "$file_name"
+              # Combine everything together
+              {
+                cat temp_before.md
+                echo -e "\n${final_tree}"
+                cat temp_after.md
+              } > "$file_name"
+              
+              # Clean up temporary files
+              rm temp_before.md temp_after.md
             else
               # If the section doesn't exist, add it at the end
-              echo -e "\n## ${chapter}\n${formatted_tree}" >> "$file_name"
+              echo -e "\n${final_tree}" >> "$file_name"
             fi
           done
           EOF
