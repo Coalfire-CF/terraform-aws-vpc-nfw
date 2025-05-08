@@ -201,8 +201,72 @@ Some variables expose different expected values based on sensible assumptions.  
 The variables can be further inspected to see what parameters and types are expected.
 
 ## Tree
-
-<!-- BEGIN_TF_DOCS -->
+```
+.
+|-- CONTRIBUTING.md
+|-- LICENSE
+|-- README.md
+|-- coalfire_logo.png
+|-- example
+|   |-- vpc-endpoints
+|   |   |-- README.md
+|   |   |-- data.tf
+|   |   |-- kms.tf
+|   |   |-- locals.tf
+|   |   |-- main.tf
+|   |   |-- nfw_policies.tf
+|   |   |-- outputs.tf
+|   |   |-- providers.tf
+|   |   |-- required_providers.tf
+|   |   |-- subnets.tf
+|   |   |-- test.rules.json
+|   |   |-- tstate.tf
+|   |   |-- variables.tf
+|   |   |-- vars.auto.tfvars
+|   |-- vpc-nfw
+|       |-- README.md
+|       |-- data.tf
+|       |-- kms.tf
+|       |-- locals.tf
+|       |-- mgmt.tf
+|       |-- nfw_policies.tf
+|       |-- outputs.tf
+|       |-- providers.tf
+|       |-- required_providers.tf
+|       |-- subnets.tf
+|       |-- test.rules.json
+|       |-- tstate.tf
+|       |-- variables.tf
+|       |-- vars.auto.tfvars
+|-- flowlog.tf
+|-- main.tf
+|-- modules
+|   |-- aws-network-firewall
+|   |   |-- README.md
+|   |   |-- coalfire_logo.png
+|   |   |-- locals.tf
+|   |   |-- main.tf
+|   |   |-- nfw-base-suricata-rules.json
+|   |   |-- output.tf
+|   |   |-- required_providers.tf
+|   |   |-- tls.tf
+|   |   |-- variables.tf
+|   |-- vpc-endpoint
+|       |-- README.md
+|       |-- locals.tf
+|       |-- main.tf
+|       |-- outputs.tf
+|       |-- variables.tf
+|-- outputs.tf
+|-- required_providers.tf
+|-- routes.tf
+|-- subnets.tf
+|-- test
+|   |-- src
+|       |-- vpc_endpoints_with_nfw_test.go
+|-- update-readme-tree.sh
+|-- variables.tf
+```
 ## Requirements
 
 | Name | Version |
