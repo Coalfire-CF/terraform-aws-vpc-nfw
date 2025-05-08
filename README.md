@@ -1,3 +1,5 @@
+==> README.md <==
+==> README.md <==
 ![Coalfire](coalfire_logo.png)
 
 # AWS VPC NFW Terraform Module
@@ -529,21 +531,3 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="output_vpc_main_route_table_id"></a> [vpc\_main\_route\_table\_id](#output\_vpc\_main\_route\_table\_id) | The ID of the main route table associated with this VPC |
 | <a name="output_vpc_secondary_cidr_blocks"></a> [vpc\_secondary\_cidr\_blocks](#output\_vpc\_secondary\_cidr\_blocks) | List of secondary CIDR blocks of the VPC |
 <!-- END_TF_DOCS -->
-
-## Contributing
-
-[Relative or absolute link to contributing.md](CONTRIBUTING.md)
-
-
-## License
-
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/license/mit/)
-
-
-## Coalfire Pages
-
-[Absolute link to any relevant Coalfire Pages](https://coalfire.com/)
-
-### Copyright
-
-Copyright © 2024 Coalfire Systems Inc.
