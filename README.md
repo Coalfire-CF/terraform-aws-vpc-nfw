@@ -268,7 +268,7 @@ The variables can be further inspected to see what parameters and types are expe
 |       |-- vpc_endpoints_with_nfw_test.go
 |-- update-readme-tree.sh
 |-- variables.tf
-
+```
 ## Requirements
 
 | Name | Version |
