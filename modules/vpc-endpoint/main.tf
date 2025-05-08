@@ -127,11 +127,14 @@ resource "aws_vpc_endpoint" "this" {
   subnet_ids = lookup(each.value, "service_type", "") == "Interface" ? lookup(each.value, "subnet_ids", []) : null
 
   # Security group IDs for Interface endpoints - always apply all common SGs
-  security_group_ids = lookup(each.value, "service_type", "") == "Interface" ?
-    concat(
-      lookup(each.value, "security_group_ids", []),
-      local.all_endpoint_sg_ids
-    ) : null
+  security_group_ids = (
+    lookup(each.value, "service_type", "") == "Interface" ?
+      concat(
+        lookup(each.value, "security_group_ids", []),
+        local.all_endpoint_sg_ids
+      ) :
+      null
+  )
 
   # Gateway-specific settings
   # Setting route tables directly in the endpoint resource for Gateway endpoints
