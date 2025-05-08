@@ -1,0 +1,138 @@
+name: VPC Network Firewall Test
+on:
+  pull_request:
+    branches: [ 'main' ]
+    types: [opened, synchronize, reopened, closed, labeled, unlabeled]
+
+# Add permission for GitHub OIDC token
+permissions:
+  id-token: write  # Required for OIDC authentication
+  contents: read   # Required to checkout the repository
+
+env:
+  AWS_CSM_ENABLED: 'true'
+
+jobs:
+  terratest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120  # Increased timeout for the entire job
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: false
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.5.7'  # Using 1.5.7 to match ~>1.5.5 requirement
+
+      - name: generate TIMESTAMP env var for use in IAM role creation
+        run: echo "TIMESTAMP=$(date +%s)" >> $GITHUB_ENV
+
+      - name: Configure AWS credentials for GovCloud
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws-us-gov:iam::358745275192:role/github-action-test-role
+          role-session-name: GitHub_to_AWS_FederatedOIDC
+          aws-region: us-gov-west-1
+          # Add this to improve authentication stability
+          role-duration-seconds: 3600
+
+      - name: Verify AWS credentials
+        run: |
+          echo "Verifying AWS credentials..."
+          aws sts get-caller-identity
+          echo "Checking available VPCs..."
+          aws ec2 describe-vpcs --region us-gov-west-1 --max-items 5
+          echo "Checking IAM permissions..."
+          aws iam list-role-policies --role-name github-action-test-role || echo "Cannot list role policies"
+
+      - name: Debug Project Structure
+        run: |
+          pwd
+          find . -type d
+
+      - name: Initialize Terraform Providers
+        run: |
+          cd test/terraform-aws-vpc-nfw/example/vpc-endpoints-nfw
+          terraform init
+          terraform version
+          terraform providers
+
+      - name: Prepare Go Test Environment
+        if: always()
+        run: |
+          # Navigate to the test directory
+          cd test/src
+          
+          # Remove existing go.sum to force fresh download
+          rm -f go.sum
+          
+          # Clean up go.mod and re-initialize module
+          go mod tidy
+          
+          # Explicitly download dependencies with verification
+          go get -v github.com/gruntwork-io/terratest@latest
+          go get -v github.com/stretchr/testify@latest
+          
+          # Verify module dependencies
+          go mod verify
+          go mod download
+
+      - name: Run Terratest
+        run: |
+          cd test/src
+          # Enable Terraform debug logging to a file
+          export TF_LOG=DEBUG
+          export TF_LOG_PATH=/tmp/terraform-debug.log
+          export TF_LOG_PROVIDER=DEBUG
+          # Run the specific test with verbose output and extended timeout
+          go test -v -timeout 90m ./vpc_endpoints_with_nfw_test.go
+        env:
+          # Enhanced AWS SDK settings
+          AWS_MAX_ATTEMPTS: 60
+          AWS_RETRY_MODE: standard
+          AWS_SDK_LOAD_CONFIG: 1
+          AWS_METADATA_SERVICE_TIMEOUT: 120
+          AWS_STS_REGIONAL_ENDPOINTS: regional
+          AWS_REGION: us-gov-west-1
+
+      - name: Upload Terraform Debug Logs
+        if: always()  # This makes sure logs are uploaded even if the tests fail
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-debug-logs
+          path: /tmp/terraform-debug.log
+          retention-days: 5
+
+      - name: Collect AWS Error Logs
+        if: failure()
+        run: |
+          # Save additional AWS diagnostic info
+          mkdir -p /tmp/aws-logs
+          aws sts get-caller-identity > /tmp/aws-logs/caller-identity.json || true
+          aws ec2 describe-account-attributes > /tmp/aws-logs/account-attributes.json || true
+          echo "Collecting VPC endpoint service information..."
+          aws ec2 describe-vpc-endpoint-services --region us-gov-west-1 > /tmp/aws-logs/vpc-endpoint-services.json || true
+
+      - name: Upload AWS Diagnostic Logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: aws-diagnostic-logs
+          path: /tmp/aws-logs/
+          retention-days: 5
+
+      - name: Cleanup on Failure
+        if: failure()
+        run: |
+          # Additional cleanup steps if needed
+          echo "Test failed. Performing cleanup..."
+          cd test/terraform-aws-vpc-nfw/example/vpc-endpoints-nfw
+          terraform destroy -auto-approve -refresh=false || echo "Destroy failed, may need manual cleanup"
