@@ -201,8 +201,72 @@ Some variables expose different expected values based on sensible assumptions.  
 The variables can be further inspected to see what parameters and types are expected.
 
 ## Tree
-
-<!-- BEGIN_TF_DOCS -->
+```
+.
+|-- CONTRIBUTING.md
+|-- LICENSE
+|-- README.md
+|-- coalfire_logo.png
+|-- example
+|   |-- vpc-endpoints
+|   |   |-- README.md
+|   |   |-- data.tf
+|   |   |-- kms.tf
+|   |   |-- locals.tf
+|   |   |-- main.tf
+|   |   |-- nfw_policies.tf
+|   |   |-- outputs.tf
+|   |   |-- providers.tf
+|   |   |-- required_providers.tf
+|   |   |-- subnets.tf
+|   |   |-- test.rules.json
+|   |   |-- tstate.tf
+|   |   |-- variables.tf
+|   |   |-- vars.auto.tfvars
+|   |-- vpc-nfw
+|       |-- README.md
+|       |-- data.tf
+|       |-- kms.tf
+|       |-- locals.tf
+|       |-- mgmt.tf
+|       |-- nfw_policies.tf
+|       |-- outputs.tf
+|       |-- providers.tf
+|       |-- required_providers.tf
+|       |-- subnets.tf
+|       |-- test.rules.json
+|       |-- tstate.tf
+|       |-- variables.tf
+|       |-- vars.auto.tfvars
+|-- flowlog.tf
+|-- main.tf
+|-- modules
+|   |-- aws-network-firewall
+|   |   |-- README.md
+|   |   |-- coalfire_logo.png
+|   |   |-- locals.tf
+|   |   |-- main.tf
+|   |   |-- nfw-base-suricata-rules.json
+|   |   |-- output.tf
+|   |   |-- required_providers.tf
+|   |   |-- tls.tf
+|   |   |-- variables.tf
+|   |-- vpc-endpoint
+|       |-- README.md
+|       |-- locals.tf
+|       |-- main.tf
+|       |-- outputs.tf
+|       |-- variables.tf
+|-- outputs.tf
+|-- required_providers.tf
+|-- routes.tf
+|-- subnets.tf
+|-- test
+|   |-- src
+|       |-- vpc_endpoints_with_nfw_test.go
+|-- update-readme-tree.sh
+|-- variables.tf
+```
 ## Requirements
 
 | Name | Version |
@@ -221,6 +285,7 @@ The variables can be further inspected to see what parameters and types are expe
 | Name | Source | Version |
 |------|--------|---------|
 | <a name="module_aws_network_firewall"></a> [aws\_network\_firewall](#module\_aws\_network\_firewall) | ./modules/aws-network-firewall | n/a |
+| <a name="module_vpc_endpoints"></a> [vpc\_endpoints](#module\_vpc\_endpoints) | ./modules/vpc-endpoint | n/a |
 
 ## Resources
 
@@ -283,14 +348,6 @@ The variables can be further inspected to see what parameters and types are expe
 | [aws_vpc.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc) | resource |
 | [aws_vpc_dhcp_options.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options) | resource |
 | [aws_vpc_dhcp_options_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_dhcp_options_association) | resource |
-| [aws_vpc_endpoint.dynamodb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
-| [aws_vpc_endpoint.s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint) | resource |
-| [aws_vpc_endpoint_route_table_association.intra_dynamodb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint_route_table_association) | resource |
-| [aws_vpc_endpoint_route_table_association.intra_s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint_route_table_association) | resource |
-| [aws_vpc_endpoint_route_table_association.private_dynamodb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint_route_table_association) | resource |
-| [aws_vpc_endpoint_route_table_association.private_s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint_route_table_association) | resource |
-| [aws_vpc_endpoint_route_table_association.public_dynamodb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint_route_table_association) | resource |
-| [aws_vpc_endpoint_route_table_association.public_s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_endpoint_route_table_association) | resource |
 | [aws_vpc_ipv4_cidr_block_association.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc_ipv4_cidr_block_association) | resource |
 | [aws_vpn_gateway.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_gateway) | resource |
 | [aws_vpn_gateway_attachment.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_gateway_attachment) | resource |
@@ -298,14 +355,14 @@ The variables can be further inspected to see what parameters and types are expe
 | [aws_vpn_gateway_route_propagation.public](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpn_gateway_route_propagation) | resource |
 | [aws_iam_policy_document.flow_log_cloudwatch_assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.vpc_flow_log_cloudwatch](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_vpc_endpoint_service.dynamodb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc_endpoint_service) | data source |
-| [aws_vpc_endpoint_service.s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/vpc_endpoint_service) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_assign_generated_ipv6_cidr_block"></a> [assign\_generated\_ipv6\_cidr\_block](#input\_assign\_generated\_ipv6\_cidr\_block) | Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC. You cannot specify the range of IP addresses, or the size of the CIDR block | `bool` | `false` | no |
+| <a name="input_associate_with_private_route_tables"></a> [associate\_with\_private\_route\_tables](#input\_associate\_with\_private\_route\_tables) | Whether to associate Gateway endpoints with private route tables | `bool` | `true` | no |
+| <a name="input_associate_with_public_route_tables"></a> [associate\_with\_public\_route\_tables](#input\_associate\_with\_public\_route\_tables) | Whether to associate Gateway endpoints with public route tables | `bool` | `false` | no |
 | <a name="input_aws_nfw_domain_stateful_rule_group"></a> [aws\_nfw\_domain\_stateful\_rule\_group](#input\_aws\_nfw\_domain\_stateful\_rule\_group) | Config for domain type stateful rule group | <pre>list(object({<br/>    name        = string<br/>    description = string<br/>    capacity    = number<br/>    domain_list = list(string)<br/>    actions     = string<br/>    protocols   = list(string)<br/>    rules_file  = optional(string, "")<br/>    rule_variables = optional(object({<br/>      ip_sets = list(object({<br/>        key    = string<br/>        ip_set = list(string)<br/>      }))<br/>      port_sets = list(object({<br/>        key       = string<br/>        port_sets = list(string)<br/>      }))<br/>      }), {<br/>      ip_sets   = []<br/>      port_sets = []<br/>    })<br/>  }))</pre> | `[]` | no |
 | <a name="input_aws_nfw_fivetuple_stateful_rule_group"></a> [aws\_nfw\_fivetuple\_stateful\_rule\_group](#input\_aws\_nfw\_fivetuple\_stateful\_rule\_group) | Config for 5-tuple type stateful rule group | <pre>list(object({<br/>    name        = string<br/>    description = string<br/>    capacity    = number<br/>    rule_config = list(object({<br/>      description           = string<br/>      protocol              = string<br/>      source_ipaddress      = string<br/>      source_port           = string<br/>      direction             = string<br/>      destination_port      = string<br/>      destination_ipaddress = string<br/>      sid                   = number<br/>      actions               = map(string)<br/>    }))<br/>  }))</pre> | `[]` | no |
 | <a name="input_aws_nfw_name"></a> [aws\_nfw\_name](#input\_aws\_nfw\_name) | AWS NFW Name | `string` | `""` | no |
@@ -320,6 +377,7 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_create_database_subnet_route_table"></a> [create\_database\_subnet\_route\_table](#input\_create\_database\_subnet\_route\_table) | Controls if separate route table for database should be created | `bool` | `false` | no |
 | <a name="input_create_elasticache_subnet_route_table"></a> [create\_elasticache\_subnet\_route\_table](#input\_create\_elasticache\_subnet\_route\_table) | Controls if separate route table for elasticache should be created | `bool` | `false` | no |
 | <a name="input_create_redshift_subnet_route_table"></a> [create\_redshift\_subnet\_route\_table](#input\_create\_redshift\_subnet\_route\_table) | Controls if separate route table for redshift should be created | `bool` | `false` | no |
+| <a name="input_create_vpc_endpoints"></a> [create\_vpc\_endpoints](#input\_create\_vpc\_endpoints) | Whether to create VPC endpoints | `bool` | `false` | no |
 | <a name="input_database_custom_routes"></a> [database\_custom\_routes](#input\_database\_custom\_routes) | Custom routes for Database Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_database_route_table_tags"></a> [database\_route\_table\_tags](#input\_database\_route\_table\_tags) | Additional tags for the database route tables | `map(string)` | `{}` | no |
 | <a name="input_database_subnet_group_tags"></a> [database\_subnet\_group\_tags](#input\_database\_subnet\_group\_tags) | Additional tags for the database subnet group | `map(string)` | `{}` | no |
@@ -338,7 +396,6 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_dhcp_options_netbios_node_type"></a> [dhcp\_options\_netbios\_node\_type](#input\_dhcp\_options\_netbios\_node\_type) | Specify netbios node\_type for DHCP options set | `string` | `""` | no |
 | <a name="input_dhcp_options_ntp_servers"></a> [dhcp\_options\_ntp\_servers](#input\_dhcp\_options\_ntp\_servers) | Specify a list of NTP servers for DHCP options set | `list(string)` | `[]` | no |
 | <a name="input_dhcp_options_tags"></a> [dhcp\_options\_tags](#input\_dhcp\_options\_tags) | Additional tags for the DHCP option set | `map(string)` | `{}` | no |
-| <a name="input_dynamodb_endpoint_type"></a> [dynamodb\_endpoint\_type](#input\_dynamodb\_endpoint\_type) | DynamoDB VPC endpoint type | `string` | `"Gateway"` | no |
 | <a name="input_elasticache_custom_routes"></a> [elasticache\_custom\_routes](#input\_elasticache\_custom\_routes) | Custom routes for Elasticache Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_elasticache_route_table_tags"></a> [elasticache\_route\_table\_tags](#input\_elasticache\_route\_table\_tags) | Additional tags for the elasticache route tables | `map(string)` | `{}` | no |
 | <a name="input_elasticache_subnet_suffix"></a> [elasticache\_subnet\_suffix](#input\_elasticache\_subnet\_suffix) | Suffix to append to elasticache subnets name | `string` | `"elasticache"` | no |
@@ -347,9 +404,7 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_enable_dhcp_options"></a> [enable\_dhcp\_options](#input\_enable\_dhcp\_options) | Should be true if you want to specify a DHCP options set with a custom domain name, DNS servers, NTP servers, netbios servers, and/or netbios server type | `bool` | `false` | no |
 | <a name="input_enable_dns_hostnames"></a> [enable\_dns\_hostnames](#input\_enable\_dns\_hostnames) | Should be true to enable DNS hostnames in the VPC | `bool` | `false` | no |
 | <a name="input_enable_dns_support"></a> [enable\_dns\_support](#input\_enable\_dns\_support) | Should be true to enable DNS support in the VPC | `bool` | `true` | no |
-| <a name="input_enable_dynamodb_endpoint"></a> [enable\_dynamodb\_endpoint](#input\_enable\_dynamodb\_endpoint) | Should be true if you want to provision a DynamoDB endpoint to the VPC | `bool` | `false` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | Should be true if you want to provision NAT Gateways for each of your private networks | `bool` | `false` | no |
-| <a name="input_enable_s3_endpoint"></a> [enable\_s3\_endpoint](#input\_enable\_s3\_endpoint) | Should be true if you want to provision an S3 endpoint to the VPC | `bool` | `false` | no |
 | <a name="input_enable_tls_inspection"></a> [enable\_tls\_inspection](#input\_enable\_tls\_inspection) | enable nfw tls inspection true/false. deploy\_aws\_nfw must be true to enable this | `bool` | `false` | no |
 | <a name="input_enable_vpn_gateway"></a> [enable\_vpn\_gateway](#input\_enable\_vpn\_gateway) | Should be true if you want to create a new VPN Gateway resource and attach it to the VPC | `bool` | `false` | no |
 | <a name="input_external_nat_ip_ids"></a> [external\_nat\_ip\_ids](#input\_external\_nat\_ip\_ids) | List of EIP IDs to be assigned to the NAT Gateways (used in combination with reuse\_nat\_ips) | `list(string)` | `[]` | no |
@@ -392,9 +447,9 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_redshift_subnet_tags"></a> [redshift\_subnet\_tags](#input\_redshift\_subnet\_tags) | Additional tags for the redshift subnets | `map(string)` | `{}` | no |
 | <a name="input_redshift_subnets"></a> [redshift\_subnets](#input\_redshift\_subnets) | A list of redshift subnets | `map` | `{}` | no |
 | <a name="input_reuse_nat_ips"></a> [reuse\_nat\_ips](#input\_reuse\_nat\_ips) | Should be true if you don't want EIPs to be created for your NAT Gateways and will instead pass them in via the 'external\_nat\_ip\_ids' variable | `bool` | `false` | no |
-| <a name="input_s3_endpoint_type"></a> [s3\_endpoint\_type](#input\_s3\_endpoint\_type) | S3 VPC endpoint type | `string` | `"Gateway"` | no |
 | <a name="input_secondary_cidr_blocks"></a> [secondary\_cidr\_blocks](#input\_secondary\_cidr\_blocks) | List of secondary CIDR blocks to associate with the VPC to extend the IP Address pool | `list(string)` | `[]` | no |
 | <a name="input_single_nat_gateway"></a> [single\_nat\_gateway](#input\_single\_nat\_gateway) | Should be true if you want to provision a single shared NAT Gateway across all of your private networks | `bool` | `false` | no |
+| <a name="input_subnet_az_mapping"></a> [subnet\_az\_mapping](#input\_subnet\_az\_mapping) | Optional explicit mapping of subnets to AZs - defaults to distributing across AZs | `map(string)` | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | `{}` | no |
 | <a name="input_tgw_custom_routes"></a> [tgw\_custom\_routes](#input\_tgw\_custom\_routes) | Custom routes for TGW Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_tgw_route_table_tags"></a> [tgw\_route\_table\_tags](#input\_tgw\_route\_table\_tags) | Additional tags for the tgw route tables | `map(string)` | `{}` | no |
@@ -409,6 +464,8 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_tls_source_cidr"></a> [tls\_source\_cidr](#input\_tls\_source\_cidr) | Source CIDR for TLS Inspection | `string` | `"0.0.0.0/0"` | no |
 | <a name="input_tls_source_from_port"></a> [tls\_source\_from\_port](#input\_tls\_source\_from\_port) | Source Port for TLS Inspection | `number` | `0` | no |
 | <a name="input_tls_source_to_port"></a> [tls\_source\_to\_port](#input\_tls\_source\_to\_port) | Source Port for TLS Inspection | `number` | `65535` | no |
+| <a name="input_vpc_endpoint_security_groups"></a> [vpc\_endpoint\_security\_groups](#input\_vpc\_endpoint\_security\_groups) | Map of security groups to create for VPC endpoints | <pre>map(object({<br/>    name        = string<br/>    description = optional(string, "Security group for VPC endpoint")<br/>    ingress_rules = optional(list(object({<br/>      description      = optional(string)<br/>      from_port        = number<br/>      to_port          = number<br/>      protocol         = string<br/>      cidr_blocks      = optional(list(string), [])<br/>      ipv6_cidr_blocks = optional(list(string), [])<br/>      security_groups  = optional(list(string), [])<br/>      self             = optional(bool, false)<br/>    })), [])<br/>    egress_rules = optional(list(object({<br/>      description      = optional(string)<br/>      from_port        = number<br/>      to_port          = number<br/>      protocol         = string<br/>      cidr_blocks      = optional(list(string), [])<br/>      ipv6_cidr_blocks = optional(list(string), [])<br/>      security_groups  = optional(list(string), [])<br/>      self             = optional(bool, false)<br/>    })), [])<br/>    tags = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
+| <a name="input_vpc_endpoints"></a> [vpc\_endpoints](#input\_vpc\_endpoints) | Map of VPC endpoint definitions to create | <pre>map(object({<br/>    service_name        = optional(string)       # If not provided, standard AWS service name will be constructed<br/>    service_type        = string                 # "Interface", "Gateway", or "GatewayLoadBalancer"<br/>    private_dns_enabled = optional(bool, true)   # Only applicable for Interface endpoints<br/>    auto_accept         = optional(bool, false)<br/>    policy              = optional(string)       # JSON policy document<br/>    security_group_ids  = optional(list(string), [])<br/>    tags                = optional(map(string), {})<br/>    subnet_ids          = optional(list(string)) # Override default subnet_ids if needed<br/>    # Required only for GatewayLoadBalancer endpoints<br/>    ip_address_type     = optional(string)       # "ipv4" or "dualstack"<br/>  }))</pre> | `{}` | no |
 | <a name="input_vpc_tags"></a> [vpc\_tags](#input\_vpc\_tags) | Additional tags for the VPC | `map(string)` | `{}` | no |
 | <a name="input_vpn_gateway_id"></a> [vpn\_gateway\_id](#input\_vpn\_gateway\_id) | ID of VPN Gateway to attach to the VPC | `string` | `""` | no |
 | <a name="input_vpn_gateway_tags"></a> [vpn\_gateway\_tags](#input\_vpn\_gateway\_tags) | Additional tags for the VPN gateway | `map(string)` | `{}` | no |
@@ -465,10 +522,8 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="output_vpc_cidr_block"></a> [vpc\_cidr\_block](#output\_vpc\_cidr\_block) | The CIDR block of the VPC |
 | <a name="output_vpc_enable_dns_hostnames"></a> [vpc\_enable\_dns\_hostnames](#output\_vpc\_enable\_dns\_hostnames) | Whether or not the VPC has DNS hostname support |
 | <a name="output_vpc_enable_dns_support"></a> [vpc\_enable\_dns\_support](#output\_vpc\_enable\_dns\_support) | Whether or not the VPC has DNS support |
-| <a name="output_vpc_endpoint_dynamodb_id"></a> [vpc\_endpoint\_dynamodb\_id](#output\_vpc\_endpoint\_dynamodb\_id) | The ID of VPC endpoint for DynamoDB |
-| <a name="output_vpc_endpoint_dynamodb_pl_id"></a> [vpc\_endpoint\_dynamodb\_pl\_id](#output\_vpc\_endpoint\_dynamodb\_pl\_id) | The prefix list for the DynamoDB VPC endpoint. |
-| <a name="output_vpc_endpoint_s3_id"></a> [vpc\_endpoint\_s3\_id](#output\_vpc\_endpoint\_s3\_id) | The ID of VPC endpoint for S3 |
-| <a name="output_vpc_endpoint_s3_pl_id"></a> [vpc\_endpoint\_s3\_pl\_id](#output\_vpc\_endpoint\_s3\_pl\_id) | The prefix list for the S3 VPC endpoint. |
+| <a name="output_vpc_endpoint_security_groups"></a> [vpc\_endpoint\_security\_groups](#output\_vpc\_endpoint\_security\_groups) | Map of security group IDs created for VPC endpoints |
+| <a name="output_vpc_endpoints"></a> [vpc\_endpoints](#output\_vpc\_endpoints) | Map of VPC endpoint IDs |
 | <a name="output_vpc_id"></a> [vpc\_id](#output\_vpc\_id) | The ID of the VPC |
 | <a name="output_vpc_instance_tenancy"></a> [vpc\_instance\_tenancy](#output\_vpc\_instance\_tenancy) | Tenancy of instances spin up within VPC |
 | <a name="output_vpc_main_route_table_id"></a> [vpc\_main\_route\_table\_id](#output\_vpc\_main\_route\_table\_id) | The ID of the main route table associated with this VPC |
