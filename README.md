@@ -58,9 +58,27 @@ module "mgmt_vpc" {
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   private_subnets = local.private_subnets # Map of Name -> CIDR
+  private_subnet_tags = {
+    "0" = "IAM"
+    "1" = "IAM"
+    "2" = "IAM"
+    "3" = "SIEM"
+    "4" = "SIEM"
+    "5" = "SIEM"
+  }
+
+  #tgw_subnets = local.tgw_subnets
+  #tgw_subnet_suffix = "TGW"
 
   public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
+  public_subnet_suffix = "PUBLC"
+
+  database_subnets = local.database_subnets
+  database_subnet_tags = {
+    "0" = "BACKEND"
+    "1" = "BACKEND"
+    "2" = "BACKEND"
+  }
 
   single_nat_gateway     = false
   enable_nat_gateway     = true
@@ -143,6 +161,7 @@ module "mgmt_vpc" {
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   private_subnets = local.private_subnets # Map of Name -> CIDR
+
 
   public_subnets       = local.public_subnets # Map of Name -> CIDR
   public_subnet_suffix = "public"
@@ -432,7 +451,6 @@ The variables can be further inspected to see what parameters and types are expe
 | <a name="input_one_nat_gateway_per_az"></a> [one\_nat\_gateway\_per\_az](#input\_one\_nat\_gateway\_per\_az) | Should be true if you want only one NAT Gateway per availability zone. Requires `var.azs` to be set, and the number of `public_subnets` created to be greater than or equal to the number of availability zones specified in `var.azs`. | `bool` | `false` | no |
 | <a name="input_private_custom_routes"></a> [private\_custom\_routes](#input\_private\_custom\_routes) | Custom routes for Private Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_private_route_table_tags"></a> [private\_route\_table\_tags](#input\_private\_route\_table\_tags) | Additional tags for the private route tables | `map(string)` | `{}` | no |
-| <a name="input_private_subnet_suffix"></a> [private\_subnet\_suffix](#input\_private\_subnet\_suffix) | Suffix to append to private subnets name | `string` | `"private"` | no |
 | <a name="input_private_subnet_tags"></a> [private\_subnet\_tags](#input\_private\_subnet\_tags) | Additional tags for the private subnets | `map(string)` | `{}` | no |
 | <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | A list of private subnets inside the VPC | `map` | `{}` | no |
 | <a name="input_propagate_private_route_tables_vgw"></a> [propagate\_private\_route\_tables\_vgw](#input\_propagate\_private\_route\_tables\_vgw) | Should be true if you want route table propagation | `bool` | `false` | no |
