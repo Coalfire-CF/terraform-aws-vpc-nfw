@@ -235,33 +235,9 @@ output "igw_id" {
   value       = element(concat(aws_internet_gateway.this[*].id, tolist([""])), 0)
 }
 
-output "vpc_endpoint_s3_id" {
-  description = "The ID of VPC endpoint for S3"
-  value       = element(concat(aws_vpc_endpoint.s3[*].id, tolist([""])), 0)
-}
-
-output "vpc_endpoint_s3_pl_id" {
-  description = "The prefix list for the S3 VPC endpoint."
-  value = element(concat(aws_vpc_endpoint.s3[*].prefix_list_id, tolist([
-    ""
-  ])), 0)
-}
-
-output "vpc_endpoint_dynamodb_id" {
-  description = "The ID of VPC endpoint for DynamoDB"
-  value       = element(concat(aws_vpc_endpoint.dynamodb[*].id, tolist([""])), 0)
-}
-
 output "vgw_id" {
   description = "The ID of the VPN Gateway"
   value = element(concat(aws_vpn_gateway.this[*].id, aws_vpn_gateway_attachment.this[*].vpn_gateway_id, tolist([
-    ""
-  ])), 0)
-}
-
-output "vpc_endpoint_dynamodb_pl_id" {
-  description = "The prefix list for the DynamoDB VPC endpoint."
-  value = element(concat(aws_vpc_endpoint.dynamodb[*].prefix_list_id, tolist([
     ""
   ])), 0)
 }
@@ -325,4 +301,14 @@ output "default_vpc_main_route_table_id" {
   value = element(concat(aws_default_vpc.this[*].main_route_table_id, tolist([
     ""
   ])), 0)
+}
+
+output "vpc_endpoints" {
+  description = "Map of VPC endpoint IDs"
+  value       = var.create_vpc_endpoints ? module.vpc_endpoints.vpc_endpoint_ids : {}
+}
+
+output "vpc_endpoint_security_groups" {
+  description = "Map of security group IDs created for VPC endpoints"
+  value       = var.create_vpc_endpoints ? module.vpc_endpoints.security_groups : {}
 }

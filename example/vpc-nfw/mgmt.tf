@@ -49,6 +49,7 @@ module "mgmt_vpc" {
   aws_nfw_prefix                        = var.resource_prefix
   aws_nfw_name                          = "mvp-test-nfw"
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group_shrd_svcs
+  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
   nfw_kms_key_id                        = aws_kms_key.nfw_key.arn
 
   # When deploying NFW, firewall_subnets must be specified
