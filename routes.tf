@@ -143,14 +143,15 @@ resource "aws_route" "private_custom" {
   # The desired end goal if given 2 custom routes and 3 subnets/AZs/Route Table is to create a route for each table
   # E.g. if 3 AZs/subnets, then the result of math/logic should be 0, 1, 2, 0, 1, 2
   # Because the element() function automatically wraps around the index (start from 0 if greater than list size), we combine it with the index function to ensure correct order
-  route_table_id = aws_route_table.private[index(aws_route_table.private, element(aws_route_table.private, count.index))].id
+  route_table_id = aws_route_table.private[count.index % length(aws_route_table.private)].id
 
-  destination_cidr_block     = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "destination_cidr_block", null)
+  destination_cidr_block = var.private_custom_routes[floor(count.index / length(aws_route_table.private))].destination_cidr_block
   destination_prefix_list_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "destination_prefix_list_id", null)
 
   network_interface_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "network_interface_id", null)
   transit_gateway_id   = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "transit_gateway_id", null)
   vpc_endpoint_id      = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_endpoint_id", null)
+  vpc_peering_connection_id   = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_peering_connection_id", null)
 
   timeouts {
     create = "5m"

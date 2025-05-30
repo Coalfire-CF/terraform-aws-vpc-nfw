@@ -31,7 +31,7 @@ resource "aws_subnet" "public" {
 
   tags = merge(tomap({
     "Name" = format("%s-${lower(var.public_subnet_suffix)}-%s", var.name, element(var.azs, count.index))
-  }), var.tags)
+  }), var.tags, var.public_eks_tags)
 }
 
 #################
@@ -48,7 +48,7 @@ resource "aws_subnet" "private" {
 
   tags = merge(tomap({
     "Name" = format("%s-${lower(var.private_subnet_tags[count.index])}-%s", var.name, element(var.azs, count.index))
-  }), var.tags)
+  }), var.tags, var.private_eks_tags)
 }
 
 #################

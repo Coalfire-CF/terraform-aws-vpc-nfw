@@ -260,37 +260,44 @@ variable "elasticache_subnet_suffix" {
 
 variable "public_subnets" {
   description = "A list of public subnets inside the VPC"
-  default     = {}
+  default     = []
+  type        = list
 }
 
 variable "firewall_subnets" {
   description = "A list of firewall subnets inside the VPC"
-  default     = {}
+  default     = []
+  type        = list
 }
 
 variable "private_subnets" {
   description = "A list of private subnets inside the VPC"
-  default     = {}
+  default     = []
+  type        = list
 }
 
 variable "tgw_subnets" {
   description = "A list of tgw subnets inside the VPC"
-  default     = {}
+  default     = []
+  type        = list
 }
 
 variable "database_subnets" {
   description = "A list of database subnets"
-  default     = {}
+  default     = []
+  type        = list
 }
 
 variable "redshift_subnets" {
   description = "A list of redshift subnets"
-  default     = {}
+  default     = []
+  type        = list
 }
 
 variable "elasticache_subnets" {
   description = "A list of elasticache subnets"
-  default     = {}
+  default     = []
+  type        = list
 }
 
 variable "create_database_subnet_route_table" {
@@ -421,6 +428,18 @@ variable "tags" {
   type        = map(string)
 }
 
+variable "private_eks_tags" {
+  description = "A map of tags to add to all privage subnets resources to support EKS"
+  default     = {}
+  type        = map(string)
+}
+
+variable "public_eks_tags" {
+  description = "A map of tags to add to all public subnets resources to support EKS"
+  default     = {}
+  type        = map(string)
+}
+
 variable "vpc_tags" {
   description = "Additional tags for the VPC"
   default     = {}
@@ -447,8 +466,7 @@ variable "firewall_subnet_name_tag" {
 
 variable "private_subnet_tags" {
   description = "Additional tags for the private subnets"
-  default     = {}
-  type        = map(string)
+  type        = list(string)
 }
 
 variable "tgw_subnet_tags" {
@@ -690,6 +708,7 @@ variable "private_custom_routes" {
     destination_prefix_list_id = optional(string, null)
     network_interface_id       = optional(string, null)
     transit_gateway_id         = optional(string, null)
+    vpc_peering_connection_id  = optional(string, null)
     vpc_endpoint_id            = optional(string, null)
   }))
   default = []
