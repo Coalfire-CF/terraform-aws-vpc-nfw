@@ -25,12 +25,12 @@ resource "aws_networkfirewall_firewall" "this" {
 }
 
 resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
-  count = length(var.suricata_stateful_rule_group) > 0 ? length(var.suricata_stateful_rule_group) : 0
+  count = length(var.suricata_stateful_rule_group) > 0 ? length(var.suricata_stateful_rule_group) : 1
   type  = "STATEFUL"
 
-  name        = var.suricata_stateful_rule_group[count.index]["name"]
-  description = var.suricata_stateful_rule_group[count.index]["description"]
-  capacity    = var.suricata_stateful_rule_group[count.index]["capacity"]
+  name        = try(var.suricata_stateful_rule_group[count.index]["name"], "DefaultSuricataDenyAll")
+  description = try(var.suricata_stateful_rule_group[count.index]["description"], "Default Deny All Suricata Rules")
+  capacity    = try(var.suricata_stateful_rule_group[count.index]["capacity"], 1000)
 
   encryption_configuration {
     key_id = var.nfw_kms_key_id
@@ -39,17 +39,14 @@ resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
 
   rule_group {
     rules_source {
-      rules_string = try(file(var.suricata_stateful_rule_group[count.index]["rules_file"]), "")
+      rules_string = try(var.suricata_stateful_rule_group[count.index]["rules_file"], file("${path.module}/nfw-base-suricata-rules.json"))
     }
 
     dynamic "rule_variables" {
-      for_each = [
-        for b in lookup(var.suricata_stateful_rule_group[count.index], "rule_variables", {}) : b
-        if length(b) > 1
-      ]
+      for_each = try(lookup(lookup(var.suricata_stateful_rule_group[count.index], "rule_variables", {}), "ip_sets", []),[])
       content {
         dynamic "ip_sets" {
-          for_each = lookup(lookup(var.suricata_stateful_rule_group[count.index], "rule_variables", {}), "ip_sets", [])
+          for_each = try(lookup(lookup(var.suricata_stateful_rule_group[count.index], "rule_variables", {}), "ip_sets", []))
           content {
             key = ip_sets.value["key"]
             ip_set {
@@ -69,10 +66,7 @@ resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
         }
       }
     }
-
-
   }
-
   tags = merge(var.tags)
 }
 
@@ -263,6 +257,19 @@ resource "aws_networkfirewall_firewall_policy" "this" {
   }
 
   firewall_policy {
+
+    # Stateful
+    stateful_default_actions = var.stateful_default_actions
+
+    dynamic "stateful_engine_options" {
+      for_each = length(var.stateful_engine_options) > 0 ? [var.stateful_engine_options] : []
+
+      content {
+        rule_order              = try(stateful_engine_options.value.rule_order, null)
+        stream_exception_policy = try(stateful_engine_options.value.stream_exception_policy, null)
+      }
+    }
+
     stateless_default_actions          = ["aws:${var.stateless_default_actions}"]
     stateless_fragment_default_actions = ["aws:${var.stateless_fragment_default_actions}"]
 
