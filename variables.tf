@@ -654,7 +654,19 @@ variable "cloudwatch_log_group_retention_in_days" {
   type        = number
   default     = 365
 }
+
 variable "cloudwatch_log_group_kms_key_id" {
+  description = "Customer KMS Key id for Cloudwatch Log encryption"
+  type        = string
+}
+
+variable "s3_access_logs_bucket" {
+  description = "bucket id for s3 access logs bucket"
+  type = string
+}
+
+
+variable "s3_kms_key_arn" {
   description = "Customer KMS Key id for Cloudwatch Log encryption"
   type        = string
 }
