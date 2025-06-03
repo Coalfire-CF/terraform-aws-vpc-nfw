@@ -90,7 +90,7 @@ resource "aws_iam_role_policy_attachment" "flowlogs_policy" {
 
 
 
-resource "aws_flow_log" "this" {
+resource "aws_flow_log" "s3" {
   count = var.flow_log_destination_type == "s3" ? 1 : 0
   iam_role_arn         = local.flow_log_iam_role_arn
   log_destination_type = var.flow_log_destination_type
