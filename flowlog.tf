@@ -3,6 +3,9 @@ locals {
   flow_log_iam_role_arn    = var.flow_log_destination_type == "cloud-watch-logs" ? try(aws_iam_role.flowlogs_role[0].arn, null) : null
 }
 
+data "aws_region" "current" {}
+
+
 resource "aws_flow_log" "this" {
   iam_role_arn         = local.flow_log_iam_role_arn
   log_destination      = local.flow_log_destination_arn
@@ -85,7 +88,7 @@ resource "aws_iam_role_policy_attachment" "flowlogs_policy" {
 
 resource "aws_s3_bucket" "flowlogs" {
   count = var.flow_log_destination_type == "s3" ? 1 : 0
-  bucket = "${var.resource_prefix}-${var.aws_region}-flowlogs"
+  bucket = "${var.name}-${data.aws_region.current.name}-flowlogs"
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "flowlogs-encryption" {
