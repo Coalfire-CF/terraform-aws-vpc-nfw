@@ -93,6 +93,7 @@ resource "aws_iam_role_policy_attachment" "flowlogs_policy" {
 resource "aws_flow_log" "s3" {
   count = var.flow_log_destination_type == "s3" ? 1 : 0
   iam_role_arn         = local.flow_log_iam_role_arn
+  log_destination = aws_s3_bucket.flowlogs[0].arn
   log_destination_type = var.flow_log_destination_type
   traffic_type         = "ALL"
   vpc_id               = local.vpc_id
@@ -100,7 +101,7 @@ resource "aws_flow_log" "s3" {
 
 resource "aws_s3_bucket" "flowlogs" {
   count = var.flow_log_destination_type == "s3" ? 1 : 0
-  bucket = "${var.name}-${data.aws_region.current.name}-vpcflowlogs"
+  bucket = "${var.name}-flowlogs"
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "flowlogs-encryption" {
