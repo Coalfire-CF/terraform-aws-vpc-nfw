@@ -7,6 +7,7 @@ resource "aws_networkfirewall_firewall" "this" {
   delete_protection                 = var.delete_protection
   firewall_policy_change_protection = var.firewall_policy_change_protection
   subnet_change_protection          = var.subnet_change_protection
+  enabled_analysis_types            = ["TLS_SNI", "HTTP_HOST"]
 
   encryption_configuration {
     key_id = var.nfw_kms_key_id
