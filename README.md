@@ -1,12 +1,18 @@
-==> README.md <==
-==> README.md <==
 ![Coalfire](coalfire_logo.png)
 
-# AWS VPC NFW Terraform Module
+# terraform-aws-vpc-nfw
+
+## Description
 
 Terraform module which creates VPC and/or NFW resources on AWS.
 
-These types of resources are supported:
+## Dependencies
+
+- terraform-aws-account-setup
+
+## Resource List
+
+The following type of resources are supported:
 
 * [VPC](https://www.terraform.io/docs/providers/aws/r/vpc.html)
 * [Subnet](https://www.terraform.io/docs/providers/aws/r/subnet.html)
@@ -26,9 +32,6 @@ These types of resources are supported:
 * [Default VPC](https://www.terraform.io/docs/providers/aws/r/default_vpc.html)
 * [AWS NFW](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/networkfirewall_firewall)
 
-## Submodule
-[Network Firewall](modules/aws-network-firewall/README.md)
-
 ## Assumptions
 
 * Networking resources, including VPCs, Transit Gateways and Network Firewalls, are designed to be deployed under a single state.
@@ -36,69 +39,9 @@ These types of resources are supported:
   * `module.mgmt_vpc.private_subnets["mvp-mgmt-compute-us-gov-west-1a"]`
   * `data.terraform_remote_state.network.outputs.public_subnets["mvp-mgmt-dmz-us-gov-west-1a"]`
 * This is designed to automatically reference the firewall subnets when opted to be created.
-* Automatically adds AWS region to the subnet name upon creation
-* The private route table IDs includes the rtb IDs from database subnets as well
+* Automatically adds AWS region to the subnet name upon creation.
+* The private route table IDs includes the route table IDs from database subnets as well.
 
-## Usage
-If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state.
-This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. 
-```hcl
-module "mgmt_vpc" {
-  source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
-  providers = {
-    aws = aws.mgmt
-  }
-
-  name = "${var.resource_prefix}-mgmt"
-
-  delete_protection = var.delete_protection
-
-  cidr = var.mgmt_vpc_cidr
-
-  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-
-  private_subnets = local.private_subnets # Map of Name -> CIDR
-
-  public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
-
-  single_nat_gateway     = false
-  enable_nat_gateway     = true
-  one_nat_gateway_per_az = true
-  enable_vpn_gateway     = false
-  enable_dns_hostnames   = true
-
-  flow_log_destination_type              = "cloud-watch-logs"
-  cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.day0.outputs.cloudwatch_kms_key_arn
-
-  ### Network Firewall ###
-  deploy_aws_nfw                        = var.deploy_aws_nfw
-  aws_nfw_prefix                        = var.resource_prefix
-  aws_nfw_name                          = "pak-nfw"
-  aws_nfw_stateless_rule_group          = local.stateless_rule_group_shrd_svcs
-  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group_shrd_svcs
-  aws_nfw_domain_stateful_rule_group    = local.domain_stateful_rule_group_shrd_svcs
-  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs # Requires creation of local file with fw rules
-  nfw_kms_key_id                        = module.nfw_kms_key.kms_key_arn
-
-  #When deploying NFW, firewall_subnets must be specified
-  firewall_subnets       = local.firewall_subnets
-  firewall_subnet_suffix = "firewall"
-
-  # TLS Outbound Inspection
-  enable_tls_inspection = var.enable_tls_inspection # deploy_aws_nfw must be set to true to enable this
-  tls_cert_arn          = var.tls_cert_arn
-  tls_destination_cidrs = var.tls_destination_cidrs # Set these to the NAT gateways to filter outbound traffic without affecting the hosted VPN
-
-  /* Add Additional tags here */
-  tags = {
-    Owner       = var.resource_prefix
-    Environment = "mgmt"
-    createdBy   = "terraform"
-  }
-}
-```
 ## Replacing the Default Deny All NFW Policy
 
 #### There will be a default Deny All NFW policy that is applied `module.mgmt_vpc.module.aws_network_firewall.nfw-base-suricata-rule.json`. If you are having networking problems, please follow the example below of how to pass a customized ruleset to the module. Any customized ruleset will overwrite the default policy.
@@ -124,48 +67,6 @@ aws_nfw_suricata_stateful_rule_group = local.suricata_rule_group_shrd_svcs
 ```  
 pass tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"Allow inbound SSH - ONLY FOR PACKER DISABLE AFTER IMAGES ARE BUILT"; flow:established; sid:103; rev:1;)
 ```
-
-
-## AWS Networking deployment without AWS Network Firewall
-```hcl
-module "mgmt_vpc" {
-  source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
-  providers = {
-    aws = aws.mgmt
-  }
-
-  name = "${var.resource_prefix}-mgmt"
-
-  delete_protection = var.delete_protection
-
-  cidr = var.mgmt_vpc_cidr
-
-  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-
-  private_subnets = local.private_subnets # Map of Name -> CIDR
-
-  public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
-
-  single_nat_gateway     = false
-  enable_nat_gateway     = true
-  one_nat_gateway_per_az = true
-  enable_vpn_gateway     = false
-  enable_dns_hostnames   = true
-
-  flow_log_destination_type              = "cloud-watch-logs"
-  cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.day0.outputs.cloudwatch_kms_key_arn
-
-  /* Add Additional tags here */
-  tags = {
-    Owner       = var.resource_prefix
-    Environment = "mgmt"
-    createdBy   = "terraform"
-  }
-}
-```
-
 
 ## Custom Routes
 
@@ -202,73 +103,251 @@ Some variables expose different expected values based on sensible assumptions.  
 
 The variables can be further inspected to see what parameters and types are expected.
 
-## Tree
+## Usage
+If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture.
+Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements. An example of 'mgmt.tf' usage is shown:
+```hcl
+module "mgmt_vpc" {
+  source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
+
+  name = "${var.resource_prefix}-mgmt"
+
+  delete_protection = var.delete_protection
+
+  cidr = var.mgmt_vpc_cidr
+
+  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+
+  private_subnets = local.private_subnets # Map of Name -> CIDR
+  private_subnet_tags = {
+    "0" = "Compute"
+    "1" = "Compute"
+    "2" = "Compute"
+    "3" = "Private"
+    "4" = "Private"
+    "5" = "Private"
+  }
+
+  tgw_subnets = local.tgw_subnets
+  tgw_subnet_tags = {
+    "0" = "TGW"
+    "1" = "TGW"
+    "2" = "TGW"
+  }
+  
+  public_subnets       = local.public_subnets # Map of Name -> CIDR
+  public_subnet_suffix = "public"
+
+  single_nat_gateway     = false
+  enable_nat_gateway     = true
+  one_nat_gateway_per_az = true
+  enable_vpn_gateway     = false
+  enable_dns_hostnames   = true
+
+  flow_log_destination_type              = "cloud-watch-logs"
+  cloudwatch_log_group_retention_in_days = 30
+  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
+
+  ### Network Firewall ###
+  deploy_aws_nfw                        = true
+  aws_nfw_prefix                        = var.resource_prefix
+  aws_nfw_name                          = "${var.resource_prefix}-nfw"
+  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
+  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
+  nfw_kms_key_id                        = data.terraform_remote_state.account-setup.outputs.nfw_kms_key_id
+
+  #When deploying NFW, firewall_subnets must be specified
+  firewall_subnets       = local.firewall_subnets
+  firewall_subnet_suffix = "firewall"
+
+  # TLS Outbound Inspection
+  enable_tls_inspection = var.enable_tls_inspection # deploy_aws_nfw must be set to true to enable this
+  tls_cert_arn          = var.tls_cert_arn
+  tls_destination_cidrs = var.tls_destination_cidrs # Set these to the NAT gateways to filter outbound traffic without affecting the hosted VPN
+
+  ### VPC Endpoints ###
+  create_vpc_endpoints = true
+
+  # Control where gateway endpoints are associated
+  associate_with_private_route_tables = true  # Associate with private subnets (default)
+  associate_with_public_route_tables  = false # Don't associate with public subnets
+
+  vpc_endpoints = {
+    # S3 Gateway endpoint
+    s3 = {
+      service_type = "Gateway"
+      service_name = "com.amazonaws.${var.aws_region}.s3"
+      tags         = { Name = "${var.resource_prefix}-s3-endpoint" }
+    }
+
+    # DynamoDB Gateway endpoint
+    dynamodb = {
+      service_type = "Gateway"
+      service_name = "com.amazonaws.${var.aws_region}.dynamodb"
+      tags         = { Name = "${var.resource_prefix}-dynamodb-endpoint" }
+    }
+
+    # KMS Interface endpoint (for encryption operations)
+    kms = {
+      service_type        = "Interface"
+      service_name        = "com.amazonaws.${var.aws_region}.kms-fips"
+      private_dns_enabled = true
+      tags                = { Name = "${var.resource_prefix}-kms-endpoint" }
+    }
+  }
+
+  # Define a common security group for the VPC endpoints
+  vpc_endpoint_security_groups = {
+    common_sg = {
+      name        = "common-endpoint-sg"
+      description = "Common security group for all VPC endpoints"
+      ingress_rules = [
+        {
+          from_port   = 443
+          to_port     = 443
+          protocol    = "tcp"
+          cidr_blocks = var.cidr_block #should just allow your vpc_cidr
+        }
+      ]
+    }
+  }
+  
+  /* Add Additional tags here */
+  tags = {
+    Owner       = var.resource_prefix
+    Environment = "mgmt"
+    createdBy   = "terraform"
+  }
+}
 ```
-.
-|-- CONTRIBUTING.md
-|-- LICENSE
-|-- README.md
-|-- coalfire_logo.png
-|-- example
-|   |-- vpc-endpoints
-|   |   |-- README.md
-|   |   |-- data.tf
-|   |   |-- kms.tf
-|   |   |-- locals.tf
-|   |   |-- main.tf
-|   |   |-- nfw_policies.tf
-|   |   |-- outputs.tf
-|   |   |-- providers.tf
-|   |   |-- required_providers.tf
-|   |   |-- subnets.tf
-|   |   |-- test.rules.json
-|   |   |-- tstate.tf
-|   |   |-- variables.tf
-|   |   |-- vars.auto.tfvars
-|   |-- vpc-nfw
-|       |-- README.md
-|       |-- data.tf
-|       |-- kms.tf
-|       |-- locals.tf
-|       |-- mgmt.tf
-|       |-- nfw_policies.tf
-|       |-- outputs.tf
-|       |-- providers.tf
-|       |-- required_providers.tf
-|       |-- subnets.tf
-|       |-- test.rules.json
-|       |-- tstate.tf
-|       |-- variables.tf
-|       |-- vars.auto.tfvars
-|-- flowlog.tf
-|-- main.tf
-|-- modules
-|   |-- aws-network-firewall
-|   |   |-- README.md
-|   |   |-- coalfire_logo.png
-|   |   |-- locals.tf
-|   |   |-- main.tf
-|   |   |-- nfw-base-suricata-rules.json
-|   |   |-- output.tf
-|   |   |-- required_providers.tf
-|   |   |-- tls.tf
-|   |   |-- variables.tf
-|   |-- vpc-endpoint
-|       |-- README.md
-|       |-- locals.tf
-|       |-- main.tf
-|       |-- outputs.tf
-|       |-- variables.tf
-|-- outputs.tf
-|-- required_providers.tf
-|-- routes.tf
-|-- subnets.tf
-|-- test
-|   |-- src
-|       |-- vpc_endpoints_with_nfw_test.go
-|-- update-readme-tree.sh
-|-- variables.tf
+AWS Networking deployment without AWS Network Firewall:
+```hcl
+module "mgmt_vpc" {
+  source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
+
+  name = "${var.resource_prefix}-mgmt"
+
+  delete_protection = var.delete_protection
+
+  cidr = var.mgmt_vpc_cidr
+
+  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
+
+  private_subnets = local.private_subnets # Map of Name -> CIDR
+  private_subnet_tags = {
+    "0" = "Compute"
+    "1" = "Compute"
+    "2" = "Compute"
+    "3" = "Private"
+    "4" = "Private"
+    "5" = "Private"
+  }
+
+  tgw_subnets = local.tgw_subnets
+  tgw_subnet_tags = {
+    "0" = "TGW"
+    "1" = "TGW"
+    "2" = "TGW"
+  }
+
+  public_subnets       = local.public_subnets # Map of Name -> CIDR
+  public_subnet_suffix = "public"
+
+  single_nat_gateway     = false
+  enable_nat_gateway     = true
+  one_nat_gateway_per_az = true
+  enable_vpn_gateway     = false
+  enable_dns_hostnames   = true
+
+  flow_log_destination_type              = "cloud-watch-logs"
+  cloudwatch_log_group_retention_in_days = 30
+  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
+
+  /* Add Additional tags here */
+  tags = {
+    Owner       = var.resource_prefix
+    Environment = "mgmt"
+    createdBy   = "terraform"
+  }
+}
 ```
+## Environment Setup
+
+```hcl
+IAM user authentication:
+
+- Download and install the AWS CLI (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- Log into the AWS Console and create AWS CLI Credentials (https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html)
+- Configure the named profile used for the project, such as 'aws configure --profile example-mgmt'
+
+SSO-based authentication (via IAM Identity Center SSO):
+
+- Login to the AWS IAM Identity Center console, select the permission set for MGMT, and select the 'Access Keys' link.
+- Choose the 'IAM Identity Center credentials' method to get the SSO Start URL and SSO Region values.
+- Run the setup command 'aws configure sso --profile example-mgmt' and follow the prompts.
+- Verify you can run AWS commands successfully, for example 'aws s3 ls --profile example-mgmt'.
+- Run 'export AWS_PROFILE=example-mgmt' in your terminal to use the specific profile and avoid having to use '--profile' option.
+```
+
+## Deployment
+
+1. Navigate to the Terraform project and create a parent directory in the upper level code, for example:
+
+    ```hcl
+    ../{CLOUD}/terraform/{REGION}/management-account/example
+    ```
+
+   If multi-account management plane:
+
+    ```hcl
+    ../{CLOUD}/terraform/{REGION}/{ACCOUNT_TYPE}-mgmt-account/example
+    ```
+
+2. Create a properly defined main.tf file via the template found under 'Usage' while adjusting 'auto.tfvars' as needed. Note that many provided variables are outputs from other modules. Example parent directory:
+
+   ```hcl
+   ├── Example/
+   │   ├── example.auto.tfvars   
+   │   ├── locals.tf
+   │   ├── mgmt.tf
+   │   ├── nfw_policies.tf
+   │   ├── outputs.tf
+   │   ├── providers.tf
+   │   ├── remote-data.tf
+   │   ├── required-providers.tf
+   │   ├── subnets.tf
+   │   ├── suricata.json
+   │   ├── variables.tf
+   │   ├── ...
+   ```
+    Make sure that 'remote-data.tf' defines the S3 backend which is on the Management account state bucket. For example:
+
+    ```hcl
+    terraform {
+      backend "s3" {
+        bucket       = "${var.resource_prefix}-us-gov-west-1-tf-state"
+        region       = "us-gov-west-1"
+        key          = "${var.resource_prefix}-us-gov-west-1-vpc-setup.tfstate"
+        encrypt      = true
+        use_lockfile = true
+      }
+    }
+    ```
+
+3. Initialize the Terraform working directory:
+   ```hcl
+   terraform init
+   ```
+   Create an execution plan and verify the resources being created:
+   ```hcl
+   terraform plan
+   ```
+   Apply the configuration:
+   ```hcl
+   terraform apply
+   ```
+
+<!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
