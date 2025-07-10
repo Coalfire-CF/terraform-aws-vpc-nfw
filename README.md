@@ -610,3 +610,71 @@ SSO-based authentication (via IAM Identity Center SSO):
 | <a name="output_vpc_main_route_table_id"></a> [vpc\_main\_route\_table\_id](#output\_vpc\_main\_route\_table\_id) | The ID of the main route table associated with this VPC |
 | <a name="output_vpc_secondary_cidr_blocks"></a> [vpc\_secondary\_cidr\_blocks](#output\_vpc\_secondary\_cidr\_blocks) | List of secondary CIDR blocks of the VPC |
 <!-- END_TF_DOCS -->
+
+## Tree
+```
+.
+|-- CONTRIBUTING.md
+|-- LICENSE
+|-- README.md
+|-- coalfire_logo.png
+|-- example
+|   |-- vpc-endpoints
+|   |   |-- README.md
+|   |   |-- data.tf
+|   |   |-- kms.tf
+|   |   |-- locals.tf
+|   |   |-- main.tf
+|   |   |-- nfw_policies.tf
+|   |   |-- outputs.tf
+|   |   |-- providers.tf
+|   |   |-- required_providers.tf
+|   |   |-- subnets.tf
+|   |   |-- test.rules.json
+|   |   |-- tstate.tf
+|   |   |-- variables.tf
+|   |   |-- vars.auto.tfvars
+|   |-- vpc-nfw
+|       |-- README.md
+|       |-- data.tf
+|       |-- kms.tf
+|       |-- locals.tf
+|       |-- mgmt.tf
+|       |-- nfw_policies.tf
+|       |-- outputs.tf
+|       |-- providers.tf
+|       |-- required_providers.tf
+|       |-- subnets.tf
+|       |-- test.rules.json
+|       |-- tstate.tf
+|       |-- variables.tf
+|       |-- vars.auto.tfvars
+|-- flowlog.tf
+|-- main.tf
+|-- modules
+|   |-- aws-network-firewall
+|   |   |-- README.md
+|   |   |-- coalfire_logo.png
+|   |   |-- locals.tf
+|   |   |-- main.tf
+|   |   |-- nfw-base-suricata-rules.json
+|   |   |-- output.tf
+|   |   |-- required_providers.tf
+|   |   |-- tls.tf
+|   |   |-- variables.tf
+|   |-- vpc-endpoint
+|       |-- README.md
+|       |-- locals.tf
+|       |-- main.tf
+|       |-- outputs.tf
+|       |-- variables.tf
+|-- outputs.tf
+|-- required_providers.tf
+|-- routes.tf
+|-- subnets.tf
+|-- test
+|   |-- src
+|       |-- vpc_endpoints_with_nfw_test.go
+|-- update-readme-tree.sh
+|-- variables.tf
+```
