@@ -9,4 +9,4 @@ on:
 
 jobs:
   check-markdown:
-    uses: Coalfire-CF/Actions/.github/workflows/org-checkov.yml@v0.0.19
+    uses: Coalfire-CF/Actions/.github/workflows/org-checkov.yml@main
