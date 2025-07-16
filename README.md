@@ -207,6 +207,7 @@ The variables can be further inspected to see what parameters and types are expe
 .
 |-- CONTRIBUTING.md
 |-- LICENSE
+|-- License.md
 |-- README.md
 |-- coalfire_logo.png
 |-- example
