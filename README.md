@@ -119,7 +119,7 @@ module "mgmt_vpc" {
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   private_subnets = local.private_subnets # Map of Name -> CIDR
-  private_subnet_tags = {
+  private_subnet_tags = { #please note this goes alphabetically in order
     "0" = "Compute"
     "1" = "Compute"
     "2" = "Compute"
@@ -149,7 +149,7 @@ module "mgmt_vpc" {
   cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
 
   ### Network Firewall ###
-  deploy_aws_nfw                        = true
+  deploy_aws_nfw                        = var.deploy_aws_nfw
   aws_nfw_prefix                        = var.resource_prefix
   aws_nfw_name                          = "${var.resource_prefix}-nfw"
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
