@@ -700,7 +700,7 @@ SSO-based authentication (via IAM Identity Center SSO):
 |   |   |-- data.tf
 |   |   |-- kms.tf
 |   |   |-- locals.tf
-|   |   |-- main.tf
+|   |   |-- main.tf.txt
 |   |   |-- nfw_policies.tf
 |   |   |-- outputs.tf
 |   |   |-- providers.tf
