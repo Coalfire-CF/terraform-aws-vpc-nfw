@@ -628,6 +628,7 @@ SSO-based authentication (via IAM Identity Center SSO):
 .
 |-- CONTRIBUTING.md
 |-- LICENSE
+|-- License.md
 |-- README.md
 |-- coalfire_logo.png
 |-- example
