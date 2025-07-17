@@ -191,7 +191,7 @@ module "mgmt_vpc" {
     kms = {
       service_type        = "Interface"
       service_name        = "com.amazonaws.${var.aws_region}.kms-fips"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-kms-endpoint" }
     }
@@ -200,7 +200,7 @@ module "mgmt_vpc" {
     ssm = {
       service_type        = "Interface"
       service_name        = "com.amazonaws.${var.aws_region}.ssm"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-ssm-endpoint" }
     }
@@ -209,7 +209,7 @@ module "mgmt_vpc" {
     ssmmessages = {
       service_type        = "Interface"
       service_name        = "com.amazonaws.${var.aws_region}.ssmmessages"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-ssmmessages-endpoint" }
     }
@@ -218,7 +218,7 @@ module "mgmt_vpc" {
     ec2messages = {
       service_type        = "Interface"
       service_name        = "com.amazonaws.${var.aws_region}.ec2messages"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-ec2messages-endpoint" }
     }
@@ -227,7 +227,7 @@ module "mgmt_vpc" {
     logs = {
       service_type        = "Interface"
       service_name        = "com.amazonaws.${var.aws_region}.logs"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-logs-endpoint" }
     }
@@ -235,7 +235,7 @@ module "mgmt_vpc" {
     dockerregistry = {
       service_type        = "Interface"
       service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-ecr-dkr" }
     }
@@ -243,7 +243,7 @@ module "mgmt_vpc" {
     ecr = {
       service_type        = "Interface"
       service_name        = "com.amazonaws.${var.aws_region}.ecr.api"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-ecr-api" }
     }
