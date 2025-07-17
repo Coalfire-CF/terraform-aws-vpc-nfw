@@ -115,7 +115,14 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "flowlogs-encrypti
   }
 }
 
+# Create a local value for the S3 bucket ARN to avoid referencing non-existent resources
+locals {
+  s3_bucket_arn = var.flow_log_destination_type == "s3" ? aws_s3_bucket.flowlogs[0].arn : ""
+}
+
 data "aws_iam_policy_document" "flowlogs_policy" {
+  count = var.flow_log_destination_type == "s3" ? 1 : 0
+
   statement {
     actions = ["s3:GetBucketAcl"]
     effect  = "Allow"
@@ -123,7 +130,7 @@ data "aws_iam_policy_document" "flowlogs_policy" {
       identifiers = ["delivery.logs.amazonaws.com"]
       type        = "Service"
     }
-    resources = [aws_s3_bucket.flowlogs[0].arn]
+    resources = [local.s3_bucket_arn]
   }
 
   statement {
@@ -134,7 +141,7 @@ data "aws_iam_policy_document" "flowlogs_policy" {
       type        = "Service"
     }
     resources = [
-    "${aws_s3_bucket.flowlogs[0].arn}/*"]
+    "${local.s3_bucket_arn}/*"]
 
     condition {
       test     = "StringEquals"
@@ -150,15 +157,15 @@ data "aws_iam_policy_document" "flowlogs_policy" {
       identifiers = ["ec2.amazonaws.com"]
       type        = "Service"
     }
-    resources = ["${aws_s3_bucket.flowlogs[0].arn}/*",
-    aws_s3_bucket.flowlogs[0].arn]
+    resources = ["${local.s3_bucket_arn}/*",
+    local.s3_bucket_arn]
   }
 }
 
 resource "aws_s3_bucket_policy" "flowlogs_bucket_policy" {
   count = var.flow_log_destination_type == "s3" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].bucket
-  policy = data.aws_iam_policy_document.flowlogs_policy.json
+  policy = data.aws_iam_policy_document.flowlogs_policy[0].json
 }
 
 resource "aws_s3_bucket_public_access_block" "flowlogs" {

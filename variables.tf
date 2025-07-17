@@ -466,7 +466,8 @@ variable "firewall_subnet_name_tag" {
 
 variable "private_subnet_tags" {
   description = "Additional tags for the private subnets"
-  type        = list(string)
+  default     = {}
+  type        = map(string)
 }
 
 variable "tgw_subnet_tags" {
@@ -658,17 +659,20 @@ variable "cloudwatch_log_group_retention_in_days" {
 variable "cloudwatch_log_group_kms_key_id" {
   description = "Customer KMS Key id for Cloudwatch Log encryption"
   type        = string
+  default     = ""
 }
 
 variable "s3_access_logs_bucket" {
   description = "bucket id for s3 access logs bucket"
   type = string
+  default     = ""
 }
 
 
 variable "s3_kms_key_arn" {
   description = "Customer KMS Key id for Cloudwatch Log encryption"
   type        = string
+  default     = ""
 }
 
 variable "database_custom_routes" {
