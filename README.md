@@ -177,7 +177,7 @@ module "mgmt_vpc" {
     s3 = {
       service_type = "Gateway"
       service_name = "com.amazonaws.${var.aws_region}.s3"
-      tags         = { Name = "${var.resource_prefix}-s3-endpoint" }
+      tags         = { Name = "${var.resource_prefix}-s3-gateway-endpoint" }
     }
 
     # DynamoDB Gateway endpoint
@@ -191,22 +191,85 @@ module "mgmt_vpc" {
     kms = {
       service_type        = "Interface"
       service_name        = "com.amazonaws.${var.aws_region}.kms-fips"
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
       private_dns_enabled = true
       tags                = { Name = "${var.resource_prefix}-kms-endpoint" }
     }
+
+    # SSM Interface endpoint
+    ssm = {
+      service_type        = "Interface"
+      service_name        = "com.amazonaws.${var.aws_region}.ssm"
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      private_dns_enabled = true
+      tags                = { Name = "${var.resource_prefix}-ssm-endpoint" }
+    }
+
+    # SSM Messages Interface endpoint
+    ssmmessages = {
+      service_type        = "Interface"
+      service_name        = "com.amazonaws.${var.aws_region}.ssmmessages"
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      private_dns_enabled = true
+      tags                = { Name = "${var.resource_prefix}-ssmmessages-endpoint" }
+    }
+
+    # EC2 Messages Interface endpoint
+    ec2messages = {
+      service_type        = "Interface"
+      service_name        = "com.amazonaws.${var.aws_region}.ec2messages"
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      private_dns_enabled = true
+      tags                = { Name = "${var.resource_prefix}-ec2messages-endpoint" }
+    }
+
+    # Logs Interface endpoint
+    logs = {
+      service_type        = "Interface"
+      service_name        = "com.amazonaws.${var.aws_region}.logs"
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      private_dns_enabled = true
+      tags                = { Name = "${var.resource_prefix}-logs-endpoint" }
+    }
+
+    dockerregistry = {
+      service_type        = "Interface"
+      service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      private_dns_enabled = true
+      tags                = { Name = "${var.resource_prefix}-ecr-dkr" }
+    }
+
+    ecr = {
+      service_type        = "Interface"
+      service_name        = "com.amazonaws.${var.aws_region}.ecr.api"
+      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-eks-us-gov-west-1c"]]
+      private_dns_enabled = true
+      tags                = { Name = "${var.resource_prefix}-ecr-api" }
+    }
+
   }
 
-  # Define a common security group for the VPC endpoints
+ # Define security groups for VPC endpoints
   vpc_endpoint_security_groups = {
     common_sg = {
       name        = "common-endpoint-sg"
-      description = "Common security group for all VPC endpoints"
+      description = "Common security group for all VPC endpoint"
       ingress_rules = [
         {
           from_port   = 443
           to_port     = 443
           protocol    = "tcp"
-          cidr_blocks = var.cidr_block #should just allow your vpc_cidr
+          cidr_blocks = ["${var.ip_network_fedramp_mgmt}.0.0/16"]
+        }
+      ]
+
+      egress_rules = [
+        {
+          from_port   = 0
+          to_port     = 0
+          protocol    = "-1"
+          cidr_blocks = ["0.0.0.0/0"]
         }
       ]
     }
