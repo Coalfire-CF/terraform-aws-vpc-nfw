@@ -702,36 +702,27 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |-- README.md
 |-- coalfire_logo.png
 |-- example
-|   |-- vpc-endpoints
-|   |   |-- README.md
-|   |   |-- data.tf
-|   |   |-- kms.tf
+|   |-- vpc-app-account
+|   |   |-- app-networking.auto.tfvars
 |   |   |-- locals.tf
-|   |   |-- main.tf.txt
-|   |   |-- nfw_policies.tf
+|   |   |-- mgmt.tf
 |   |   |-- outputs.tf
 |   |   |-- providers.tf
+|   |   |-- remote-data.tf
 |   |   |-- required_providers.tf
-|   |   |-- subnets.tf
-|   |   |-- test.rules.json
-|   |   |-- tstate.tf
 |   |   |-- variables.tf
-|   |   |-- vars.auto.tfvars
 |   |-- vpc-nfw
-|       |-- README.md
-|       |-- data.tf
-|       |-- kms.tf
 |       |-- locals.tf
 |       |-- mgmt.tf
 |       |-- nfw_policies.tf
 |       |-- outputs.tf
 |       |-- providers.tf
+|       |-- remote-data.tf
 |       |-- required_providers.tf
 |       |-- subnets.tf
-|       |-- test.rules.json
-|       |-- tstate.tf
+|       |-- suricata.json
 |       |-- variables.tf
-|       |-- vars.auto.tfvars
+|       |-- vpc_nfw.auto.tfvars
 |-- flowlog.tf
 |-- main.tf
 |-- modules
