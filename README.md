@@ -4,7 +4,7 @@
 
 ## Description
 
-Terraform module which creates VPC and/or NFW resources on AWS.
+Terraform module which creates VPC (and optionally NFW) resources on AWS.
 
 ## Dependencies
 
@@ -105,17 +105,13 @@ The variables can be further inspected to see what parameters and types are expe
 
 ## Usage
 If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture.
-Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements. An example of 'mgmt.tf' usage is shown:
+Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements. An example of 'mgmt.tf' usage is shown where VPC and AWS NFW resources are deployed, along with optional VPC endpoints:
 ```hcl
 module "mgmt_vpc" {
-  source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
+  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
 
   name = "${var.resource_prefix}-mgmt"
-
-  delete_protection = var.delete_protection
-
   cidr = var.mgmt_vpc_cidr
-
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
   private_subnets = local.private_subnets # Map of Name -> CIDR
@@ -129,6 +125,12 @@ module "mgmt_vpc" {
   }
 
   tgw_subnets = local.tgw_subnets
+# Example of using specific CIDRs for TGW:  
+# tgw_subnets = [
+#   "x.x.255.0/28",
+#   "x.x.255.16/28"
+# ]
+  
   tgw_subnet_tags = {
     "0" = "TGW"
     "1" = "TGW"
@@ -138,11 +140,11 @@ module "mgmt_vpc" {
   public_subnets       = local.public_subnets # Map of Name -> CIDR
   public_subnet_suffix = "public"
 
-  single_nat_gateway     = false
-  enable_nat_gateway     = true
-  one_nat_gateway_per_az = true
-  enable_vpn_gateway     = false
-  enable_dns_hostnames   = true
+  single_nat_gateway     = var.single_nat_gateway # false
+  enable_nat_gateway     = var.enable_nat_gateway # true
+  one_nat_gateway_per_az = var.one_nat_gateway_per_az # true
+  enable_vpn_gateway     = var.enable_vpn_gateway # false
+  enable_dns_hostnames   = var.enable_dns_hostnames # true
 
   flow_log_destination_type              = "cloud-watch-logs"
   cloudwatch_log_group_retention_in_days = 30
@@ -150,22 +152,23 @@ module "mgmt_vpc" {
 
   ### Network Firewall ###
   deploy_aws_nfw                        = var.deploy_aws_nfw
+  delete_protection                     = var.delete_protection
   aws_nfw_prefix                        = var.resource_prefix
   aws_nfw_name                          = "${var.resource_prefix}-nfw"
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
   aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
   nfw_kms_key_id                        = data.terraform_remote_state.account-setup.outputs.nfw_kms_key_id
 
-  #When deploying NFW, firewall_subnets must be specified
+  # When deploying NFW, firewall_subnets must be specified
   firewall_subnets       = local.firewall_subnets
   firewall_subnet_suffix = "firewall"
 
-  # TLS Outbound Inspection
+  # TLS Outbound Inspection (Optional)
   enable_tls_inspection = var.enable_tls_inspection # deploy_aws_nfw must be set to true to enable this
   tls_cert_arn          = var.tls_cert_arn
   tls_destination_cidrs = var.tls_destination_cidrs # Set these to the NAT gateways to filter outbound traffic without affecting the hosted VPN
 
-  ### VPC Endpoints ###
+  ### VPC Endpoints ### (Optional)
   create_vpc_endpoints = true
 
   # Control where gateway endpoints are associated
@@ -286,17 +289,13 @@ module "mgmt_vpc" {
 AWS Networking deployment without AWS Network Firewall:
 ```hcl
 module "mgmt_vpc" {
-  source = "github.com/Coalfire-CF/terraform-aws-vpc-nfw"
-
+  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
+  
   name = "${var.resource_prefix}-mgmt"
-
-  delete_protection = var.delete_protection
-
   cidr = var.mgmt_vpc_cidr
-
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
-  private_subnets = local.private_subnets # Map of Name -> CIDR
+  private_subnets = local.private_subnets # Map of Name -> CIDR, please note this goes alphabetically in order
   private_subnet_tags = {
     "0" = "Compute"
     "1" = "Compute"
@@ -313,14 +312,17 @@ module "mgmt_vpc" {
     "2" = "TGW"
   }
 
+  firewall_subnets       = local.firewall_subnets
+  firewall_subnet_suffix = "firewall"
+
   public_subnets       = local.public_subnets # Map of Name -> CIDR
   public_subnet_suffix = "public"
 
-  single_nat_gateway     = false
-  enable_nat_gateway     = true
-  one_nat_gateway_per_az = true
-  enable_vpn_gateway     = false
-  enable_dns_hostnames   = true
+  single_nat_gateway     = var.single_nat_gateway # false
+  enable_nat_gateway     = var.enable_nat_gateway # true
+  one_nat_gateway_per_az = var.one_nat_gateway_per_az # true
+  enable_vpn_gateway     = var.enable_vpn_gateway # false
+  enable_dns_hostnames   = var.enable_dns_hostnames # true
 
   flow_log_destination_type              = "cloud-watch-logs"
   cloudwatch_log_group_retention_in_days = 30
@@ -353,6 +355,10 @@ SSO-based authentication (via IAM Identity Center SSO):
 ```
 
 ## Deployment
+
+These deployments steps assume you will be deploying this PAK (including AWS NFW) on the Management plane VPC. 
+
+**NOTE: Please use the code under the 'Usage' section on this README for the most up-to-date code while referring to the 'example' folder for previous deployment examples only.**
 
 1. Navigate to the Terraform project and create a parent directory in the upper level code, for example:
 
@@ -396,8 +402,9 @@ SSO-based authentication (via IAM Identity Center SSO):
       }
     }
     ```
+3. Review and update 'nfw_policies.tf', 'subnets.tf', and 'suricata.json' if needed.
 
-3. Initialize the Terraform working directory:
+4. Initialize the Terraform working directory:
    ```hcl
    terraform init
    ```
