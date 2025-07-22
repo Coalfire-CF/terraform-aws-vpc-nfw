@@ -32,3 +32,9 @@ variable "deploy_aws_nfw" {
   type        = bool
   default     = false
 }
+
+variable "create_vpc_endpoints" {
+  description = "enable vpc endpoints true/false"
+  type        = bool
+  default     = false
+}

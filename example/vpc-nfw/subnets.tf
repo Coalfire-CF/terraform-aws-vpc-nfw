@@ -1,5 +1,5 @@
 module "mgmt_subnet_addrs" {
-  source  = "hashicorp/subnets/cidr"
+  source  = "hashicorp/subnets/cidr" #https://registry.terraform.io/modules/hashicorp/subnets/cidr/latest read if confused
   version = "v1.0.0"
 
   base_cidr_block = var.mgmt_vpc_cidr
@@ -13,10 +13,6 @@ module "mgmt_subnet_addrs" {
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-firewall-1c"
-      new_bits = 8
-    },
-    {
       name     = "${var.resource_prefix}-public-1a"
       new_bits = 8
     },
@@ -25,44 +21,44 @@ module "mgmt_subnet_addrs" {
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-public-1c"
+      name     = "${var.resource_prefix}-private-iam-1a"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-compute-1a"
+      name     = "${var.resource_prefix}-private-iam-1b"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-compute-1b"
+      name     = "${var.resource_prefix}-private-secops-1a"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-compute-1c"
+      name     = "${var.resource_prefix}-private-secops-1b"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-private-1a"
+      name     = "${var.resource_prefix}-private-config-1a"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-private-1b"
+      name     = "${var.resource_prefix}-private-config-1b"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-private-1c"
+      name     = "${var.resource_prefix}-private-database-1a"
       new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-tgw-1a"
-      new_bits = 12
+      name     = "${var.resource_prefix}-private-database-1b"
+      new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-tgw-1b"
-      new_bits = 12
+      name     = "${var.resource_prefix}-private-siem-1a"
+      new_bits = 8
     },
     {
-      name     = "${var.resource_prefix}-tgw-1c"
-      new_bits = 12
+      name     = "${var.resource_prefix}-private-siem-1b"
+      new_bits = 8
     }
   ]
 }

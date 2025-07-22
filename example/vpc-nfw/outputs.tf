@@ -208,31 +208,9 @@ output "igw_id" {
   value       = module.mgmt_vpc.igw_id
 }
 
-output "vpc_endpoint_s3_id" {
-  description = "The ID of VPC endpoint for S3"
-  value       = module.mgmt_vpc.vpc_endpoint_s3_id
-}
-
-output "vpc_endpoint_s3_pl_id" {
-  description = "The prefix list for the S3 VPC endpoint."
-  value       = module.mgmt_vpc.vpc_endpoint_s3_pl_id
-
-}
-
-output "vpc_endpoint_dynamodb_id" {
-  description = "The ID of VPC endpoint for DynamoDB"
-  value       = module.mgmt_vpc.vpc_endpoint_dynamodb_id
-}
-
 output "vgw_id" {
   description = "The ID of the VPN Gateway"
   value       = module.mgmt_vpc.vgw_id
-}
-
-output "vpc_endpoint_dynamodb_pl_id" {
-  description = "The prefix list for the DynamoDB VPC endpoint."
-  value       = module.mgmt_vpc.vpc_endpoint_dynamodb_pl_id
-
 }
 
 output "default_vpc_id" {
@@ -284,4 +262,14 @@ output "default_vpc_enable_dns_hostnames" {
 output "default_vpc_main_route_table_id" {
   description = "The ID of the main route table associated with this VPC"
   value       = module.mgmt_vpc.default_vpc_main_route_table_id
+}
+
+output "vpc_endpoints" {
+  description = "Map of VPC endpoint IDs"
+  value       = module.mgmt_vpc.vpc_endpoints
+}
+
+output "vpc_endpoint_security_groups" {
+  description = "Map of security group IDs created for VPC endpoints"
+  value       = module.mgmt_vpc.vpc_endpoint_security_groups
 }
