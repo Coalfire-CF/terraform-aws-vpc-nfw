@@ -261,43 +261,43 @@ variable "elasticache_subnet_suffix" {
 variable "public_subnets" {
   description = "A list of public subnets inside the VPC"
   default     = []
-  type        = list
+  type        = list(any)
 }
 
 variable "firewall_subnets" {
   description = "A list of firewall subnets inside the VPC"
   default     = []
-  type        = list
+  type        = list(any)
 }
 
 variable "private_subnets" {
   description = "A list of private subnets inside the VPC"
   default     = []
-  type        = list
+  type        = list(any)
 }
 
 variable "tgw_subnets" {
   description = "A list of tgw subnets inside the VPC"
   default     = []
-  type        = list
+  type        = list(any)
 }
 
 variable "database_subnets" {
   description = "A list of database subnets"
   default     = []
-  type        = list
+  type        = list(any)
 }
 
 variable "redshift_subnets" {
   description = "A list of redshift subnets"
   default     = []
-  type        = list
+  type        = list(any)
 }
 
 variable "elasticache_subnets" {
   description = "A list of elasticache subnets"
   default     = []
-  type        = list
+  type        = list(any)
 }
 
 variable "create_database_subnet_route_table" {
@@ -664,7 +664,7 @@ variable "cloudwatch_log_group_kms_key_id" {
 
 variable "s3_access_logs_bucket" {
   description = "bucket id for s3 access logs bucket"
-  type = string
+  type        = string
   default     = ""
 }
 
@@ -789,16 +789,16 @@ variable "associate_with_public_route_tables" {
 variable "vpc_endpoints" {
   description = "Map of VPC endpoint definitions to create"
   type = map(object({
-    service_name        = optional(string)       # If not provided, standard AWS service name will be constructed
-    service_type        = string                 # "Interface", "Gateway", or "GatewayLoadBalancer"
-    private_dns_enabled = optional(bool, true)   # Only applicable for Interface endpoints
+    service_name        = optional(string)     # If not provided, standard AWS service name will be constructed
+    service_type        = string               # "Interface", "Gateway", or "GatewayLoadBalancer"
+    private_dns_enabled = optional(bool, true) # Only applicable for Interface endpoints
     auto_accept         = optional(bool, false)
-    policy              = optional(string)       # JSON policy document
+    policy              = optional(string) # JSON policy document
     security_group_ids  = optional(list(string), [])
     tags                = optional(map(string), {})
     subnet_ids          = optional(list(string)) # Override default subnet_ids if needed
     # Required only for GatewayLoadBalancer endpoints
-    ip_address_type     = optional(string)       # "ipv4" or "dualstack"
+    ip_address_type = optional(string) # "ipv4" or "dualstack"
   }))
   default = {}
 }
@@ -837,4 +837,12 @@ variable "subnet_az_mapping" {
   description = "Optional explicit mapping of subnets to AZs - defaults to distributing across AZs"
   type        = map(string)
   default     = {}
+}
+
+variable "subnets" {
+  type = list(object({
+    name = string
+    cidr = string
+    type = string
+  }))
 }
