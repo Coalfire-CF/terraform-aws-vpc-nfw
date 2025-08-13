@@ -724,6 +724,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |       |-- variables.tf
 |       |-- vpc_nfw.auto.tfvars
 |-- flowlog.tf
+|-- locals.tf
 |-- main.tf
 |-- modules
 |   |-- aws-network-firewall
