@@ -17,12 +17,12 @@
 # }
 
 resource "aws_subnet" "firewall" {
-  for_each          = { for subnet in local.firewall_subnets : subnet.name => subnet }
+  count             = length(local.firewall_subnets) > 0 ? length(local.firewall_subnets) : 0
   vpc_id            = local.vpc_id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.availability_zone
+  cidr_block        = local.firewall_subnets[count.index].cidr
+  availability_zone = local.firewall_subnets[count.index].availability_zone
   tags = merge(tomap({
-    "Name" = "${each.value.name}"
+    "Name" = "${local.firewall_subnets[count.index].name}"
   }), var.tags)
 }
 
@@ -47,13 +47,13 @@ resource "aws_subnet" "firewall" {
 
 resource "aws_subnet" "public" {
   #checkov:skip=CKV_AWS_130: "Ensure VPC subnets do not assign public IP by default" - This is a public subet.
-  for_each                = { for subnet in local.public_subnets : subnet.name => subnet }
+  count                   = length(local.public_subnets) > 0 ? length(local.public_subnets) : 0
   vpc_id                  = local.vpc_id
-  cidr_block              = each.value.cidr
-  availability_zone       = each.value.availability_zone
+  cidr_block              = local.public_subnets[count.index].cidr
+  availability_zone       = local.public_subnets[count.index].availability_zone
   map_public_ip_on_launch = var.map_public_ip_on_launch
   tags = merge(tomap({
-    "Name" = "${each.value.name}"
+    "Name" = "${local.public_subnets[count.index].name}"
   }), var.tags, var.public_eks_tags)
 }
 
@@ -76,12 +76,12 @@ resource "aws_subnet" "public" {
 # }
 
 resource "aws_subnet" "private" {
-  for_each          = local.private_subnets
+  count             = length(local.private_subnets) > 0 ? length(local.private_subnets) : 0
   vpc_id            = local.vpc_id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.availability_zone
+  cidr_block        = local.private_subnets[count.index].cidr
+  availability_zone = local.private_subnets[count.index].availability_zone
   tags = merge(tomap({
-    "Name" = "${each.value.name}"
+    "Name" = "${local.private_subnets[count.index].name}"
   }), var.tags, var.private_eks_tags)
 }
 
@@ -104,12 +104,12 @@ resource "aws_subnet" "private" {
 # }
 
 resource "aws_subnet" "tgw" {
-  for_each          = local.tgw_subnets
+  count             = length(local.tgw_subnets) > 0 ? length(local.tgw_subnets) : 0
   vpc_id            = local.vpc_id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.availability_zone
+  cidr_block        = local.tgw_subnets[count.index].cidr
+  availability_zone = local.tgw_subnets[count.index].availability_zone
   tags = merge(tomap({
-    "Name" = "${each.value.name}"
+    "Name" = "${local.tgw_subnets[count.index].name}"
   }), var.tags)
 }
 
@@ -131,12 +131,12 @@ resource "aws_subnet" "tgw" {
 # }
 
 resource "aws_subnet" "database" {
-  for_each          = local.database_subnets
+  count             = length(local.database_subnets) > 0 ? length(local.database_subnets) : 0
   vpc_id            = local.vpc_id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.availability_zone
+  cidr_block        = local.database_subnets[count.index].cidr
+  availability_zone = local.database_subnets[count.index].availability_zone
   tags = merge(tomap({
-    "Name" = "${each.value.name}"
+    "Name" = "${local.database_subnets[count.index].name}"
   }), var.database_subnet_tags, var.tags)
 }
 
@@ -181,12 +181,12 @@ resource "aws_db_subnet_group" "database" {
 # }
 
 resource "aws_subnet" "redshift" {
-  for_each          = local.redshift_subnets
+  count             = length(local.redshift_subnets) > 0 ? length(local.redshift_subnets) : 0
   vpc_id            = local.vpc_id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.availability_zone
+  cidr_block        = local.redshift_subnets[count.index].cidr
+  availability_zone = local.redshift_subnets[count.index].availability_zone
   tags = merge(tomap({
-    "Name" = "${each.value.name}"
+    "Name" = "${local.redshift_subnets[count.index].name}"
   }), var.tags)
 }
 
@@ -234,12 +234,12 @@ resource "aws_redshift_subnet_group" "redshift" {
 # }
 
 resource "aws_subnet" "elasticache" {
-  for_each          = local.elasticache_subnets
+  count             = length(local.elasticache_subnets) > 0 ? length(local.elasticache_subnets) : 0
   vpc_id            = local.vpc_id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.availability_zone
+  cidr_block        = local.elasticache_subnets[count.index].cidr
+  availability_zone = local.elasticache_subnets[count.index].availability_zone
   tags = merge(tomap({
-    "Name" = "${each.value.name}"
+    "Name" = "${local.elasticache_subnets[count.index].name}"
   }), var.tags)
 }
 
@@ -254,11 +254,11 @@ resource "aws_elasticache_subnet_group" "elasticache" {
 # intra subnets - private subnet without NAT gateway
 #####################################################
 resource "aws_subnet" "intra" {
-  for_each          = local.intra_subnets
+  count             = length(local.intra_subnets) > 0 ? length(local.intra_subnets) : 0
   vpc_id            = local.vpc_id
-  cidr_block        = each.value.cidr
-  availability_zone = each.value.availability_zone
+  cidr_block        = local.intra_subnets[count.index].cidr
+  availability_zone = local.intra_subnets[count.index].availability_zone
   tags = merge(tomap({
-    "Name" = "${each.value.name}"
+    "Name" = "${local.intra_subnets[count.index].name}"
   }), var.tags)
 }
