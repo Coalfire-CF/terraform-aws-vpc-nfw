@@ -841,7 +841,7 @@ variable "subnet_az_mapping" {
 
 variable "subnets" {
   type = list(object({
-    name              = string
+    name              = optional(string)
     cidr              = string
     type              = string
     availability_zone = string
