@@ -126,7 +126,7 @@ resource "aws_route_table" "private" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (var.single_nat_gateway ? "${var.name}-${var.private_subnet_suffix}" : format("%s-${var.private_subnet_suffix}-%s-rtb", var.name, element(var.azs, count.index)))
+    "Name" = (var.single_nat_gateway ? "${var.name}-private" : format("%s-private-%s-rtb", var.name, element(var.azs, count.index)))
   }), var.tags, var.private_route_table_tags)
 
   lifecycle {
@@ -167,7 +167,7 @@ resource "aws_route_table" "tgw" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (var.single_nat_gateway ? "${var.name}-${var.tgw_subnet_suffix}" : format("%s-${var.tgw_subnet_suffix}-%s-rtb", var.name, element(var.azs, count.index)))
+    "Name" = (var.single_nat_gateway ? "${var.name}-tgw" : format("%s-tgw-%s-rtb", var.name, element(var.azs, count.index)))
   }), var.tags, var.tgw_route_table_tags)
 
   lifecycle {
@@ -207,7 +207,7 @@ resource "aws_route_table" "firewall" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (var.single_nat_gateway ? "${var.name}-${var.firewall_subnet_suffix}" : format("%s-${var.firewall_subnet_suffix}-%s-rtb", var.name, element(var.azs, count.index)))
+    "Name" = (var.single_nat_gateway ? "${var.name}-firewall" : format("%s-firewall-%s-rtb", var.name, element(var.azs, count.index)))
   }), var.tags, var.firewall_route_table_tags)
 
   lifecycle {
@@ -248,7 +248,7 @@ resource "aws_route_table" "database" {
   vpc_id = local.vpc_id
 
   tags = merge(var.tags, var.database_route_table_tags, tomap({
-    "Name" = "${var.name}-${var.database_subnet_suffix}-rtb"
+    "Name" = "${var.name}-database-rtb"
   }))
 }
 
@@ -282,7 +282,7 @@ resource "aws_route_table" "redshift" {
   vpc_id = local.vpc_id
 
   tags = merge(var.tags, var.redshift_route_table_tags, tomap({
-    "Name" = "${var.name}-${var.redshift_subnet_suffix}-rtb"
+    "Name" = "${var.name}-redshift-rtb"
   }))
 }
 
@@ -316,7 +316,7 @@ resource "aws_route_table" "elasticache" {
   vpc_id = local.vpc_id
 
   tags = merge(var.tags, var.elasticache_route_table_tags, tomap({
-    "Name" = "${var.name}-${var.elasticache_subnet_suffix}-rtb"
+    "Name" = "${var.name}-elasticache-rtb"
   }))
 }
 
@@ -345,7 +345,7 @@ resource "aws_route" "elasticache_custom" {
 # Intra routes
 #################
 resource "aws_route_table" "intra" {
-  count = length(var.intra_subnets) > 0 ? 1 : 0
+  count = length(local.intra_subnets) > 0 ? 1 : 0
 
   vpc_id = local.vpc_id
 
@@ -438,7 +438,7 @@ resource "aws_route_table_association" "elasticache" {
 }
 
 resource "aws_route_table_association" "intra" {
-  count = length(var.intra_subnets) > 0 ? length(var.intra_subnets) : 0
+  count = length(local.intra_subnets) > 0 ? length(local.intra_subnets) : 0
 
   subnet_id      = element(aws_subnet.intra[*].id, count.index)
   route_table_id = element(aws_route_table.intra[*].id, 0)

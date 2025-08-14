@@ -8,8 +8,4 @@ locals {
   redshift_subnets    = [for s in var.subnets : s if s.type == "redshift"]
   elasticache_subnets = [for s in var.subnets : s if s.type == "elasticache"]
   intra_subnets       = [for s in var.subnets : s if s.type == "intra"]
-  # perform naming logic here
-  database_subnet_group_name    = "todo"
-  redshift_subnet_group_name    = "todo"
-  elasticache_subnet_group_name = "todo"
 }
