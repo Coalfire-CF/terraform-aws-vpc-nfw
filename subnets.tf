@@ -78,14 +78,14 @@ resource "aws_subnet" "database" {
   availability_zone = local.database_subnets[count.index].availability_zone
   tags = (
     # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
-    local.tgw_subnets[count.index].custom_name != null ?
+    local.database_subnets[count.index].custom_name != null ?
     merge(tomap({ "Name" = "${local.database_subnets[count.index].custom_name}" }), var.database_subnet_tags, var.tags) :
     merge(tomap({ "Name" = format("%s-${local.database_subnets[count.index].tag}-%s", var.name, local.database_subnets[count.index].availability_zone) }), var.database_subnet_tags, var.tags)
   )
 }
 
 resource "aws_db_subnet_group" "database" {
-  count = length(local.database_subnets) > 0 && var.create_database_subnet_group ? 1 : 0
+  count = length(aws_subnet.database) > 0 && var.create_database_subnet_group ? 1 : 0
   # if a custom subnet group name is defined, set it, else, generate one based on Coalfire's naming convention
   name        = var.database_subnet_group_name != null ? var.database_subnet_group_name : "${lower(var.name)}-backend"
   description = "Database subnet group for ${var.name}"
@@ -116,13 +116,11 @@ resource "aws_subnet" "redshift" {
 }
 
 resource "aws_redshift_subnet_group" "redshift" {
-  count = length(local.redshift_subnets) > 0 ? 1 : 0
+  count = length(aws_subnet.redshift) > 0 ? 1 : 0
   # if a custom subnet group name is defined, set it, else, generate one based on Coalfire's naming convention
   name        = var.redshift_subnet_group_name != null ? var.redshift_subnet_group_name : var.name
   description = "Redshift subnet group for ${var.name}"
-  subnet_ids = [
-    aws_subnet.redshift[*].id
-  ]
+  subnet_ids  = aws_subnet.redshift[*].id
   tags = (
     # if a custom subnet group name is defined, set resource tag 'Name' to the custom name, else, generate one based on Coalfire's naming convention
     var.redshift_subnet_group_name != null ?
@@ -148,7 +146,7 @@ resource "aws_subnet" "elasticache" {
 }
 
 resource "aws_elasticache_subnet_group" "elasticache" {
-  count = length(local.elasticache_subnets) > 0 ? 1 : 0
+  count = length(aws_subnet.elasticache) > 0 ? 1 : 0
   # if a custom subnet group name is defined, set resource tag 'Name' to the custom name, else, generate one based on Coalfire's naming convention
   name        = var.elasticache_subnet_group_name != null ? var.elasticache_subnet_group_name : var.name
   description = "ElastiCache subnet group for ${var.name}"
