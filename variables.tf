@@ -841,7 +841,8 @@ variable "subnet_az_mapping" {
 
 variable "subnets" {
   type = list(object({
-    name              = optional(string)
+    custom_name       = optional(string)
+    tag               = optional(string)
     cidr              = string
     type              = string
     availability_zone = string
@@ -849,6 +850,14 @@ variable "subnets" {
   validation {
     condition     = length([for s in var.subnets : s if s.type == "public"]) >= length([for s in var.subnets : s if s.type == "firewall"])
     error_message = "The number of public subnets must be greater than or equal to the number of firewall subnets to accomodate IGW routing from the NFW"
+  }
+  validation {
+    condition     = length([for s in var.subnets : s if s.custom_name != null && s.tag != null]) == 0
+    error_message = "Subnets must have only one of 'custom_name' or 'tag' defined. (You cannot specify both a 'custom_name' and a 'tag')"
+  }
+  validation {
+    condition     = length([for s in var.subnets : s if s.custom_name == null && s.tag == null]) == 0
+    error_message = "You must provide one of either 'custom_name' or 'tag' for each subnet"
   }
   validation {
     condition = length([
