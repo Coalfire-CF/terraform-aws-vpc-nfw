@@ -244,7 +244,7 @@ resource "aws_subnet" "elasticache" {
 }
 
 resource "aws_elasticache_subnet_group" "elasticache" {
-  count       = length(var.elasticache_subnets) > 0 ? 1 : 0
+  count       = length(local.elasticache_subnets) > 0 ? 1 : 0
   name        = local.elasticache_subnet_group_name
   description = "ElastiCache subnet group for ${var.name}"
   subnet_ids  = aws_subnet.elasticache[*].id

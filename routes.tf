@@ -2,7 +2,7 @@
 # Publiс routes
 ################
 resource "aws_route_table" "public" {
-  count = length(var.public_subnets) > 0 ? length(var.public_subnets) : 0
+  count = length(local.public_subnets) > 0 ? length(local.public_subnets) : 0
 
   vpc_id = local.vpc_id
 
@@ -12,7 +12,7 @@ resource "aws_route_table" "public" {
 }
 
 resource "aws_route" "public_internet_gateway" {
-  count = var.deploy_aws_nfw ? 0 : length(var.public_subnets)
+  count = var.deploy_aws_nfw ? 0 : length(local.public_subnets)
 
   route_table_id         = aws_route_table.public[count.index].id
   destination_cidr_block = "0.0.0.0/0"
@@ -24,7 +24,7 @@ resource "aws_route" "public_internet_gateway" {
 }
 
 resource "aws_route" "nfw_public_internet_gateway" {
-  count = var.deploy_aws_nfw ? length(var.firewall_subnets) : 0
+  count = var.deploy_aws_nfw ? length(local.firewall_subnets) : 0
 
   route_table_id         = aws_route_table.firewall[count.index].id
   destination_cidr_block = "0.0.0.0/0"
@@ -36,7 +36,7 @@ resource "aws_route" "nfw_public_internet_gateway" {
 }
 
 resource "aws_route" "aws_nfw_public_internet" {
-  count = var.deploy_aws_nfw ? length(var.public_subnets) : 0
+  count = var.deploy_aws_nfw ? length(local.public_subnets) : 0
 
   route_table_id         = aws_route_table.public[count.index].id
   destination_cidr_block = "0.0.0.0/0"
@@ -59,10 +59,10 @@ resource "aws_route_table" "aws_nfw_igw_rtb" {
 }
 
 resource "aws_route" "aws_nfw_igw_rt" {
-  count = var.deploy_aws_nfw ? length(var.firewall_subnets) : 0
+  count = var.deploy_aws_nfw ? length(local.firewall_subnets) : 0
 
   route_table_id         = aws_route_table.aws_nfw_igw_rtb[0].id
-  destination_cidr_block = var.public_subnets[count.index]
+  destination_cidr_block = local.public_subnets[count.index].cidr
   vpc_endpoint_id        = module.aws_network_firewall[0].endpoint_id[count.index]
 
   timeouts {
@@ -145,13 +145,13 @@ resource "aws_route" "private_custom" {
   # Because the element() function automatically wraps around the index (start from 0 if greater than list size), we combine it with the index function to ensure correct order
   route_table_id = aws_route_table.private[count.index % length(aws_route_table.private)].id
 
-  destination_cidr_block = var.private_custom_routes[floor(count.index / length(aws_route_table.private))].destination_cidr_block
+  destination_cidr_block     = var.private_custom_routes[floor(count.index / length(aws_route_table.private))].destination_cidr_block
   destination_prefix_list_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "destination_prefix_list_id", null)
 
-  network_interface_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "network_interface_id", null)
-  transit_gateway_id   = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "transit_gateway_id", null)
-  vpc_endpoint_id      = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_endpoint_id", null)
-  vpc_peering_connection_id   = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_peering_connection_id", null)
+  network_interface_id      = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "network_interface_id", null)
+  transit_gateway_id        = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "transit_gateway_id", null)
+  vpc_endpoint_id           = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_endpoint_id", null)
+  vpc_peering_connection_id = lookup(var.private_custom_routes[floor(count.index / length(aws_route_table.private))], "vpc_peering_connection_id", null)
 
   timeouts {
     create = "5m"
@@ -162,7 +162,7 @@ resource "aws_route" "private_custom" {
 # TGW routes
 #################
 resource "aws_route_table" "tgw" {
-  count = local.max_subnet_length > 0 ? length(var.tgw_subnets) : 0
+  count = local.max_subnet_length > 0 ? length(local.tgw_subnets) : 0
 
   vpc_id = local.vpc_id
 
@@ -202,7 +202,7 @@ resource "aws_route" "tgw_custom" {
 # Firewall routes
 #################
 resource "aws_route_table" "firewall" {
-  count = length(var.firewall_subnets) > 0 ? length(var.firewall_subnets) : 0
+  count = length(local.firewall_subnets) > 0 ? length(local.firewall_subnets) : 0
 
   vpc_id = local.vpc_id
 
@@ -243,7 +243,7 @@ resource "aws_route" "firewall_custom" {
 # Database routes
 #################
 resource "aws_route_table" "database" {
-  count = var.create_database_subnet_route_table && length(var.database_subnets) > 0 ? 1 : 0
+  count = var.create_database_subnet_route_table && length(local.database_subnets) > 0 ? 1 : 0
 
   vpc_id = local.vpc_id
 
@@ -277,7 +277,7 @@ resource "aws_route" "database_custom" {
 # Redshift routes
 #################
 resource "aws_route_table" "redshift" {
-  count = var.create_redshift_subnet_route_table && length(var.redshift_subnets) > 0 ? 1 : 0
+  count = var.create_redshift_subnet_route_table && length(local.redshift_subnets) > 0 ? 1 : 0
 
   vpc_id = local.vpc_id
 
@@ -311,7 +311,7 @@ resource "aws_route" "redshift_custom" {
 # Elasticache routes
 #################
 resource "aws_route_table" "elasticache" {
-  count = var.create_elasticache_subnet_route_table && length(var.elasticache_subnets) > 0 ? 1 : 0
+  count = var.create_elasticache_subnet_route_table && length(local.elasticache_subnets) > 0 ? 1 : 0
 
   vpc_id = local.vpc_id
 
@@ -396,42 +396,42 @@ resource "aws_route" "private_nat_gateway" {
 # Route table association
 ##########################
 resource "aws_route_table_association" "private" {
-  count = length(var.private_subnets) > 0 ? length(var.private_subnets) : 0
+  count = length(local.private_subnets) > 0 ? length(local.private_subnets) : 0
 
   subnet_id      = element(aws_subnet.private[*].id, count.index)
   route_table_id = element(aws_route_table.private[*].id, (var.single_nat_gateway ? 0 : count.index))
 }
 
 resource "aws_route_table_association" "tgw" {
-  count = length(var.tgw_subnets) > 0 ? length(var.tgw_subnets) : 0
+  count = length(local.tgw_subnets) > 0 ? length(local.tgw_subnets) : 0
 
   subnet_id      = element(aws_subnet.tgw[*].id, count.index)
   route_table_id = element(aws_route_table.tgw[*].id, (var.single_nat_gateway ? 0 : count.index))
 }
 
 resource "aws_route_table_association" "firewall" {
-  count = var.deploy_aws_nfw ? length(var.firewall_subnets) : 0
+  count = var.deploy_aws_nfw ? length(local.firewall_subnets) : 0
 
   subnet_id      = element(aws_subnet.firewall[*].id, count.index)
   route_table_id = element(aws_route_table.firewall[*].id, (var.single_nat_gateway ? 0 : count.index))
 }
 
 resource "aws_route_table_association" "database" {
-  count = length(var.database_subnets) > 0 ? length(var.database_subnets) : 0
+  count = length(local.database_subnets) > 0 ? length(local.database_subnets) : 0
 
   subnet_id      = element(aws_subnet.database[*].id, count.index)
   route_table_id = element(coalescelist(aws_route_table.database[*].id, aws_route_table.private[*].id), (var.single_nat_gateway || var.create_database_subnet_route_table ? 0 : count.index))
 }
 
 resource "aws_route_table_association" "redshift" {
-  count = length(var.redshift_subnets) > 0 ? length(var.redshift_subnets) : 0
+  count = length(local.redshift_subnets) > 0 ? length(local.redshift_subnets) : 0
 
   subnet_id      = element(aws_subnet.redshift[*].id, count.index)
   route_table_id = element(coalescelist(aws_route_table.redshift[*].id, aws_route_table.private[*].id), (var.single_nat_gateway || var.create_redshift_subnet_route_table ? 0 : count.index))
 }
 
 resource "aws_route_table_association" "elasticache" {
-  count = length(var.elasticache_subnets) > 0 ? length(var.elasticache_subnets) : 0
+  count = length(local.elasticache_subnets) > 0 ? length(local.elasticache_subnets) : 0
 
   subnet_id      = element(aws_subnet.elasticache[*].id, count.index)
   route_table_id = element(coalescelist(aws_route_table.elasticache[*].id, aws_route_table.private[*].id), (var.single_nat_gateway || var.create_elasticache_subnet_route_table ? 0 : count.index))
@@ -445,7 +445,7 @@ resource "aws_route_table_association" "intra" {
 }
 
 resource "aws_route_table_association" "public" {
-  count = var.deploy_aws_nfw ? 0 : length(var.public_subnets)
+  count = var.deploy_aws_nfw ? 0 : length(local.public_subnets)
 
   subnet_id      = element(aws_subnet.public[*].id, count.index)
   route_table_id = aws_route_table.public[0].id
@@ -456,7 +456,7 @@ resource "aws_route_table_association" "public" {
 }
 
 resource "aws_route_table_association" "nfw_public" {
-  count = var.deploy_aws_nfw ? length(var.public_subnets) : 0
+  count = var.deploy_aws_nfw ? length(local.public_subnets) : 0
 
   subnet_id      = element(aws_subnet.public[*].id, count.index)
   route_table_id = aws_route_table.public[count.index].id
