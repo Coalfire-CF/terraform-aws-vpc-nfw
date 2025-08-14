@@ -216,90 +216,6 @@ variable "instance_tenancy" {
   type        = string
 }
 
-variable "public_subnet_suffix" {
-  description = "Suffix to append to public subnets name"
-  default     = "public"
-  type        = string
-}
-
-variable "private_subnet_suffix" {
-  description = "Suffix to append to private subnets name"
-  default     = "private"
-  type        = string
-}
-
-variable "tgw_subnet_suffix" {
-  description = "Suffix to append to tgw subnets name"
-  default     = "tgw"
-  type        = string
-}
-
-variable "firewall_subnet_suffix" {
-  description = "Suffix to append to firewall subnets name"
-  default     = "firewall"
-  type        = string
-}
-
-variable "database_subnet_suffix" {
-  description = "Suffix to append to database subnets name"
-  default     = "db"
-  type        = string
-}
-
-variable "redshift_subnet_suffix" {
-  description = "Suffix to append to redshift subnets name"
-  default     = "redshift"
-  type        = string
-}
-
-variable "elasticache_subnet_suffix" {
-  description = "Suffix to append to elasticache subnets name"
-  default     = "elasticache"
-  type        = string
-}
-
-# variable "public_subnets" {
-#   description = "A list of public subnets inside the VPC"
-#   default     = []
-#   type        = list(any)
-# }
-
-# variable "firewall_subnets" {
-#   description = "A list of firewall subnets inside the VPC"
-#   default     = []
-#   type        = list(any)
-# }
-
-# variable "private_subnets" {
-#   description = "A list of private subnets inside the VPC"
-#   default     = []
-#   type        = list(any)
-# }
-
-# variable "tgw_subnets" {
-#   description = "A list of tgw subnets inside the VPC"
-#   default     = []
-#   type        = list(any)
-# }
-
-# variable "database_subnets" {
-#   description = "A list of database subnets"
-#   default     = []
-#   type        = list(any)
-# }
-
-# variable "redshift_subnets" {
-#   description = "A list of redshift subnets"
-#   default     = []
-#   type        = list(any)
-# }
-
-# variable "elasticache_subnets" {
-#   description = "A list of elasticache subnets"
-#   default     = []
-#   type        = list(any)
-# }
-
 variable "create_database_subnet_route_table" {
   description = "Controls if separate route table for database should be created"
   default     = false
@@ -316,11 +232,6 @@ variable "create_elasticache_subnet_route_table" {
   description = "Controls if separate route table for elasticache should be created"
   default     = false
   type        = bool
-}
-
-variable "intra_subnets" {
-  description = "A list of intra subnets"
-  default     = {}
 }
 
 variable "create_database_subnet_group" {
@@ -452,26 +363,8 @@ variable "igw_tags" {
   type        = map(string)
 }
 
-variable "public_subnet_tags" {
-  description = "Additional tags for the public subnets"
-  default     = {}
-  type        = map(string)
-}
-
 variable "firewall_subnet_name_tag" {
   description = "Additional name tag for the firewall subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "private_subnet_tags" {
-  description = "Additional tags for the private subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "tgw_subnet_tags" {
-  description = "Additional tags for the tgw subnets"
   default     = {}
   type        = map(string)
 }
@@ -877,3 +770,20 @@ variable "subnets" {
   }
 }
 
+variable "database_subnet_group_name" {
+  description = "Optional custom resource name for the database subnet group"
+  type        = string
+  default     = null
+}
+
+variable "redshift_subnet_group_name" {
+  description = "Optional custom resource name for the Redshift subnet group"
+  type        = string
+  default     = null
+}
+
+variable "elasticache_subnet_group_name" {
+  description = "Optional custom resource name for the Elasticache subnet group"
+  type        = string
+  default     = null
+}
