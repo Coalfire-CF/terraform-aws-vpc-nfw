@@ -143,7 +143,7 @@ resource "aws_subnet" "elasticache" {
   tags = (
     local.elasticache_subnets[count.index].custom_name != null ?
     merge(tomap({ "Name" = "${local.elasticache_subnets[count.index].custom_name}" }), var.tags) :
-    merge(tomap({ "Name" = format("%s-${local.elasticache_subnets[count.index].tag}-%s", var.name, ocal.elasticache_subnets[count.index].availability_zone) }), var.tags)
+    merge(tomap({ "Name" = format("%s-${local.elasticache_subnets[count.index].tag}-%s", var.name, local.elasticache_subnets[count.index].availability_zone) }), var.tags)
   )
 }
 
