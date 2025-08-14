@@ -1,5 +1,5 @@
 locals {
-  max_subnet_length = max(length(var.private_subnets), length(var.elasticache_subnets), length(var.database_subnets), length(var.redshift_subnets), length(var.firewall_subnets), length(var.tgw_subnets))
+  max_subnet_length = max(length(local.private_subnets), length(local.elasticache_subnets), length(local.database_subnets), length(local.redshift_subnets), length(local.firewall_subnets), length(local.tgw_subnets))
   nat_gateway_count = var.single_nat_gateway ? 1 : (var.one_nat_gateway_per_az ? length(var.azs) : local.max_subnet_length)
 
   nfw_subnets = [for s in aws_subnet.firewall : s.id]
@@ -70,7 +70,7 @@ resource "aws_vpc_dhcp_options_association" "this" {
 # Internet Gateway
 ###################
 resource "aws_internet_gateway" "this" {
-  count = length(var.public_subnets) > 0 ? 1 : 0
+  count = length(local.public_subnets) > 0 ? 1 : 0
 
   vpc_id = local.vpc_id
 
@@ -86,23 +86,23 @@ resource "aws_internet_gateway" "this" {
 module "vpc_endpoints" {
   source = "./modules/vpc-endpoint"
 
-  create_vpc_endpoints = var.create_vpc_endpoints
+  create_vpc_endpoints                = var.create_vpc_endpoints
   associate_with_private_route_tables = var.associate_with_private_route_tables
-  associate_with_public_route_tables = var.associate_with_public_route_tables
-  vpc_id               = aws_vpc.this.id
+  associate_with_public_route_tables  = var.associate_with_public_route_tables
+  vpc_id                              = aws_vpc.this.id
 
   # Default to private subnets for interface endpoints if available
-  subnet_ids           = length(aws_subnet.private) > 0 ? [for subnet in aws_subnet.private : subnet.id] : null
+  subnet_ids = length(aws_subnet.private) > 0 ? [for subnet in aws_subnet.private : subnet.id] : null
 
   # Use private_route_table_ids variable instead of directly accessing route tables
   private_route_table_ids = [for rt in aws_route_table.private : rt.id]
-  route_table_ids = [for rt in aws_route_table.private : rt.id]
-  public_route_table_ids = [for rt in aws_route_table.public : rt.id]
+  route_table_ids         = [for rt in aws_route_table.private : rt.id]
+  public_route_table_ids  = [for rt in aws_route_table.public : rt.id]
 
-  vpc_endpoints        = var.vpc_endpoints
+  vpc_endpoints                = var.vpc_endpoints
   vpc_endpoint_security_groups = var.vpc_endpoint_security_groups
 
-  tags                 = var.tags
+  tags = var.tags
 }
 
 ###################
@@ -210,7 +210,7 @@ resource "aws_vpn_gateway_route_propagation" "public" {
 }
 
 resource "aws_vpn_gateway_route_propagation" "private" {
-  count = var.propagate_private_route_tables_vgw && (var.enable_vpn_gateway || var.vpn_gateway_id != "") ? length(var.private_subnets) : 0
+  count = var.propagate_private_route_tables_vgw && (var.enable_vpn_gateway || var.vpn_gateway_id != "") ? length(local.private_subnets) : 0
 
   route_table_id = element(aws_route_table.private[*].id, count.index)
   vpn_gateway_id = element(concat(aws_vpn_gateway.this[*].id, aws_vpn_gateway_attachment.this[*].vpn_gateway_id), count.index)

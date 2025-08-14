@@ -258,47 +258,47 @@ variable "elasticache_subnet_suffix" {
   type        = string
 }
 
-variable "public_subnets" {
-  description = "A list of public subnets inside the VPC"
-  default     = []
-  type        = list(any)
-}
+# variable "public_subnets" {
+#   description = "A list of public subnets inside the VPC"
+#   default     = []
+#   type        = list(any)
+# }
 
-variable "firewall_subnets" {
-  description = "A list of firewall subnets inside the VPC"
-  default     = []
-  type        = list(any)
-}
+# variable "firewall_subnets" {
+#   description = "A list of firewall subnets inside the VPC"
+#   default     = []
+#   type        = list(any)
+# }
 
-variable "private_subnets" {
-  description = "A list of private subnets inside the VPC"
-  default     = []
-  type        = list(any)
-}
+# variable "private_subnets" {
+#   description = "A list of private subnets inside the VPC"
+#   default     = []
+#   type        = list(any)
+# }
 
-variable "tgw_subnets" {
-  description = "A list of tgw subnets inside the VPC"
-  default     = []
-  type        = list(any)
-}
+# variable "tgw_subnets" {
+#   description = "A list of tgw subnets inside the VPC"
+#   default     = []
+#   type        = list(any)
+# }
 
-variable "database_subnets" {
-  description = "A list of database subnets"
-  default     = []
-  type        = list(any)
-}
+# variable "database_subnets" {
+#   description = "A list of database subnets"
+#   default     = []
+#   type        = list(any)
+# }
 
-variable "redshift_subnets" {
-  description = "A list of redshift subnets"
-  default     = []
-  type        = list(any)
-}
+# variable "redshift_subnets" {
+#   description = "A list of redshift subnets"
+#   default     = []
+#   type        = list(any)
+# }
 
-variable "elasticache_subnets" {
-  description = "A list of elasticache subnets"
-  default     = []
-  type        = list(any)
-}
+# variable "elasticache_subnets" {
+#   description = "A list of elasticache subnets"
+#   default     = []
+#   type        = list(any)
+# }
 
 variable "create_database_subnet_route_table" {
   description = "Controls if separate route table for database should be created"
@@ -846,4 +846,25 @@ variable "subnets" {
     type              = string
     availability_zone = string
   }))
+  validation {
+    condition     = length([for s in var.subnets : s if s.type == "public"]) >= length([for s in var.subnets : s if s.type == "firewall"])
+    error_message = "The number of public subnets must be greater than or equal to the number of firewall subnets to accomodate IGW routing from the NFW"
+  }
+  validation {
+    condition = length([
+      for subnet in var.subnets[*].type : true if contains([
+        "firewall",
+        "public",
+        "private",
+        "tgw",
+        "database",
+        "redshift",
+        "elasticache",
+        "intra"
+        ],
+      subnet)
+    ]) == length(var.subnets)
+    error_message = "Allowed subnet types are 'firewall', 'public', 'private', 'tgw', 'database', 'redshift', 'elasticache', and 'intra'."
+  }
 }
+
