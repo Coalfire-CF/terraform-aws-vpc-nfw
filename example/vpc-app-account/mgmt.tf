@@ -1,35 +1,94 @@
 module "prod_vpc" {
+  # Note: Checkov recommends pointing to hash instead of tags since hashes are immutable unlike tags
   source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
 
   providers = {
     aws = aws.example-app
   }
 
-  name = "${var.resource_prefix}-${var.environment}"
+  name = "${var.resource_prefix}-prod"
   cidr = var.app_vpc_cidr
   azs  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
-  private_subnets = local.private_subnets
-  private_subnet_tags = {
-    "0" = "db"
-    "1" = "db"
-    "2" = "compute"
-    "3" = "compute"
-    "4" = "secops"
-    "5" = "secops"
-  }
-
-  tgw_subnets = local.tgw_subnets
-  tgw_subnet_tags = {
-    "0" = "tgw"
-    "1" = "tgw"
-  }
-
-  firewall_subnets       = local.firewall_subnets
-  firewall_subnet_suffix = "firewall"
-
-  public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
+  subnets = [
+    # Firewall subnets
+    {
+      tag               = "firewall"
+      cidr              = "10.1.0.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "firewall"
+      cidr              = "10.1.1.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    },
+    # Public subnets
+    {
+      tag               = "public"
+      cidr              = "10.1.2.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "public"
+      cidr              = "10.1.3.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1b"
+    },
+    # Private subnets
+    {
+      tag               = "compute"
+      cidr              = "10.1.4.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "compute"
+      cidr              = "10.1.5.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "secops"
+      cidr              = "10.1.6.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "secops"
+      cidr              = "10.1.7.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+    },
+    # Database subnets
+    {
+      tag               = "database"
+      cidr              = "10.1.8.0/24"
+      type              = "database"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "database"
+      cidr              = "10.1.9.0/24"
+      type              = "tgw"
+      availability_zone = "us-gov-west-1b"
+    },
+    # TGW subnets
+    {
+      tag               = "tgw"
+      cidr              = "10.1.10.0/24"
+      type              = "tgw"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "tgw"
+      cidr              = "10.1.11.0/24"
+      type              = "tgw"
+      availability_zone = "us-gov-west-1b"
+    }
+  ]
 
   single_nat_gateway     = false
   enable_nat_gateway     = true
@@ -40,4 +99,13 @@ module "prod_vpc" {
   flow_log_destination_type              = "cloud-watch-logs"
   cloudwatch_log_group_retention_in_days = 30
   cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
+
+  ### Network Firewall ###
+  deploy_aws_nfw                        = var.deploy_aws_nfw
+  delete_protection                     = var.delete_protection
+  aws_nfw_prefix                        = var.resource_prefix
+  aws_nfw_name                          = "${var.resource_prefix}-nfw"
+  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
+  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
+  nfw_kms_key_id                        = data.terraform_remote_state.account-setup.outputs.nfw_kms_key_id
 }
