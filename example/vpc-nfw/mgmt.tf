@@ -6,31 +6,97 @@ module "mgmt_vpc" {
   cidr = var.mgmt_vpc_cidr
   azs  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 
-  private_subnets = local.private_subnets
-  private_subnet_tags = { #please note this goes alphabetically in order
-    "0" = "config"
-    "1" = "config"
-    "2" = "database"
-    "3" = "database"
-    "4" = "iam"
-    "5" = "iam"
-    "6" = "secops"
-    "7" = "secops"
-    "8" = "siem"
-    "9" = "siem"
-  }
-
-  tgw_subnets = [
-    "10.1.255.0/28",
-    "10.1.255.16/28"
+  subnets = [
+    # Firewall subnets
+    {
+      tag               = "firewall"
+      cidr              = "10.0.0.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "firewall"
+      cidr              = "10.0.1.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    },
+    # Public subnets
+    {
+      tag               = "public"
+      cidr              = "10.0.2.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "public"
+      cidr              = "10.0.3.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1b"
+    },
+    # Private subnets
+    {
+      tag               = "iam"
+      cidr              = "10.0.4.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "iam"
+      cidr              = "10.0.5.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "secops"
+      cidr              = "10.0.6.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "secops"
+      cidr              = "10.0.7.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "config"
+      cidr              = "10.0.8.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "config"
+      cidr              = "10.0.9.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+    },
+    # Database subnets
+    {
+      tag               = "database"
+      cidr              = "10.0.10.0/24"
+      type              = "database"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "database"
+      cidr              = "10.0.11.0/24"
+      type              = "tgw"
+      availability_zone = "us-gov-west-1b"
+    },
+    # TGW subnets
+    {
+      tag               = "tgw"
+      cidr              = "10.0.12.0/24"
+      type              = "tgw"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "tgw"
+      cidr              = "10.0.13.0/24"
+      type              = "tgw"
+      availability_zone = "us-gov-west-1b"
+    }
   ]
-  tgw_subnet_tags = {
-    "0" = "TGW"
-    "1" = "TGW"
-  }
-
-  public_subnets       = local.public_subnets
-  public_subnet_suffix = "public"
 
   single_nat_gateway     = false
   enable_nat_gateway     = true
@@ -50,8 +116,4 @@ module "mgmt_vpc" {
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
   aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
   nfw_kms_key_id                        = data.terraform_remote_state.account-setup.outputs.nfw_kms_key_id
-
-  # When deploying NFW, firewall_subnets must be specified
-  firewall_subnets       = local.firewall_subnets
-  firewall_subnet_suffix = "firewall"
 }
