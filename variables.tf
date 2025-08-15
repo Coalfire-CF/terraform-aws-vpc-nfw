@@ -740,18 +740,11 @@ variable "subnets" {
     type              = string
     availability_zone = string
   }))
-  validation {
-    condition     = length([for s in var.subnets : s if s.type == "public"]) >= length([for s in var.subnets : s if s.type == "firewall"])
-    error_message = "The number of public subnets must be greater than or equal to the number of firewall subnets to accomodate IGW routing from the NFW"
-  }
-  validation {
-    condition     = length([for s in var.subnets : s if s.custom_name != null && s.tag != null]) == 0
-    error_message = "Subnets must have only one of 'custom_name' or 'tag' defined. (You cannot specify both a 'custom_name' and a 'tag')"
-  }
-  validation {
-    condition     = length([for s in var.subnets : s if s.custom_name == null && s.tag == null]) == 0
-    error_message = "You must provide one of either 'custom_name' or 'tag' for each subnet"
-  }
+
+  ### There are MANY invalid configurations for this input object which terraform will not catch, but the AWS API will reject during apply
+  ### We must define input validation rules for each known error:
+
+  # Error if subnet type is not an allowed value
   validation {
     condition = length([
       for subnet in var.subnets[*].type : true if contains([
@@ -767,6 +760,31 @@ variable "subnets" {
       subnet)
     ]) == length(var.subnets)
     error_message = "Allowed subnet types are 'firewall', 'public', 'private', 'tgw', 'database', 'redshift', 'elasticache', and 'intra'."
+  }
+  # Error if subnet CIDRs are duplicated
+  validation {
+    condition     = length([for s in var.subnets : s if s.type == "public"]) >= length([for s in var.subnets : s if s.type == "firewall"])
+    error_message = "The number of public subnets must be greater than or equal to the number of firewall subnets to accomodate IGW routing from the NFW."
+  }
+  # Error if multiple subnets are defined with the same CIDR
+  validation {
+    condition     = length(var.subnets) == length(distinct([for s in var.subnets : s.cidr]))
+    error_message = "Each subnet must have a unique CIDR."
+  }
+  # Error if the number of public subnets is less than the number of firewall subnets
+  validation {
+    condition     = length([for s in var.subnets : s if s.type == "public"]) >= length([for s in var.subnets : s if s.type == "firewall"])
+    error_message = "The number of public subnets must be greater than or equal to the number of firewall subnets to accomodate IGW routing from the NFW."
+  }
+  # Error if BOTH 'tag' and 'custom_name' are defined for any subnet
+  validation {
+    condition     = length([for s in var.subnets : s if s.custom_name != null && s.tag != null]) == 0
+    error_message = "Subnets must have only one of 'custom_name' or 'tag' defined. (i.e. you cannot specify both a 'custom_name' and a 'tag' for the same subnet)."
+  }
+  # Error if NEITHER 'tag' nor 'custom_name' are defined for any subnet
+  validation {
+    condition     = length([for s in var.subnets : s if s.custom_name == null && s.tag == null]) == 0
+    error_message = "You must provide one of either 'custom_name' or 'tag' for each subnet."
   }
 }
 
