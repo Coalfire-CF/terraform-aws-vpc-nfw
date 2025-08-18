@@ -120,8 +120,8 @@ variable "delete_protection" {
   default     = true
 }
 
-variable "nfw_kms_key_id" {
-  description = "NFW KMS Key Id for encryption"
+variable "nfw_kms_key_arn" {
+  description = "ARN of the KMS key to use for NFW encryption"
   type        = string
   default     = null
 }
