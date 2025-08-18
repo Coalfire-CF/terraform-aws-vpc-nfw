@@ -719,7 +719,6 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |       |-- providers.tf
 |       |-- remote-data.tf
 |       |-- required_providers.tf
-|       |-- subnets.tf
 |       |-- suricata.json
 |       |-- variables.tf
 |       |-- vpc_nfw.auto.tfvars
