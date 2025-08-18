@@ -761,7 +761,7 @@ variable "subnets" {
     ]) == length(var.subnets)
     error_message = "Allowed subnet types are 'firewall', 'public', 'private', 'tgw', 'database', 'redshift', 'elasticache', and 'intra'."
   }
-  # Error if subnet CIDRs are duplicated
+  # Error if the number of public subnets is less than the number of firewall subnets
   validation {
     condition     = length([for s in var.subnets : s if s.type == "public"]) >= length([for s in var.subnets : s if s.type == "firewall"])
     error_message = "The number of public subnets must be greater than or equal to the number of firewall subnets to accomodate IGW routing from the NFW."
@@ -770,11 +770,6 @@ variable "subnets" {
   validation {
     condition     = length(var.subnets) == length(distinct([for s in var.subnets : s.cidr]))
     error_message = "Each subnet must have a unique CIDR."
-  }
-  # Error if the number of public subnets is less than the number of firewall subnets
-  validation {
-    condition     = length([for s in var.subnets : s if s.type == "public"]) >= length([for s in var.subnets : s if s.type == "firewall"])
-    error_message = "The number of public subnets must be greater than or equal to the number of firewall subnets to accomodate IGW routing from the NFW."
   }
   # Error if BOTH 'tag' and 'custom_name' are defined for any subnet
   validation {
