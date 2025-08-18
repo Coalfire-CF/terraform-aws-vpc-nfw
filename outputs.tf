@@ -312,3 +312,24 @@ output "vpc_endpoint_security_groups" {
   description = "Map of security group IDs created for VPC endpoints"
   value       = var.create_vpc_endpoints ? module.vpc_endpoints.security_groups : {}
 }
+
+output "subnets" {
+  description = "List of objects containing all subnet IDs and CIDRs by name"
+  value = {
+    for subnet in concat(
+      aws_subnet.public[*],
+      aws_subnet.firewall[*],
+      aws_subnet.private[*],
+      aws_subnet.tgw[*],
+      aws_subnet.database[*],
+      aws_subnet.redshift[*],
+      aws_subnet.elasticache[*],
+      aws_subnet.intra[*]
+      ) : subnet.tags["Name"] => {
+      id                = subnet.id
+      arn               = subnet.arn
+      cidr              = subnet.cidr_block
+      availability_zone = subnet.availability_zone
+    }
+  }
+}
