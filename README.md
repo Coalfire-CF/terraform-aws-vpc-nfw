@@ -584,17 +584,18 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |-- example
 |   |-- prior-versions
 |   |   |-- README.md
-|   |   |-- example-with-tls-inspection.tf
-|   |   |-- without-network-firewall.tf
-|   |-- vpc-app-account
-|   |   |-- app-networking.auto.tfvars
-|   |   |-- locals.tf
-|   |   |-- mgmt.tf
-|   |   |-- outputs.tf
-|   |   |-- providers.tf
-|   |   |-- remote-data.tf
-|   |   |-- required_providers.tf
-|   |   |-- variables.tf
+|   |   |-- other-examples
+|   |   |   |-- example-with-tls-inspection.tf
+|   |   |   |-- example-without-network-firewall.tf
+|   |   |-- vpc-app-account
+|   |       |-- app-networking.auto.tfvars
+|   |       |-- locals.tf
+|   |       |-- mgmt.tf
+|   |       |-- outputs.tf
+|   |       |-- providers.tf
+|   |       |-- remote-data.tf
+|   |       |-- required_providers.tf
+|   |       |-- variables.tf
 |   |-- vpc-nfw
 |       |-- locals.tf
 |       |-- mgmt.tf
