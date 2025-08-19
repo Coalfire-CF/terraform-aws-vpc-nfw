@@ -187,6 +187,11 @@ variable "tls_source_to_port" {
 ######
 # VPC
 ######
+variable "vpc_name" {
+  description = "Name to assign to the AWS VPC"
+  type        = string
+}
+
 variable "resource_prefix" {
   description = "Prefix to be added to resource names as identifier"
   default     = ""
