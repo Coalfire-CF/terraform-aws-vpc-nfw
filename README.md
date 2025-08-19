@@ -573,3 +573,66 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="output_vpc_main_route_table_id"></a> [vpc\_main\_route\_table\_id](#output\_vpc\_main\_route\_table\_id) | The ID of the main route table associated with this VPC |
 | <a name="output_vpc_secondary_cidr_blocks"></a> [vpc\_secondary\_cidr\_blocks](#output\_vpc\_secondary\_cidr\_blocks) | List of secondary CIDR blocks of the VPC |
 <!-- END_TF_DOCS -->
+## Tree
+```
+.
+|-- CONTRIBUTING.md
+|-- LICENSE
+|-- License.md
+|-- README.md
+|-- coalfire_logo.png
+|-- example
+|   |-- prior-versions
+|   |   |-- README.md
+|   |   |-- example-with-tls-inspection.tf
+|   |   |-- without-network-firewall.tf
+|   |-- vpc-app-account
+|   |   |-- app-networking.auto.tfvars
+|   |   |-- locals.tf
+|   |   |-- mgmt.tf
+|   |   |-- outputs.tf
+|   |   |-- providers.tf
+|   |   |-- remote-data.tf
+|   |   |-- required_providers.tf
+|   |   |-- variables.tf
+|   |-- vpc-nfw
+|       |-- locals.tf
+|       |-- mgmt.tf
+|       |-- nfw_policies.tf
+|       |-- outputs.tf
+|       |-- providers.tf
+|       |-- remote-data.tf
+|       |-- required_providers.tf
+|       |-- suricata.json
+|       |-- variables.tf
+|       |-- vpc_nfw.auto.tfvars
+|-- flowlog.tf
+|-- locals.tf
+|-- main.tf
+|-- modules
+|   |-- aws-network-firewall
+|   |   |-- README.md
+|   |   |-- coalfire_logo.png
+|   |   |-- locals.tf
+|   |   |-- main.tf
+|   |   |-- nfw-base-suricata-rules.json
+|   |   |-- output.tf
+|   |   |-- required_providers.tf
+|   |   |-- tls.tf
+|   |   |-- variables.tf
+|   |-- vpc-endpoint
+|       |-- README.md
+|       |-- locals.tf
+|       |-- main.tf
+|       |-- outputs.tf
+|       |-- variables.tf
+|-- outputs.tf
+|-- required_providers.tf
+|-- routes.tf
+|-- subnets.tf
+|-- test
+|   |-- src
+|       |-- vpc_endpoints_with_nfw_test.go
+|-- update-readme-tree.sh
+|-- variables.tf
+```
