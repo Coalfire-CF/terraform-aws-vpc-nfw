@@ -208,15 +208,6 @@ Some variables expose different expected values based on sensible assumptions.  
 
 The variables can be further inspected to see what parameters and types are expected.
 
-
-
-
-
-### Example with 
-
-AWS Networking deployment without AWS Network Firewall:
-```hcl
-```
 ## Environment Setup
 
 ```hcl
