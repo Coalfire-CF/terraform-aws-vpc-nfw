@@ -42,6 +42,111 @@ The following type of resources are supported:
 * AWS region is appended to the subnet name by default.
 * The private route table IDs includes the route table IDs from database subnets as well.
 
+# Usage
+For a detailed example of module usage and structure, see the `example/vpc-nfw` folder.
+
+A simplified module call is given below to demonstrate general format/syntax and structure:
+
+```hcl
+module "mgmt_vpc" {
+  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
+  name = "example-mgmt"
+  cidr = "x.x.x.x/xx"
+  azs  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+
+  subnets = [
+    {
+      tag               = "subnet1"
+      cidr              = "10.0.0.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "subnet2"
+      cidr              = "10.0.1.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1b"
+    }
+  ]
+
+  single_nat_gateway     = false
+  enable_nat_gateway     = true
+  one_nat_gateway_per_az = true
+  enable_vpn_gateway     = false
+  enable_dns_hostnames   = true
+
+  flow_log_destination_type              = "cloud-watch-logs"
+  cloudwatch_log_group_retention_in_days = 30
+  cloudwatch_log_group_kms_key_id        = "arn:aws-us-gov:kms:your-cloudwatch-kms-key-arn"
+
+  deploy_aws_nfw                        = true
+  delete_protection                     = true
+  aws_nfw_prefix                        = "example"
+  aws_nfw_name                          = "example-nfw"
+  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
+  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
+  nfw_kms_key_arn                        = "arn:aws-us-gov:kms:your-nfw-kms-key-arn"
+}
+```
+
+> Note: If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements.
+
+## Required inputs
+
+| Input | Description | Example |
+|---|---|---|
+| resource_prefix | Deployment-wide identifier prepended to resource names (excluding any explicitly-defined or custom resource names) | `"prod"` |
+| vpc_name | Name to assign to the VPC resource | `"mgmt-prod-vpc"` |
+| cidr | The CIDR block to assign to the VPC. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html) for more info on defining VPC CIDRs. | `"10.0.0.0/16"` |
+| azs | This variable defines the Availability Zones in your environment. You may use a terraform `data` call to retrieve these values dynamically from the AWS provider. | `[data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]` |
+| subnets | A block of subnet definitions. | See [subnets](#defining-the-subnets-block) |
+| enable_nat_gateway | Whether to deploy NAT gateway(s) | `true` |
+| single_nat_gateway | If `true`, only deploys a single NAT gateway, shared between all private subnets | `false` |
+| one_nat_gateway_per_az | If `true`, deploys only one NAT gateway per Availability Zone, shared between all private subnets in that AZ | `true` |
+| enable_vpn_gateway | If `true`, creates a VPN gateway resource attached to the VPC | `false` |
+| enable_dns_hostnames | If `true`, enables DNS hostnames in the Default VPC | `false` |
+| flow_log_destination_type | The type of flow log destination. msut be one of `"s3"` or `"cloud-watch-logs"` | `"cloud-watch-logs"` |
+| cloudwatch_log_group_retention_in_days | The length of time, in days, to retain CloudWatch logs | `30`|
+| cloudwatch_log_group_kms_key_arn | ARN of the KMS key to use for the cloudwatch log group encryption. | `"arn:aws-us-gov:kms:your-kms-key-arn"` |
+| deploy_aws_nfw | If `true`, deploys AWS Network Firewall | `true` | 
+| delete_protection | If `true`, prevents deletion of the AWS Network Firewall. | `true` |
+| aws_nfw_name | Name to assign to the NFW resource | `"mgmt-prod-nfw"` |
+| aws_nfw_fivetuple_stateful_rule_group | Object block containing config for Suricata 5-tuple type stateful rule group | See [Replacing the Default Deny All NFW Policy](#replacing-the-default-deny-all-nfw-policy) | 
+| aws_nfw_suricata_stateful_rule_group | Object block containing config for Suricata type stateful rule group| See [Replacing the Default Deny All NFW Policy](#replacing-the-default-deny-all-nfw-policy) | 
+| nfw_kms_key_arn | ARN of the KMS key to use for firewall encryption | `"arn:aws-us-gov:kms:your-kms-key-arn"` |
+
+### Defining the subnets block
+Subnets are specified via the `subnets` block:
+
+```hcl
+  subnets = [
+    {
+      tag               = "fw1"  
+      cidr              = "10.0.0.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "fw2"  
+      cidr              = "10.0.1.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    }
+  ]
+```
+
+Each subnet must be defined with the following Attributes:
+
+| Attribute | Description | Example |
+|---|---|---|
+| tag | An arbitrary identifier (freindly name) which will be combined with `resource_prefix` variable and the subnet's `availability_zone` to form the subnet `Name` tag. For example, for a deployment with `resource_prefix` "example", setting `tag = "secops"` and `availability_zone = us-gov-west-1a` will result in the subnet name `example-secops-us-gov-west-1a` | `siem` |
+| cidr | Defines the CIDR block for the subnet. Subnet CIDR blocks must not overlap, and no two subnets can have the same CIDR block. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html) for more information on defining CIDR blocks for VPC subnets. | `10.0.3.0/24` |
+| type | Determines the type of subnet to deploy. Allowed values are `firewall`, `public`, `private`, `tgw`, `database`, `redshift`, `elasticache`, or `intra` | `private` | 
+| availability_zone | The availability zone in which to create the subnet. The AZ specified here must be available in your environment. | `us-gov-west-1b` |
+| custom_name | (Optional, supersedes `tag`) If your environment has strict requirements for resource naming, you may specify `custom_name` in place of `tag` to define the exact string to assign to the subnet's Name tag. | `aws-subnet-private-secops-west-1a` |
+
+> Note: You may specify any number of subnets, in any order, and of any combination of types, availability zones, and CIDR blocks. Note that you may arbitrarily destroy or create subnets as the need arises, without affecting other subnets. (Always check the output of `terraform plan` before applying changes)
+
 ## Replacing the Default Deny All NFW Policy
 
 #### There will be a default Deny All NFW policy that is applied `module.mgmt_vpc.module.aws_network_firewall.nfw-base-suricata-rule.json`. If you are having networking problems, please follow the example below of how to pass a customized ruleset to the module. Any customized ruleset will overwrite the default policy.
@@ -103,275 +208,14 @@ Some variables expose different expected values based on sensible assumptions.  
 
 The variables can be further inspected to see what parameters and types are expected.
 
-# Usage
-
-## Required inputs
-
-| Input | Description | Example |
-|---|---|---|
-| resource_prefix | Deployment-wide identifier prepended to resource names (excluding any explicitly-defined or custom resource names) | `"prod"` |
-| vpc_name | Name to assign to the VPC resource | `"mgmt-prod-vpc"` |
-| cidr | The CIDR block to assign to the VPC. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html) for more info on defining VPC CIDRs. | `"10.0.0.0/16"` |
-| azs | This variable defines the Availability Zones in your environment. You may use a terraform `data` call to retrieve these values dynamically from the AWS provider. | `[data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]` |
-| subnets | A block of subnet definitions. | See [subnets](#defining-the-subnets-block) |
-| enable_nat_gateway | Whether to deploy NAT gateway(s) | `true` |
-| single_nat_gateway | If `true`, only deploys a single NAT gateway, shared between all private subnets | `false` |
-| one_nat_gateway_per_az | If `true`, deploys only one NAT gateway per Availability Zone, shared between all private subnets in that AZ | `true` |
-| enable_vpn_gateway | If `true`, creates a VPN gateway resource attached to the VPC | `false` |
-| enable_dns_hostnames | If `true`, enables DNS hostnames in the Default VPC | `false` |
-| flow_log_destination_type | The type of flow log destination. msut be one of `"s3"` or `"cloud-watch-logs"` | `"cloud-watch-logs"` |
-| cloudwatch_log_group_retention_in_days | The length of time, in days, to retain CloudWatch logs | `30`|
-| cloudwatch_log_group_kms_key_arn | Defines the ARN of the KMS key to use for the cloudwatch log group encryption. | `"arn:aws-us-gov:kms:your-kms-key-arn"` |
-| deploy_aws_nfw | If `true`, deploys AWS Network Firewall | `true` | 
-| delete_protection | If `true`, prevents deletion of the AWS Network Firewall. | `true` |
 
 
 
-### Defining the subnets block
-Subnets are specified via the `subnets` block:
-
-```hcl
-  subnets = [
-    {
-      tag               = "fw1"  
-      cidr              = "10.0.0.0/24"
-      type              = "firewall"
-      availability_zone = "us-gov-west-1a"
-    },
-    {
-      tag               = "fw2"  
-      cidr              = "10.0.1.0/24"
-      type              = "firewall"
-      availability_zone = "us-gov-west-1b"
-    }
-  ]
-```
-
-Each subnet must be defined with the following Attributes:
-
-| Attribute | Description | Example |
-|---|---|---|
-| tag | An arbitrary identifier (freindly name) which will be combined with `resource_prefix` variable and the subnet's `availability_zone` to form the subnet `Name` tag. For example, for a deployment with `resource_prefix` "example", setting `tag = "secops"` and `availability_zone = us-gov-west-1a` will result in the subnet name `example-secops-us-gov-west-1a` | `siem` |
-| cidr | Defines the CIDR block for the subnet. Subnet CIDR blocks must not overlap, and no two subnets can have the same CIDR block. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html) for more information on defining CIDR blocks for VPC subnets. | `10.0.3.0/24` |
-| type | Determines the type of subnet to deploy. Allowed values are `firewall`, `public`, `private`, `tgw`, `database`, `redshift`, `elasticache`, or `intra` | `private` | 
-| availability_zone | The availability zone in which to create the subnet. The AZ specified here must be available in your environment. | `us-gov-west-1b` |
-| custom_name | (Optional, supersedes `tag`) If your environment has strict requirements for resource naming, you may specify `custom_name` in place of `tag` to define the exact string to assign to the subnet's Name tag. | `aws-subnet-private-secops-west-1a` |
-
-You may specify any number of subnets in any order, of any combination of types, availability zones, and CIDR blocks. Note that subnets may be arbitrarily destroyed or created as necessary without affecting other subnets. 
-
-
-
-
-## Usage and Examples
-If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture.
-Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements. An example of 'mgmt.tf' usage is shown where VPC and AWS NFW resources are deployed, along with optional VPC endpoints:
 
 ### Example with 
-```hcl
-module "mgmt_vpc" {
-  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
 
-  name = "example-mgmt"
-  cidr = "10.1.0.0/16"
-  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-
-  single_nat_gateway     = false
-  enable_nat_gateway     = true
-  one_nat_gateway_per_az = true
-  enable_vpn_gateway     = false
-  enable_dns_hostnames   = true
-
-  flow_log_destination_type              = "cloud-watch-logs"
-  cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = "arn:aws-us-gov:kms:your-kms-key-arn"
-
-  ### Network Firewall ###
-  deploy_aws_nfw                        = true
-  delete_protection                     = true
-  aws_nfw_prefix                        = "example"
-  aws_nfw_name                          = "example-nfw"
-  nfw_kms_key_id                        = "arn:aws-us-gov:kms:your-kms-key-arn"
-
-  # Reference example directory for these values, as they are too large to show here
-  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group 
-  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
-
-  # When deploying NFW, firewall_subnets must be specified
-  firewall_subnets       = local.firewall_subnets
-  firewall_subnet_suffix = "firewall"
-
-  # TLS Outbound Inspection (Optional)
-  enable_tls_inspection = var.enable_tls_inspection # deploy_aws_nfw must be set to true to enable this
-  tls_cert_arn          = var.tls_cert_arn
-  tls_destination_cidrs = var.tls_destination_cidrs # Set these to the NAT gateways to filter outbound traffic without affecting the hosted VPN
-
-  ### VPC Endpoints ### (Optional)
-  create_vpc_endpoints = true
-
-  # Control where gateway endpoints are associated
-  associate_with_private_route_tables = true  # Associate with private subnets (default)
-  associate_with_public_route_tables  = false # Don't associate with public subnets
-
-  vpc_endpoints = {
-    # S3 Gateway endpoint
-    s3 = {
-      service_type = "Gateway"
-      service_name = "com.amazonaws.${var.aws_region}.s3"
-      tags         = { Name = "${var.resource_prefix}-s3-gateway-endpoint" }
-    }
-
-    # DynamoDB Gateway endpoint
-    dynamodb = {
-      service_type = "Gateway"
-      service_name = "com.amazonaws.${var.aws_region}.dynamodb"
-      tags         = { Name = "${var.resource_prefix}-dynamodb-endpoint" }
-    }
-
-    # KMS Interface endpoint (for encryption operations)
-    kms = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.kms-fips"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-kms-endpoint" }
-    }
-
-    # SSM Interface endpoint
-    ssm = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ssm"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ssm-endpoint" }
-    }
-
-    # SSM Messages Interface endpoint
-    ssmmessages = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ssmmessages"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ssmmessages-endpoint" }
-    }
-
-    # EC2 Messages Interface endpoint
-    ec2messages = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ec2messages"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ec2messages-endpoint" }
-    }
-
-    # Logs Interface endpoint
-    logs = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.logs"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-logs-endpoint" }
-    }
-
-    dockerregistry = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ecr-dkr" }
-    }
-
-    ecr = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ecr.api"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ecr-api" }
-    }
-
-  }
-
- # Define security groups for VPC endpoints
-  vpc_endpoint_security_groups = {
-    common_sg = {
-      name        = "common-endpoint-sg"
-      description = "Common security group for all VPC endpoint"
-      ingress_rules = [
-        {
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = ["${var.ip_network_fedramp_mgmt}.0.0/16"]
-        }
-      ]
-
-      egress_rules = [
-        {
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      ]
-    }
-  }
-  
-  /* Add Additional tags here */
-  tags = {
-    Owner       = var.resource_prefix
-    Environment = "mgmt"
-    createdBy   = "terraform"
-  }
-}
-```
 AWS Networking deployment without AWS Network Firewall:
 ```hcl
-module "mgmt_vpc" {
-  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
-  
-  name = "${var.resource_prefix}-mgmt"
-  cidr = var.mgmt_vpc_cidr
-  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-
-  private_subnets = local.private_subnets # Map of Name -> CIDR, please note this goes alphabetically in order
-  private_subnet_tags = {
-    "0" = "Compute"
-    "1" = "Compute"
-    "2" = "Compute"
-    "3" = "Private"
-    "4" = "Private"
-    "5" = "Private"
-  }
-
-  tgw_subnets = local.tgw_subnets
-  tgw_subnet_tags = {
-    "0" = "TGW"
-    "1" = "TGW"
-    "2" = "TGW"
-  }
-
-  firewall_subnets       = local.firewall_subnets
-  firewall_subnet_suffix = "firewall"
-
-  public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
-
-  single_nat_gateway     = var.single_nat_gateway # false
-  enable_nat_gateway     = var.enable_nat_gateway # true
-  one_nat_gateway_per_az = var.one_nat_gateway_per_az # true
-  enable_vpn_gateway     = var.enable_vpn_gateway # false
-  enable_dns_hostnames   = var.enable_dns_hostnames # true
-
-  flow_log_destination_type              = "cloud-watch-logs"
-  cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
-
-  /* Add Additional tags here */
-  tags = {
-    Owner       = var.resource_prefix
-    Environment = "mgmt"
-    createdBy   = "terraform"
-  }
-}
 ```
 ## Environment Setup
 
@@ -729,63 +573,3 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="output_vpc_main_route_table_id"></a> [vpc\_main\_route\_table\_id](#output\_vpc\_main\_route\_table\_id) | The ID of the main route table associated with this VPC |
 | <a name="output_vpc_secondary_cidr_blocks"></a> [vpc\_secondary\_cidr\_blocks](#output\_vpc\_secondary\_cidr\_blocks) | List of secondary CIDR blocks of the VPC |
 <!-- END_TF_DOCS -->
-
-## Tree
-```
-.
-|-- CONTRIBUTING.md
-|-- LICENSE
-|-- License.md
-|-- README.md
-|-- coalfire_logo.png
-|-- example
-|   |-- vpc-app-account
-|   |   |-- app-networking.auto.tfvars
-|   |   |-- locals.tf
-|   |   |-- mgmt.tf
-|   |   |-- outputs.tf
-|   |   |-- providers.tf
-|   |   |-- remote-data.tf
-|   |   |-- required_providers.tf
-|   |   |-- variables.tf
-|   |-- vpc-nfw
-|       |-- locals.tf
-|       |-- mgmt.tf
-|       |-- nfw_policies.tf
-|       |-- outputs.tf
-|       |-- providers.tf
-|       |-- remote-data.tf
-|       |-- required_providers.tf
-|       |-- suricata.json
-|       |-- variables.tf
-|       |-- vpc_nfw.auto.tfvars
-|-- flowlog.tf
-|-- locals.tf
-|-- main.tf
-|-- modules
-|   |-- aws-network-firewall
-|   |   |-- README.md
-|   |   |-- coalfire_logo.png
-|   |   |-- locals.tf
-|   |   |-- main.tf
-|   |   |-- nfw-base-suricata-rules.json
-|   |   |-- output.tf
-|   |   |-- required_providers.tf
-|   |   |-- tls.tf
-|   |   |-- variables.tf
-|   |-- vpc-endpoint
-|       |-- README.md
-|       |-- locals.tf
-|       |-- main.tf
-|       |-- outputs.tf
-|       |-- variables.tf
-|-- outputs.tf
-|-- required_providers.tf
-|-- routes.tf
-|-- subnets.tf
-|-- test
-|   |-- src
-|       |-- vpc_endpoints_with_nfw_test.go
-|-- update-readme-tree.sh
-|-- variables.tf
-```
