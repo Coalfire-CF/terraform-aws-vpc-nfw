@@ -188,7 +188,7 @@ module "mgmt_vpc" {
 }
 ```
 
-> ⚠️ **WARNING:** due to the way the module generates subnets, it is likely that removing, adding, or otherwise changing one subnet in the module can cause all other subnet CIDRs to be updated, potentially generating cascading effects across your deployment. If using this method, it is highly recommended to define all subnets during your first deployment, and excercise extreme caution when making any updates. 
+> ⚠️ **WARNING:** due to the way the module Hashicorp subnetting module generates CIDRs, it is likely that removing, adding, or otherwise changing one subnet in the module can cause all other subnet CIDRs to be updated, potentially generating cascading effects across your deployment. If using this method, it is highly recommended to define all subnets during your first deployment, and excercise extreme caution when making any updates. 
 
 
 ## Replacing the Default Deny All NFW Policy
