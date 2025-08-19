@@ -23,7 +23,7 @@ resource "aws_vpc" "this" {
   assign_generated_ipv6_cidr_block = var.assign_generated_ipv6_cidr_block
 
   tags = merge(tomap({
-    "Name" = format("%s", var.name)
+    "Name" = format("%s", var.vpc_name)
   }), var.tags, var.vpc_tags)
 }
 
@@ -52,7 +52,7 @@ resource "aws_vpc_dhcp_options" "this" {
   netbios_node_type    = var.dhcp_options_netbios_node_type
 
   tags = merge(tomap({
-    "Name" = format("%s-dhcp-options", var.name)
+    "Name" = format("%s-dhcp-options", var.resource_prefix)
   }), var.tags, var.dhcp_options_tags)
 }
 
@@ -75,7 +75,7 @@ resource "aws_internet_gateway" "this" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = format("%s", var.name)
+    "Name" = format("%s", var.resource_prefix)
   }), var.tags, var.igw_tags)
 }
 
@@ -165,7 +165,7 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = merge(tomap({
-    "Name" = format("%s-%s", var.name, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
+    "Name" = format("%s-%s", var.resource_prefix, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
   }), var.tags, var.nat_eip_tags)
 }
 
@@ -176,7 +176,7 @@ resource "aws_nat_gateway" "this" {
   subnet_id     = element(aws_subnet.public.*.id, (var.single_nat_gateway ? 0 : count.index))
 
   tags = merge(tomap({
-    "Name" = format("%s-%s", var.name, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
+    "Name" = format("%s-%s", var.resource_prefix, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
   }), var.tags, var.nat_gateway_tags)
 
   depends_on = [aws_internet_gateway.this, aws_subnet.public]
@@ -191,7 +191,7 @@ resource "aws_vpn_gateway" "this" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = format("%s", var.name)
+    "Name" = format("%s", var.resource_prefix)
   }), var.tags, var.vpn_gateway_tags)
 }
 
