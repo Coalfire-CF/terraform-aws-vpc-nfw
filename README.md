@@ -39,8 +39,157 @@ The following type of resources are supported:
   * `module.mgmt_vpc.private_subnets["mvp-mgmt-compute-us-gov-west-1a"]`
   * `data.terraform_remote_state.network.outputs.public_subnets["mvp-mgmt-dmz-us-gov-west-1a"]`
 * This is designed to automatically reference the firewall subnets when opted to be created.
-* Automatically adds AWS region to the subnet name upon creation.
+* AWS region is appended to the subnet name by default.
 * The private route table IDs includes the route table IDs from database subnets as well.
+
+# Usage
+For a detailed example of module usage and structure, see the `example/vpc-nfw` folder.
+
+A simplified module call is given below to demonstrate general format/syntax and structure:
+
+```hcl
+module "mgmt_vpc" {
+  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
+  name = "example-mgmt"
+  cidr = "x.x.x.x/xx"
+  azs  = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+
+  subnets = [
+    {
+      tag               = "subnet1"
+      cidr              = "10.0.0.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "subnet2"
+      cidr              = "10.0.1.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1b"
+    }
+  ]
+
+  single_nat_gateway     = false
+  enable_nat_gateway     = true
+  one_nat_gateway_per_az = true
+  enable_vpn_gateway     = false
+  enable_dns_hostnames   = true
+
+  flow_log_destination_type              = "cloud-watch-logs"
+  cloudwatch_log_group_retention_in_days = 30
+  cloudwatch_log_group_kms_key_id        = "arn:aws-us-gov:kms:your-cloudwatch-kms-key-arn"
+
+  deploy_aws_nfw                        = true
+  delete_protection                     = true
+  aws_nfw_prefix                        = "example"
+  aws_nfw_name                          = "example-nfw"
+  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
+  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
+  nfw_kms_key_arn                        = "arn:aws-us-gov:kms:your-nfw-kms-key-arn"
+}
+```
+
+> Note: If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements.
+
+## Required inputs
+
+| Input | Description | Example |
+|---|---|---|
+| resource_prefix | Deployment-wide identifier prepended to resource names (excluding any explicitly-defined or custom resource names) | `"prod"` |
+| vpc_name | Name to assign to the VPC resource | `"mgmt-prod-vpc"` |
+| cidr | The CIDR block to assign to the VPC. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html) for more info on defining VPC CIDRs. | `"10.0.0.0/16"` |
+| azs | This variable defines the Availability Zones in your environment. You may use a terraform `data` call to retrieve these values dynamically from the AWS provider. | `[data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]` |
+| subnets | A block of subnet definitions. | See [subnets](#defining-the-subnets-block) |
+| enable_nat_gateway | Whether to deploy NAT gateway(s) | `true` |
+| single_nat_gateway | If `true`, only deploys a single NAT gateway, shared between all private subnets | `false` |
+| one_nat_gateway_per_az | If `true`, deploys only one NAT gateway per Availability Zone, shared between all private subnets in that AZ | `true` |
+| enable_vpn_gateway | If `true`, creates a VPN gateway resource attached to the VPC | `false` |
+| enable_dns_hostnames | If `true`, enables DNS hostnames in the Default VPC | `false` |
+| flow_log_destination_type | The type of flow log destination. msut be one of `"s3"` or `"cloud-watch-logs"` | `"cloud-watch-logs"` |
+| cloudwatch_log_group_retention_in_days | The length of time, in days, to retain CloudWatch logs | `30`|
+| cloudwatch_log_group_kms_key_arn | ARN of the KMS key to use for the cloudwatch log group encryption. | `"arn:aws-us-gov:kms:your-kms-key-arn"` |
+| deploy_aws_nfw | If `true`, deploys AWS Network Firewall | `true` | 
+| delete_protection | If `true`, prevents deletion of the AWS Network Firewall. | `true` |
+| aws_nfw_name | Name to assign to the NFW resource | `"mgmt-prod-nfw"` |
+| aws_nfw_fivetuple_stateful_rule_group | Object block containing config for Suricata 5-tuple type stateful rule group | See [Replacing the Default Deny All NFW Policy](#replacing-the-default-deny-all-nfw-policy) | 
+| aws_nfw_suricata_stateful_rule_group | Object block containing config for Suricata type stateful rule group| See [Replacing the Default Deny All NFW Policy](#replacing-the-default-deny-all-nfw-policy) | 
+| nfw_kms_key_arn | ARN of the KMS key to use for firewall encryption | `"arn:aws-us-gov:kms:your-kms-key-arn"` |
+
+### Defining the subnets block
+Subnets are specified via the `subnets` block:
+
+```hcl
+  subnets = [
+    {
+      tag               = "fw1"  
+      cidr              = "10.0.0.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "fw2"  
+      cidr              = "10.0.1.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    }
+  ]
+```
+
+Each subnet must be defined with the following Attributes:
+
+| Attribute | Description | Example |
+|---|---|---|
+| tag | An arbitrary identifier (freindly name) which will be combined with `resource_prefix` variable and the subnet's `availability_zone` to form the subnet `Name` tag. For example, for a deployment with `resource_prefix` "example", setting `tag = "secops"` and `availability_zone = us-gov-west-1a` will result in the subnet name `example-secops-us-gov-west-1a` | `siem` |
+| cidr | Defines the CIDR block for the subnet. Subnet CIDR blocks must not overlap, and no two subnets can have the same CIDR block. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html) for more information on defining CIDR blocks for VPC subnets. | `10.0.3.0/24` |
+| type | Determines the type of subnet to deploy. Allowed values are `firewall`, `public`, `private`, `tgw`, `database`, `redshift`, `elasticache`, or `intra` | `private` | 
+| availability_zone | The availability zone in which to create the subnet. The AZ specified here must be available in your environment. | `us-gov-west-1b` |
+| custom_name | (Optional, supersedes `tag`) If your environment has strict requirements for resource naming, you may specify `custom_name` in place of `tag` to define the exact string to assign to the subnet's Name tag. | `aws-subnet-private-secops-west-1a` |
+
+> Note: You may specify any number of subnets, in any order, and of any combination of types, availability zones, and CIDR blocks. Note that you may arbitrarily destroy or create subnets as the need arises, without affecting other subnets. (Always check the output of `terraform plan` before applying changes)
+
+### (Optional) Defining subnet CIDRs using Hashicorp CIDR module
+If desired, you may define subnet CIDRs dynamically using Hashicorp's [Terraform CIDR Subnets Module](https://registry.terraform.io/modules/hashicorp/subnets/cidr/latest):
+
+```hcl
+module "cidr_blocks" {
+  source          = "hashicorp/subnets/cidr"
+  version         = "v1.0.0"
+  base_cidr_block = var.mgmt_vpc_cidr
+  networks = [
+    {
+      name     = "block1"
+      new_bits = 8
+    },
+    {
+      name     = "block2"
+      new_bits = 8
+    }
+  ]
+}
+
+module "mgmt_vpc" {
+  cidr = var.mgmt_vpc_cidr
+  ...
+  subnets = [
+    {
+      tag               = "firewall1"
+      cidr              = module.cidr_blocks.network_cidr_blocks["block1"]
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "firewall1"
+      cidr              = module.cidr_blocks.network_cidr_blocks["block2"]
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    }
+  ]
+  ...
+}
+```
+
+> ⚠️ **WARNING:** due to the way the module Hashicorp subnetting module generates CIDRs, it is likely that removing, adding, or otherwise changing one subnet in the module can cause all other subnet CIDRs to be updated, potentially generating cascading effects across your deployment. If using this method, it is highly recommended to define all subnets during your first deployment, and excercise extreme caution when making any updates. 
+
 
 ## Replacing the Default Deny All NFW Policy
 
@@ -103,239 +252,6 @@ Some variables expose different expected values based on sensible assumptions.  
 
 The variables can be further inspected to see what parameters and types are expected.
 
-## Usage
-If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture.
-Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements. An example of 'mgmt.tf' usage is shown where VPC and AWS NFW resources are deployed, along with optional VPC endpoints:
-```hcl
-module "mgmt_vpc" {
-  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
-
-  name = "${var.resource_prefix}-mgmt"
-  cidr = var.mgmt_vpc_cidr
-  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-
-  private_subnets = local.private_subnets # Map of Name -> CIDR
-  private_subnet_tags = { #please note this goes alphabetically in order
-    "0" = "Compute"
-    "1" = "Compute"
-    "2" = "Compute"
-    "3" = "Private"
-    "4" = "Private"
-    "5" = "Private"
-  }
-
-  tgw_subnets = local.tgw_subnets
-# Example of using specific CIDRs for TGW:  
-# tgw_subnets = [
-#   "x.x.255.0/28",
-#   "x.x.255.16/28"
-# ]
-  
-  tgw_subnet_tags = {
-    "0" = "TGW"
-    "1" = "TGW"
-    "2" = "TGW"
-  }
-  
-  public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
-
-  single_nat_gateway     = var.single_nat_gateway # false
-  enable_nat_gateway     = var.enable_nat_gateway # true
-  one_nat_gateway_per_az = var.one_nat_gateway_per_az # true
-  enable_vpn_gateway     = var.enable_vpn_gateway # false
-  enable_dns_hostnames   = var.enable_dns_hostnames # true
-
-  flow_log_destination_type              = "cloud-watch-logs"
-  cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
-
-  ### Network Firewall ###
-  deploy_aws_nfw                        = var.deploy_aws_nfw
-  delete_protection                     = var.delete_protection
-  aws_nfw_prefix                        = var.resource_prefix
-  aws_nfw_name                          = "${var.resource_prefix}-nfw"
-  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
-  aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
-  nfw_kms_key_id                        = data.terraform_remote_state.account-setup.outputs.nfw_kms_key_id
-
-  # When deploying NFW, firewall_subnets must be specified
-  firewall_subnets       = local.firewall_subnets
-  firewall_subnet_suffix = "firewall"
-
-  # TLS Outbound Inspection (Optional)
-  enable_tls_inspection = var.enable_tls_inspection # deploy_aws_nfw must be set to true to enable this
-  tls_cert_arn          = var.tls_cert_arn
-  tls_destination_cidrs = var.tls_destination_cidrs # Set these to the NAT gateways to filter outbound traffic without affecting the hosted VPN
-
-  ### VPC Endpoints ### (Optional)
-  create_vpc_endpoints = true
-
-  # Control where gateway endpoints are associated
-  associate_with_private_route_tables = true  # Associate with private subnets (default)
-  associate_with_public_route_tables  = false # Don't associate with public subnets
-
-  vpc_endpoints = {
-    # S3 Gateway endpoint
-    s3 = {
-      service_type = "Gateway"
-      service_name = "com.amazonaws.${var.aws_region}.s3"
-      tags         = { Name = "${var.resource_prefix}-s3-gateway-endpoint" }
-    }
-
-    # DynamoDB Gateway endpoint
-    dynamodb = {
-      service_type = "Gateway"
-      service_name = "com.amazonaws.${var.aws_region}.dynamodb"
-      tags         = { Name = "${var.resource_prefix}-dynamodb-endpoint" }
-    }
-
-    # KMS Interface endpoint (for encryption operations)
-    kms = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.kms-fips"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-kms-endpoint" }
-    }
-
-    # SSM Interface endpoint
-    ssm = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ssm"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ssm-endpoint" }
-    }
-
-    # SSM Messages Interface endpoint
-    ssmmessages = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ssmmessages"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ssmmessages-endpoint" }
-    }
-
-    # EC2 Messages Interface endpoint
-    ec2messages = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ec2messages"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ec2messages-endpoint" }
-    }
-
-    # Logs Interface endpoint
-    logs = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.logs"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-logs-endpoint" }
-    }
-
-    dockerregistry = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ecr.dkr"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ecr-dkr" }
-    }
-
-    ecr = {
-      service_type        = "Interface"
-      service_name        = "com.amazonaws.${var.aws_region}.ecr.api"
-      subnet_ids          = [module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1a"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1b"], module.mgmt_vpc.private_subnets["vpc-compute-us-gov-west-1c"]]
-      private_dns_enabled = true
-      tags                = { Name = "${var.resource_prefix}-ecr-api" }
-    }
-
-  }
-
- # Define security groups for VPC endpoints
-  vpc_endpoint_security_groups = {
-    common_sg = {
-      name        = "common-endpoint-sg"
-      description = "Common security group for all VPC endpoint"
-      ingress_rules = [
-        {
-          from_port   = 443
-          to_port     = 443
-          protocol    = "tcp"
-          cidr_blocks = ["${var.ip_network_fedramp_mgmt}.0.0/16"]
-        }
-      ]
-
-      egress_rules = [
-        {
-          from_port   = 0
-          to_port     = 0
-          protocol    = "-1"
-          cidr_blocks = ["0.0.0.0/0"]
-        }
-      ]
-    }
-  }
-  
-  /* Add Additional tags here */
-  tags = {
-    Owner       = var.resource_prefix
-    Environment = "mgmt"
-    createdBy   = "terraform"
-  }
-}
-```
-AWS Networking deployment without AWS Network Firewall:
-```hcl
-module "mgmt_vpc" {
-  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
-  
-  name = "${var.resource_prefix}-mgmt"
-  cidr = var.mgmt_vpc_cidr
-  azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
-
-  private_subnets = local.private_subnets # Map of Name -> CIDR, please note this goes alphabetically in order
-  private_subnet_tags = {
-    "0" = "Compute"
-    "1" = "Compute"
-    "2" = "Compute"
-    "3" = "Private"
-    "4" = "Private"
-    "5" = "Private"
-  }
-
-  tgw_subnets = local.tgw_subnets
-  tgw_subnet_tags = {
-    "0" = "TGW"
-    "1" = "TGW"
-    "2" = "TGW"
-  }
-
-  firewall_subnets       = local.firewall_subnets
-  firewall_subnet_suffix = "firewall"
-
-  public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
-
-  single_nat_gateway     = var.single_nat_gateway # false
-  enable_nat_gateway     = var.enable_nat_gateway # true
-  one_nat_gateway_per_az = var.one_nat_gateway_per_az # true
-  enable_vpn_gateway     = var.enable_vpn_gateway # false
-  enable_dns_hostnames   = var.enable_dns_hostnames # true
-
-  flow_log_destination_type              = "cloud-watch-logs"
-  cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
-
-  /* Add Additional tags here */
-  tags = {
-    Owner       = var.resource_prefix
-    Environment = "mgmt"
-    createdBy   = "terraform"
-  }
-}
-```
 ## Environment Setup
 
 ```hcl
@@ -525,12 +441,11 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_aws_nfw_domain_stateful_rule_group"></a> [aws\_nfw\_domain\_stateful\_rule\_group](#input\_aws\_nfw\_domain\_stateful\_rule\_group) | Config for domain type stateful rule group | <pre>list(object({<br/>    name        = string<br/>    description = string<br/>    capacity    = number<br/>    domain_list = list(string)<br/>    actions     = string<br/>    protocols   = list(string)<br/>    rules_file  = optional(string, "")<br/>    rule_variables = optional(object({<br/>      ip_sets = list(object({<br/>        key    = string<br/>        ip_set = list(string)<br/>      }))<br/>      port_sets = list(object({<br/>        key       = string<br/>        port_sets = list(string)<br/>      }))<br/>      }), {<br/>      ip_sets   = []<br/>      port_sets = []<br/>    })<br/>  }))</pre> | `[]` | no |
 | <a name="input_aws_nfw_fivetuple_stateful_rule_group"></a> [aws\_nfw\_fivetuple\_stateful\_rule\_group](#input\_aws\_nfw\_fivetuple\_stateful\_rule\_group) | Config for 5-tuple type stateful rule group | <pre>list(object({<br/>    name        = string<br/>    description = string<br/>    capacity    = number<br/>    rule_config = list(object({<br/>      description           = string<br/>      protocol              = string<br/>      source_ipaddress      = string<br/>      source_port           = string<br/>      direction             = string<br/>      destination_port      = string<br/>      destination_ipaddress = string<br/>      sid                   = number<br/>      actions               = map(string)<br/>    }))<br/>  }))</pre> | `[]` | no |
 | <a name="input_aws_nfw_name"></a> [aws\_nfw\_name](#input\_aws\_nfw\_name) | AWS NFW Name | `string` | `""` | no |
-| <a name="input_aws_nfw_prefix"></a> [aws\_nfw\_prefix](#input\_aws\_nfw\_prefix) | AWS NFW Prefix | `string` | `""` | no |
 | <a name="input_aws_nfw_stateless_rule_group"></a> [aws\_nfw\_stateless\_rule\_group](#input\_aws\_nfw\_stateless\_rule\_group) | AWS NFW sateless rule group | <pre>list(object({<br/>    name        = string<br/>    description = string<br/>    capacity    = number<br/>    rule_config = list(object({<br/>      protocols_number      = list(number)<br/>      source_ipaddress      = string<br/>      source_to_port        = string<br/>      destination_to_port   = string<br/>      destination_ipaddress = string<br/>      tcp_flag = object({<br/>        flags = list(string)<br/>        masks = list(string)<br/>      })<br/>      actions = map(string)<br/>    }))<br/>  }))</pre> | `[]` | no |
 | <a name="input_aws_nfw_suricata_stateful_rule_group"></a> [aws\_nfw\_suricata\_stateful\_rule\_group](#input\_aws\_nfw\_suricata\_stateful\_rule\_group) | Config for Suricata type stateful rule group | <pre>list(object({<br/>    name        = string<br/>    description = string<br/>    capacity    = number<br/>    rules_file  = optional(string, "")<br/>    rule_variables = optional(object({<br/>      ip_sets = list(object({<br/>        key    = string<br/>        ip_set = list(string)<br/>      }))<br/>      port_sets = list(object({<br/>        key       = string<br/>        port_sets = list(string)<br/>      }))<br/>      }), {<br/>      ip_sets   = []<br/>      port_sets = []<br/>    })<br/>  }))</pre> | `[]` | no |
 | <a name="input_azs"></a> [azs](#input\_azs) | A list of availability zones in the region | `list(string)` | `[]` | no |
 | <a name="input_cidr"></a> [cidr](#input\_cidr) | The CIDR block for the VPC. | `string` | n/a | yes |
-| <a name="input_cloudwatch_log_group_kms_key_id"></a> [cloudwatch\_log\_group\_kms\_key\_id](#input\_cloudwatch\_log\_group\_kms\_key\_id) | Customer KMS Key id for Cloudwatch Log encryption | `string` | `""` | no |
+| <a name="input_cloudwatch_log_group_kms_key_arn"></a> [cloudwatch\_log\_group\_kms\_key\_arn](#input\_cloudwatch\_log\_group\_kms\_key\_arn) | Customer KMS Key ARN for Cloudwatch Log encryption | `string` | `""` | no |
 | <a name="input_cloudwatch_log_group_retention_in_days"></a> [cloudwatch\_log\_group\_retention\_in\_days](#input\_cloudwatch\_log\_group\_retention\_in\_days) | Number of days to retain Cloudwatch logs | `number` | `365` | no |
 | <a name="input_create_database_subnet_group"></a> [create\_database\_subnet\_group](#input\_create\_database\_subnet\_group) | Controls if database subnet group should be created | `bool` | `true` | no |
 | <a name="input_create_database_subnet_route_table"></a> [create\_database\_subnet\_route\_table](#input\_create\_database\_subnet\_route\_table) | Controls if separate route table for database should be created | `bool` | `false` | no |
@@ -539,10 +454,9 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_create_vpc_endpoints"></a> [create\_vpc\_endpoints](#input\_create\_vpc\_endpoints) | Whether to create VPC endpoints | `bool` | `false` | no |
 | <a name="input_database_custom_routes"></a> [database\_custom\_routes](#input\_database\_custom\_routes) | Custom routes for Database Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_database_route_table_tags"></a> [database\_route\_table\_tags](#input\_database\_route\_table\_tags) | Additional tags for the database route tables | `map(string)` | `{}` | no |
+| <a name="input_database_subnet_group_name"></a> [database\_subnet\_group\_name](#input\_database\_subnet\_group\_name) | Optional custom resource name for the database subnet group | `string` | `null` | no |
 | <a name="input_database_subnet_group_tags"></a> [database\_subnet\_group\_tags](#input\_database\_subnet\_group\_tags) | Additional tags for the database subnet group | `map(string)` | `{}` | no |
-| <a name="input_database_subnet_suffix"></a> [database\_subnet\_suffix](#input\_database\_subnet\_suffix) | Suffix to append to database subnets name | `string` | `"db"` | no |
 | <a name="input_database_subnet_tags"></a> [database\_subnet\_tags](#input\_database\_subnet\_tags) | Additional tags for the database subnets | `map(string)` | `{}` | no |
-| <a name="input_database_subnets"></a> [database\_subnets](#input\_database\_subnets) | A list of database subnets | `list` | `[]` | no |
 | <a name="input_default_vpc_enable_dns_hostnames"></a> [default\_vpc\_enable\_dns\_hostnames](#input\_default\_vpc\_enable\_dns\_hostnames) | Should be true to enable DNS hostnames in the Default VPC | `bool` | `false` | no |
 | <a name="input_default_vpc_enable_dns_support"></a> [default\_vpc\_enable\_dns\_support](#input\_default\_vpc\_enable\_dns\_support) | Should be true to enable DNS support in the Default VPC | `bool` | `true` | no |
 | <a name="input_default_vpc_name"></a> [default\_vpc\_name](#input\_default\_vpc\_name) | Name to be used on the Default VPC | `string` | `""` | no |
@@ -557,9 +471,8 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_dhcp_options_tags"></a> [dhcp\_options\_tags](#input\_dhcp\_options\_tags) | Additional tags for the DHCP option set | `map(string)` | `{}` | no |
 | <a name="input_elasticache_custom_routes"></a> [elasticache\_custom\_routes](#input\_elasticache\_custom\_routes) | Custom routes for Elasticache Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_elasticache_route_table_tags"></a> [elasticache\_route\_table\_tags](#input\_elasticache\_route\_table\_tags) | Additional tags for the elasticache route tables | `map(string)` | `{}` | no |
-| <a name="input_elasticache_subnet_suffix"></a> [elasticache\_subnet\_suffix](#input\_elasticache\_subnet\_suffix) | Suffix to append to elasticache subnets name | `string` | `"elasticache"` | no |
+| <a name="input_elasticache_subnet_group_name"></a> [elasticache\_subnet\_group\_name](#input\_elasticache\_subnet\_group\_name) | Optional custom resource name for the Elasticache subnet group | `string` | `null` | no |
 | <a name="input_elasticache_subnet_tags"></a> [elasticache\_subnet\_tags](#input\_elasticache\_subnet\_tags) | Additional tags for the elasticache subnets | `map(string)` | `{}` | no |
-| <a name="input_elasticache_subnets"></a> [elasticache\_subnets](#input\_elasticache\_subnets) | A list of elasticache subnets | `list` | `[]` | no |
 | <a name="input_enable_dhcp_options"></a> [enable\_dhcp\_options](#input\_enable\_dhcp\_options) | Should be true if you want to specify a DHCP options set with a custom domain name, DNS servers, NTP servers, netbios servers, and/or netbios server type | `bool` | `false` | no |
 | <a name="input_enable_dns_hostnames"></a> [enable\_dns\_hostnames](#input\_enable\_dns\_hostnames) | Should be true to enable DNS hostnames in the VPC | `bool` | `false` | no |
 | <a name="input_enable_dns_support"></a> [enable\_dns\_support](#input\_enable\_dns\_support) | Should be true to enable DNS support in the VPC | `bool` | `true` | no |
@@ -570,8 +483,6 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_firewall_custom_routes"></a> [firewall\_custom\_routes](#input\_firewall\_custom\_routes) | Custom routes for Firewall Subnets | `list(map(string))` | `[]` | no |
 | <a name="input_firewall_route_table_tags"></a> [firewall\_route\_table\_tags](#input\_firewall\_route\_table\_tags) | Additional tags for the firewall route tables | `map(string)` | `{}` | no |
 | <a name="input_firewall_subnet_name_tag"></a> [firewall\_subnet\_name\_tag](#input\_firewall\_subnet\_name\_tag) | Additional name tag for the firewall subnets | `map(string)` | `{}` | no |
-| <a name="input_firewall_subnet_suffix"></a> [firewall\_subnet\_suffix](#input\_firewall\_subnet\_suffix) | Suffix to append to firewall subnets name | `string` | `"firewall"` | no |
-| <a name="input_firewall_subnets"></a> [firewall\_subnets](#input\_firewall\_subnets) | A list of firewall subnets inside the VPC | `list` | `[]` | no |
 | <a name="input_flow_log_destination_arn"></a> [flow\_log\_destination\_arn](#input\_flow\_log\_destination\_arn) | The ARN of the Cloudwatch log destination for Flow Logs | `string` | `null` | no |
 | <a name="input_flow_log_destination_type"></a> [flow\_log\_destination\_type](#input\_flow\_log\_destination\_type) | Type of flow log destination. Can be s3 or cloud-watch-logs | `string` | n/a | yes |
 | <a name="input_igw_tags"></a> [igw\_tags](#input\_igw\_tags) | Additional tags for the internet gateway | `map(string)` | `{}` | no |
@@ -579,46 +490,36 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_intra_custom_routes"></a> [intra\_custom\_routes](#input\_intra\_custom\_routes) | Custom routes for Intra Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_intra_route_table_tags"></a> [intra\_route\_table\_tags](#input\_intra\_route\_table\_tags) | Additional tags for the intra route tables | `map(string)` | `{}` | no |
 | <a name="input_intra_subnet_tags"></a> [intra\_subnet\_tags](#input\_intra\_subnet\_tags) | Additional tags for the intra subnets | `map(string)` | `{}` | no |
-| <a name="input_intra_subnets"></a> [intra\_subnets](#input\_intra\_subnets) | A list of intra subnets | `map` | `{}` | no |
 | <a name="input_manage_default_vpc"></a> [manage\_default\_vpc](#input\_manage\_default\_vpc) | Should be true to adopt and manage Default VPC | `bool` | `false` | no |
 | <a name="input_map_public_ip_on_launch"></a> [map\_public\_ip\_on\_launch](#input\_map\_public\_ip\_on\_launch) | Should be false if you do not want to auto-assign public IP on launch | `bool` | `true` | no |
-| <a name="input_name"></a> [name](#input\_name) | Name to be used on all the resources as identifier | `string` | `""` | no |
 | <a name="input_nat_eip_tags"></a> [nat\_eip\_tags](#input\_nat\_eip\_tags) | Additional tags for the NAT EIP | `map(string)` | `{}` | no |
 | <a name="input_nat_gateway_tags"></a> [nat\_gateway\_tags](#input\_nat\_gateway\_tags) | Additional tags for the NAT gateways | `map(string)` | `{}` | no |
-| <a name="input_nfw_kms_key_id"></a> [nfw\_kms\_key\_id](#input\_nfw\_kms\_key\_id) | NFW KMS Key Id for encryption | `string` | `null` | no |
+| <a name="input_nfw_kms_key_arn"></a> [nfw\_kms\_key\_arn](#input\_nfw\_kms\_key\_arn) | ARN of the KMS key to use for NFW encryption | `string` | `null` | no |
 | <a name="input_one_nat_gateway_per_az"></a> [one\_nat\_gateway\_per\_az](#input\_one\_nat\_gateway\_per\_az) | Should be true if you want only one NAT Gateway per availability zone. Requires `var.azs` to be set, and the number of `public_subnets` created to be greater than or equal to the number of availability zones specified in `var.azs`. | `bool` | `false` | no |
 | <a name="input_private_custom_routes"></a> [private\_custom\_routes](#input\_private\_custom\_routes) | Custom routes for Private Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_peering_connection_id  = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_private_eks_tags"></a> [private\_eks\_tags](#input\_private\_eks\_tags) | A map of tags to add to all privage subnets resources to support EKS | `map(string)` | `{}` | no |
 | <a name="input_private_route_table_tags"></a> [private\_route\_table\_tags](#input\_private\_route\_table\_tags) | Additional tags for the private route tables | `map(string)` | `{}` | no |
-| <a name="input_private_subnet_suffix"></a> [private\_subnet\_suffix](#input\_private\_subnet\_suffix) | Suffix to append to private subnets name | `string` | `"private"` | no |
-| <a name="input_private_subnet_tags"></a> [private\_subnet\_tags](#input\_private\_subnet\_tags) | Additional tags for the private subnets | `map(string)` | `{}` | no |
-| <a name="input_private_subnets"></a> [private\_subnets](#input\_private\_subnets) | A list of private subnets inside the VPC | `list` | `[]` | no |
 | <a name="input_propagate_private_route_tables_vgw"></a> [propagate\_private\_route\_tables\_vgw](#input\_propagate\_private\_route\_tables\_vgw) | Should be true if you want route table propagation | `bool` | `false` | no |
 | <a name="input_propagate_public_route_tables_vgw"></a> [propagate\_public\_route\_tables\_vgw](#input\_propagate\_public\_route\_tables\_vgw) | Should be true if you want route table propagation | `bool` | `false` | no |
 | <a name="input_public_custom_routes"></a> [public\_custom\_routes](#input\_public\_custom\_routes) | Custom routes for Public Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    internet_route             = optional(bool, null)<br/>    transit_gateway_id         = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_public_eks_tags"></a> [public\_eks\_tags](#input\_public\_eks\_tags) | A map of tags to add to all public subnets resources to support EKS | `map(string)` | `{}` | no |
 | <a name="input_public_route_table_tags"></a> [public\_route\_table\_tags](#input\_public\_route\_table\_tags) | Additional tags for the public route tables | `map(string)` | `{}` | no |
-| <a name="input_public_subnet_suffix"></a> [public\_subnet\_suffix](#input\_public\_subnet\_suffix) | Suffix to append to public subnets name | `string` | `"public"` | no |
-| <a name="input_public_subnet_tags"></a> [public\_subnet\_tags](#input\_public\_subnet\_tags) | Additional tags for the public subnets | `map(string)` | `{}` | no |
-| <a name="input_public_subnets"></a> [public\_subnets](#input\_public\_subnets) | A list of public subnets inside the VPC | `list` | `[]` | no |
 | <a name="input_redshift_custom_routes"></a> [redshift\_custom\_routes](#input\_redshift\_custom\_routes) | Custom routes for Redshift Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_redshift_route_table_tags"></a> [redshift\_route\_table\_tags](#input\_redshift\_route\_table\_tags) | Additional tags for the redshift route tables | `map(string)` | `{}` | no |
+| <a name="input_redshift_subnet_group_name"></a> [redshift\_subnet\_group\_name](#input\_redshift\_subnet\_group\_name) | Optional custom resource name for the Redshift subnet group | `string` | `null` | no |
 | <a name="input_redshift_subnet_group_tags"></a> [redshift\_subnet\_group\_tags](#input\_redshift\_subnet\_group\_tags) | Additional tags for the redshift subnet group | `map(string)` | `{}` | no |
-| <a name="input_redshift_subnet_suffix"></a> [redshift\_subnet\_suffix](#input\_redshift\_subnet\_suffix) | Suffix to append to redshift subnets name | `string` | `"redshift"` | no |
 | <a name="input_redshift_subnet_tags"></a> [redshift\_subnet\_tags](#input\_redshift\_subnet\_tags) | Additional tags for the redshift subnets | `map(string)` | `{}` | no |
-| <a name="input_redshift_subnets"></a> [redshift\_subnets](#input\_redshift\_subnets) | A list of redshift subnets | `list` | `[]` | no |
+| <a name="input_resource_prefix"></a> [resource\_prefix](#input\_resource\_prefix) | Prefix to be added to resource names as identifier | `string` | `""` | no |
 | <a name="input_reuse_nat_ips"></a> [reuse\_nat\_ips](#input\_reuse\_nat\_ips) | Should be true if you don't want EIPs to be created for your NAT Gateways and will instead pass them in via the 'external\_nat\_ip\_ids' variable | `bool` | `false` | no |
 | <a name="input_s3_access_logs_bucket"></a> [s3\_access\_logs\_bucket](#input\_s3\_access\_logs\_bucket) | bucket id for s3 access logs bucket | `string` | `""` | no |
 | <a name="input_s3_kms_key_arn"></a> [s3\_kms\_key\_arn](#input\_s3\_kms\_key\_arn) | Customer KMS Key id for Cloudwatch Log encryption | `string` | `""` | no |
 | <a name="input_secondary_cidr_blocks"></a> [secondary\_cidr\_blocks](#input\_secondary\_cidr\_blocks) | List of secondary CIDR blocks to associate with the VPC to extend the IP Address pool | `list(string)` | `[]` | no |
 | <a name="input_single_nat_gateway"></a> [single\_nat\_gateway](#input\_single\_nat\_gateway) | Should be true if you want to provision a single shared NAT Gateway across all of your private networks | `bool` | `false` | no |
 | <a name="input_subnet_az_mapping"></a> [subnet\_az\_mapping](#input\_subnet\_az\_mapping) | Optional explicit mapping of subnets to AZs - defaults to distributing across AZs | `map(string)` | `{}` | no |
+| <a name="input_subnets"></a> [subnets](#input\_subnets) | n/a | <pre>list(object({<br/>    custom_name       = optional(string)<br/>    tag               = optional(string)<br/>    cidr              = string<br/>    type              = string<br/>    availability_zone = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | `{}` | no |
 | <a name="input_tgw_custom_routes"></a> [tgw\_custom\_routes](#input\_tgw\_custom\_routes) | Custom routes for TGW Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_tgw_route_table_tags"></a> [tgw\_route\_table\_tags](#input\_tgw\_route\_table\_tags) | Additional tags for the tgw route tables | `map(string)` | `{}` | no |
-| <a name="input_tgw_subnet_suffix"></a> [tgw\_subnet\_suffix](#input\_tgw\_subnet\_suffix) | Suffix to append to tgw subnets name | `string` | `"tgw"` | no |
-| <a name="input_tgw_subnet_tags"></a> [tgw\_subnet\_tags](#input\_tgw\_subnet\_tags) | Additional tags for the tgw subnets | `map(string)` | `{}` | no |
-| <a name="input_tgw_subnets"></a> [tgw\_subnets](#input\_tgw\_subnets) | A list of tgw subnets inside the VPC | `list` | `[]` | no |
 | <a name="input_tls_cert_arn"></a> [tls\_cert\_arn](#input\_tls\_cert\_arn) | TLS Certificate ARN | `string` | `""` | no |
 | <a name="input_tls_description"></a> [tls\_description](#input\_tls\_description) | Description for the TLS Inspection | `string` | `"TLS Oubound Inspection"` | no |
 | <a name="input_tls_destination_cidrs"></a> [tls\_destination\_cidrs](#input\_tls\_destination\_cidrs) | Destination CIDRs for TLS Inspection | `list(string)` | <pre>[<br/>  "0.0.0.0/0"<br/>]</pre> | no |
@@ -628,7 +529,8 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_tls_source_from_port"></a> [tls\_source\_from\_port](#input\_tls\_source\_from\_port) | Source Port for TLS Inspection | `number` | `0` | no |
 | <a name="input_tls_source_to_port"></a> [tls\_source\_to\_port](#input\_tls\_source\_to\_port) | Source Port for TLS Inspection | `number` | `65535` | no |
 | <a name="input_vpc_endpoint_security_groups"></a> [vpc\_endpoint\_security\_groups](#input\_vpc\_endpoint\_security\_groups) | Map of security groups to create for VPC endpoints | <pre>map(object({<br/>    name        = string<br/>    description = optional(string, "Security group for VPC endpoint")<br/>    ingress_rules = optional(list(object({<br/>      description      = optional(string)<br/>      from_port        = number<br/>      to_port          = number<br/>      protocol         = string<br/>      cidr_blocks      = optional(list(string), [])<br/>      ipv6_cidr_blocks = optional(list(string), [])<br/>      security_groups  = optional(list(string), [])<br/>      self             = optional(bool, false)<br/>    })), [])<br/>    egress_rules = optional(list(object({<br/>      description      = optional(string)<br/>      from_port        = number<br/>      to_port          = number<br/>      protocol         = string<br/>      cidr_blocks      = optional(list(string), [])<br/>      ipv6_cidr_blocks = optional(list(string), [])<br/>      security_groups  = optional(list(string), [])<br/>      self             = optional(bool, false)<br/>    })), [])<br/>    tags = optional(map(string), {})<br/>  }))</pre> | `{}` | no |
-| <a name="input_vpc_endpoints"></a> [vpc\_endpoints](#input\_vpc\_endpoints) | Map of VPC endpoint definitions to create | <pre>map(object({<br/>    service_name        = optional(string)       # If not provided, standard AWS service name will be constructed<br/>    service_type        = string                 # "Interface", "Gateway", or "GatewayLoadBalancer"<br/>    private_dns_enabled = optional(bool, true)   # Only applicable for Interface endpoints<br/>    auto_accept         = optional(bool, false)<br/>    policy              = optional(string)       # JSON policy document<br/>    security_group_ids  = optional(list(string), [])<br/>    tags                = optional(map(string), {})<br/>    subnet_ids          = optional(list(string)) # Override default subnet_ids if needed<br/>    # Required only for GatewayLoadBalancer endpoints<br/>    ip_address_type     = optional(string)       # "ipv4" or "dualstack"<br/>  }))</pre> | `{}` | no |
+| <a name="input_vpc_endpoints"></a> [vpc\_endpoints](#input\_vpc\_endpoints) | Map of VPC endpoint definitions to create | <pre>map(object({<br/>    service_name        = optional(string)     # If not provided, standard AWS service name will be constructed<br/>    service_type        = string               # "Interface", "Gateway", or "GatewayLoadBalancer"<br/>    private_dns_enabled = optional(bool, true) # Only applicable for Interface endpoints<br/>    auto_accept         = optional(bool, false)<br/>    policy              = optional(string) # JSON policy document<br/>    security_group_ids  = optional(list(string), [])<br/>    tags                = optional(map(string), {})<br/>    subnet_ids          = optional(list(string)) # Override default subnet_ids if needed<br/>    # Required only for GatewayLoadBalancer endpoints<br/>    ip_address_type = optional(string) # "ipv4" or "dualstack"<br/>  }))</pre> | `{}` | no |
+| <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Name to assign to the AWS VPC | `string` | n/a | yes |
 | <a name="input_vpc_tags"></a> [vpc\_tags](#input\_vpc\_tags) | Additional tags for the VPC | `map(string)` | `{}` | no |
 | <a name="input_vpn_gateway_id"></a> [vpn\_gateway\_id](#input\_vpn\_gateway\_id) | ID of VPN Gateway to attach to the VPC | `string` | `""` | no |
 | <a name="input_vpn_gateway_tags"></a> [vpn\_gateway\_tags](#input\_vpn\_gateway\_tags) | Additional tags for the VPN gateway | `map(string)` | `{}` | no |
@@ -678,6 +580,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="output_redshift_subnet_group"></a> [redshift\_subnet\_group](#output\_redshift\_subnet\_group) | ID of redshift subnet group |
 | <a name="output_redshift_subnets"></a> [redshift\_subnets](#output\_redshift\_subnets) | List of IDs of redshift subnets |
 | <a name="output_redshift_subnets_cidr_blocks"></a> [redshift\_subnets\_cidr\_blocks](#output\_redshift\_subnets\_cidr\_blocks) | List of cidr\_blocks of redshift subnets |
+| <a name="output_subnets"></a> [subnets](#output\_subnets) | List of objects containing all subnet IDs and CIDRs by name |
 | <a name="output_tgw_route_table_ids"></a> [tgw\_route\_table\_ids](#output\_tgw\_route\_table\_ids) | List of IDs of tgw route tables |
 | <a name="output_tgw_subnets"></a> [tgw\_subnets](#output\_tgw\_subnets) | List of IDs of tgw subnets |
 | <a name="output_tgw_subnets_cidr_blocks"></a> [tgw\_subnets\_cidr\_blocks](#output\_tgw\_subnets\_cidr\_blocks) | List of cidr\_blocks of tgw subnets |
@@ -692,7 +595,6 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="output_vpc_main_route_table_id"></a> [vpc\_main\_route\_table\_id](#output\_vpc\_main\_route\_table\_id) | The ID of the main route table associated with this VPC |
 | <a name="output_vpc_secondary_cidr_blocks"></a> [vpc\_secondary\_cidr\_blocks](#output\_vpc\_secondary\_cidr\_blocks) | List of secondary CIDR blocks of the VPC |
 <!-- END_TF_DOCS -->
-
 ## Tree
 ```
 .
@@ -702,15 +604,20 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |-- README.md
 |-- coalfire_logo.png
 |-- example
-|   |-- vpc-app-account
-|   |   |-- app-networking.auto.tfvars
-|   |   |-- locals.tf
-|   |   |-- mgmt.tf
-|   |   |-- outputs.tf
-|   |   |-- providers.tf
-|   |   |-- remote-data.tf
-|   |   |-- required_providers.tf
-|   |   |-- variables.tf
+|   |-- prior-versions
+|   |   |-- README.md
+|   |   |-- other-examples
+|   |   |   |-- example-with-tls-inspection.tf
+|   |   |   |-- example-without-network-firewall.tf
+|   |   |-- vpc-app-account
+|   |       |-- app-networking.auto.tfvars
+|   |       |-- locals.tf
+|   |       |-- mgmt.tf
+|   |       |-- outputs.tf
+|   |       |-- providers.tf
+|   |       |-- remote-data.tf
+|   |       |-- required_providers.tf
+|   |       |-- variables.tf
 |   |-- vpc-nfw
 |       |-- locals.tf
 |       |-- mgmt.tf
@@ -719,11 +626,11 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |       |-- providers.tf
 |       |-- remote-data.tf
 |       |-- required_providers.tf
-|       |-- subnets.tf
 |       |-- suricata.json
 |       |-- variables.tf
 |       |-- vpc_nfw.auto.tfvars
 |-- flowlog.tf
+|-- locals.tf
 |-- main.tf
 |-- modules
 |   |-- aws-network-firewall

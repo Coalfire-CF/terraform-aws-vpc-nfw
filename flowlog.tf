@@ -7,7 +7,7 @@ data "aws_region" "current" {}
 
 
 resource "aws_flow_log" "this" {
-  count = var.flow_log_destination_type == "cloud-watch-logs" ? 1 : 0
+  count                = var.flow_log_destination_type == "cloud-watch-logs" ? 1 : 0
   iam_role_arn         = local.flow_log_iam_role_arn
   log_destination      = local.flow_log_destination_arn
   log_destination_type = var.flow_log_destination_type
@@ -20,14 +20,14 @@ resource "aws_cloudwatch_log_group" "this" {
 
   name              = "/aws/vpcflow/${local.vpc_id}"
   retention_in_days = var.cloudwatch_log_group_retention_in_days
-  kms_key_id        = var.cloudwatch_log_group_kms_key_id
+  kms_key_id        = var.cloudwatch_log_group_kms_key_arn
   tags              = var.tags
 }
 
 resource "aws_iam_role" "flowlogs_role" {
   count = var.flow_log_destination_type == "cloud-watch-logs" ? 1 : 0
 
-  name = "${var.name}-flowlogs-cloudwatch-role"
+  name = "${var.resource_prefix}-flowlogs-cloudwatch-role"
 
   assume_role_policy = data.aws_iam_policy_document.flow_log_cloudwatch_assume_role[0].json
 }
@@ -52,7 +52,7 @@ data "aws_iam_policy_document" "flow_log_cloudwatch_assume_role" {
 resource "aws_iam_policy" "flowlogs_policy" {
   count = var.flow_log_destination_type == "cloud-watch-logs" ? 1 : 0
 
-  name        = "${var.name}-flowlogs-cloudwatch-policy"
+  name        = "${var.resource_prefix}-flowlogs-cloudwatch-policy"
   description = "Policy to allow vpc flow logs to forward logs to Cloudwatch"
 
   policy = data.aws_iam_policy_document.vpc_flow_log_cloudwatch[0].json
@@ -91,21 +91,21 @@ resource "aws_iam_role_policy_attachment" "flowlogs_policy" {
 
 
 resource "aws_flow_log" "s3" {
-  count = var.flow_log_destination_type == "s3" ? 1 : 0
+  count                = var.flow_log_destination_type == "s3" ? 1 : 0
   iam_role_arn         = local.flow_log_iam_role_arn
-  log_destination = aws_s3_bucket.flowlogs[0].arn
+  log_destination      = aws_s3_bucket.flowlogs[0].arn
   log_destination_type = var.flow_log_destination_type
   traffic_type         = "ALL"
   vpc_id               = local.vpc_id
 }
 
 resource "aws_s3_bucket" "flowlogs" {
-  count = var.flow_log_destination_type == "s3" ? 1 : 0
-  bucket = "${var.name}-flowlogs"
+  count  = var.flow_log_destination_type == "s3" ? 1 : 0
+  bucket = "${var.resource_prefix}-flowlogs"
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "flowlogs-encryption" {
-  count = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].id
   rule {
     apply_server_side_encryption_by_default {
@@ -163,13 +163,13 @@ data "aws_iam_policy_document" "flowlogs_policy" {
 }
 
 resource "aws_s3_bucket_policy" "flowlogs_bucket_policy" {
-  count = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].bucket
   policy = data.aws_iam_policy_document.flowlogs_policy[0].json
 }
 
 resource "aws_s3_bucket_public_access_block" "flowlogs" {
-  count = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].id
 
   block_public_acls       = true
@@ -178,7 +178,7 @@ resource "aws_s3_bucket_public_access_block" "flowlogs" {
   ignore_public_acls      = true
 }
 resource "aws_s3_bucket_logging" "flowlogs" {
-  count = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].id
 
   target_bucket = var.s3_access_logs_bucket
