@@ -1,5 +1,5 @@
 locals {
-  max_subnet_length = max(length(var.private_subnets), length(var.elasticache_subnets), length(var.database_subnets), length(var.redshift_subnets), length(var.firewall_subnets), length(var.tgw_subnets))
+  max_subnet_length = max(length(local.private_subnets), length(local.elasticache_subnets), length(local.database_subnets), length(local.redshift_subnets), length(local.firewall_subnets), length(local.tgw_subnets))
   nat_gateway_count = var.single_nat_gateway ? 1 : (var.one_nat_gateway_per_az ? length(var.azs) : local.max_subnet_length)
 
   nfw_subnets = [for s in aws_subnet.firewall : s.id]
@@ -23,7 +23,7 @@ resource "aws_vpc" "this" {
   assign_generated_ipv6_cidr_block = var.assign_generated_ipv6_cidr_block
 
   tags = merge(tomap({
-    "Name" = format("%s", var.name)
+    "Name" = format("%s", var.vpc_name)
   }), var.tags, var.vpc_tags)
 }
 
@@ -52,7 +52,7 @@ resource "aws_vpc_dhcp_options" "this" {
   netbios_node_type    = var.dhcp_options_netbios_node_type
 
   tags = merge(tomap({
-    "Name" = format("%s-dhcp-options", var.name)
+    "Name" = format("%s-dhcp-options", var.resource_prefix)
   }), var.tags, var.dhcp_options_tags)
 }
 
@@ -70,12 +70,12 @@ resource "aws_vpc_dhcp_options_association" "this" {
 # Internet Gateway
 ###################
 resource "aws_internet_gateway" "this" {
-  count = length(var.public_subnets) > 0 ? 1 : 0
+  count = length(local.public_subnets) > 0 ? 1 : 0
 
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = format("%s", var.name)
+    "Name" = format("%s", var.resource_prefix)
   }), var.tags, var.igw_tags)
 }
 
@@ -86,23 +86,23 @@ resource "aws_internet_gateway" "this" {
 module "vpc_endpoints" {
   source = "./modules/vpc-endpoint"
 
-  create_vpc_endpoints = var.create_vpc_endpoints
+  create_vpc_endpoints                = var.create_vpc_endpoints
   associate_with_private_route_tables = var.associate_with_private_route_tables
-  associate_with_public_route_tables = var.associate_with_public_route_tables
-  vpc_id               = aws_vpc.this.id
+  associate_with_public_route_tables  = var.associate_with_public_route_tables
+  vpc_id                              = aws_vpc.this.id
 
   # Default to private subnets for interface endpoints if available
-  subnet_ids           = length(aws_subnet.private) > 0 ? [for subnet in aws_subnet.private : subnet.id] : null
+  subnet_ids = length(aws_subnet.private) > 0 ? [for subnet in aws_subnet.private : subnet.id] : null
 
   # Use private_route_table_ids variable instead of directly accessing route tables
   private_route_table_ids = [for rt in aws_route_table.private : rt.id]
-  route_table_ids = [for rt in aws_route_table.private : rt.id]
-  public_route_table_ids = [for rt in aws_route_table.public : rt.id]
+  route_table_ids         = [for rt in aws_route_table.private : rt.id]
+  public_route_table_ids  = [for rt in aws_route_table.public : rt.id]
 
-  vpc_endpoints        = var.vpc_endpoints
+  vpc_endpoints                = var.vpc_endpoints
   vpc_endpoint_security_groups = var.vpc_endpoint_security_groups
 
-  tags                 = var.tags
+  tags = var.tags
 }
 
 ###################
@@ -115,7 +115,7 @@ module "aws_network_firewall" {
 
   # General
   firewall_name     = var.aws_nfw_name
-  prefix            = var.aws_nfw_prefix
+  prefix            = var.resource_prefix
   vpc_id            = local.vpc_id
   delete_protection = var.delete_protection
 
@@ -127,9 +127,9 @@ module "aws_network_firewall" {
   subnet_mapping                = local.nfw_subnets
 
   # Encryption and Logging
-  nfw_kms_key_id                         = var.nfw_kms_key_id
+  nfw_kms_key_id                         = var.nfw_kms_key_arn
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention_in_days
-  cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_id
+  cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_arn
 
   # TLS Inspection
   tls_inspection_enabled    = var.enable_tls_inspection
@@ -165,7 +165,7 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = merge(tomap({
-    "Name" = format("%s-%s", var.name, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
+    "Name" = format("%s-%s", var.resource_prefix, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
   }), var.tags, var.nat_eip_tags)
 }
 
@@ -176,7 +176,7 @@ resource "aws_nat_gateway" "this" {
   subnet_id     = element(aws_subnet.public.*.id, (var.single_nat_gateway ? 0 : count.index))
 
   tags = merge(tomap({
-    "Name" = format("%s-%s", var.name, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
+    "Name" = format("%s-%s", var.resource_prefix, element(var.azs, (var.single_nat_gateway ? 0 : count.index)))
   }), var.tags, var.nat_gateway_tags)
 
   depends_on = [aws_internet_gateway.this, aws_subnet.public]
@@ -191,7 +191,7 @@ resource "aws_vpn_gateway" "this" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = format("%s", var.name)
+    "Name" = format("%s", var.resource_prefix)
   }), var.tags, var.vpn_gateway_tags)
 }
 
@@ -210,7 +210,7 @@ resource "aws_vpn_gateway_route_propagation" "public" {
 }
 
 resource "aws_vpn_gateway_route_propagation" "private" {
-  count = var.propagate_private_route_tables_vgw && (var.enable_vpn_gateway || var.vpn_gateway_id != "") ? length(var.private_subnets) : 0
+  count = var.propagate_private_route_tables_vgw && (var.enable_vpn_gateway || var.vpn_gateway_id != "") ? length(local.private_subnets) : 0
 
   route_table_id = element(aws_route_table.private[*].id, count.index)
   vpn_gateway_id = element(concat(aws_vpn_gateway.this[*].id, aws_vpn_gateway_attachment.this[*].vpn_gateway_id), count.index)

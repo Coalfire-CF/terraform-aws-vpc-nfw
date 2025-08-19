@@ -8,12 +8,6 @@ variable "deploy_aws_nfw" {
   default     = false
 }
 
-variable "aws_nfw_prefix" {
-  description = "AWS NFW Prefix"
-  type        = string
-  default     = ""
-}
-
 variable "aws_nfw_name" {
   description = "AWS NFW Name"
   type        = string
@@ -120,8 +114,8 @@ variable "delete_protection" {
   default     = true
 }
 
-variable "nfw_kms_key_id" {
-  description = "NFW KMS Key Id for encryption"
+variable "nfw_kms_key_arn" {
+  description = "ARN of the KMS key to use for NFW encryption"
   type        = string
   default     = null
 }
@@ -187,8 +181,13 @@ variable "tls_source_to_port" {
 ######
 # VPC
 ######
-variable "name" {
-  description = "Name to be used on all the resources as identifier"
+variable "vpc_name" {
+  description = "Name to assign to the AWS VPC"
+  type        = string
+}
+
+variable "resource_prefix" {
+  description = "Prefix to be added to resource names as identifier"
   default     = ""
   type        = string
 }
@@ -216,90 +215,6 @@ variable "instance_tenancy" {
   type        = string
 }
 
-variable "public_subnet_suffix" {
-  description = "Suffix to append to public subnets name"
-  default     = "public"
-  type        = string
-}
-
-variable "private_subnet_suffix" {
-  description = "Suffix to append to private subnets name"
-  default     = "private"
-  type        = string
-}
-
-variable "tgw_subnet_suffix" {
-  description = "Suffix to append to tgw subnets name"
-  default     = "tgw"
-  type        = string
-}
-
-variable "firewall_subnet_suffix" {
-  description = "Suffix to append to firewall subnets name"
-  default     = "firewall"
-  type        = string
-}
-
-variable "database_subnet_suffix" {
-  description = "Suffix to append to database subnets name"
-  default     = "db"
-  type        = string
-}
-
-variable "redshift_subnet_suffix" {
-  description = "Suffix to append to redshift subnets name"
-  default     = "redshift"
-  type        = string
-}
-
-variable "elasticache_subnet_suffix" {
-  description = "Suffix to append to elasticache subnets name"
-  default     = "elasticache"
-  type        = string
-}
-
-variable "public_subnets" {
-  description = "A list of public subnets inside the VPC"
-  default     = []
-  type        = list
-}
-
-variable "firewall_subnets" {
-  description = "A list of firewall subnets inside the VPC"
-  default     = []
-  type        = list
-}
-
-variable "private_subnets" {
-  description = "A list of private subnets inside the VPC"
-  default     = []
-  type        = list
-}
-
-variable "tgw_subnets" {
-  description = "A list of tgw subnets inside the VPC"
-  default     = []
-  type        = list
-}
-
-variable "database_subnets" {
-  description = "A list of database subnets"
-  default     = []
-  type        = list
-}
-
-variable "redshift_subnets" {
-  description = "A list of redshift subnets"
-  default     = []
-  type        = list
-}
-
-variable "elasticache_subnets" {
-  description = "A list of elasticache subnets"
-  default     = []
-  type        = list
-}
-
 variable "create_database_subnet_route_table" {
   description = "Controls if separate route table for database should be created"
   default     = false
@@ -316,11 +231,6 @@ variable "create_elasticache_subnet_route_table" {
   description = "Controls if separate route table for elasticache should be created"
   default     = false
   type        = bool
-}
-
-variable "intra_subnets" {
-  description = "A list of intra subnets"
-  default     = {}
 }
 
 variable "create_database_subnet_group" {
@@ -452,26 +362,8 @@ variable "igw_tags" {
   type        = map(string)
 }
 
-variable "public_subnet_tags" {
-  description = "Additional tags for the public subnets"
-  default     = {}
-  type        = map(string)
-}
-
 variable "firewall_subnet_name_tag" {
   description = "Additional name tag for the firewall subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "private_subnet_tags" {
-  description = "Additional tags for the private subnets"
-  default     = {}
-  type        = map(string)
-}
-
-variable "tgw_subnet_tags" {
-  description = "Additional tags for the tgw subnets"
   default     = {}
   type        = map(string)
 }
@@ -656,15 +548,15 @@ variable "cloudwatch_log_group_retention_in_days" {
   default     = 365
 }
 
-variable "cloudwatch_log_group_kms_key_id" {
-  description = "Customer KMS Key id for Cloudwatch Log encryption"
+variable "cloudwatch_log_group_kms_key_arn" {
+  description = "Customer KMS Key ARN for Cloudwatch Log encryption"
   type        = string
   default     = ""
 }
 
 variable "s3_access_logs_bucket" {
   description = "bucket id for s3 access logs bucket"
-  type = string
+  type        = string
   default     = ""
 }
 
@@ -789,16 +681,16 @@ variable "associate_with_public_route_tables" {
 variable "vpc_endpoints" {
   description = "Map of VPC endpoint definitions to create"
   type = map(object({
-    service_name        = optional(string)       # If not provided, standard AWS service name will be constructed
-    service_type        = string                 # "Interface", "Gateway", or "GatewayLoadBalancer"
-    private_dns_enabled = optional(bool, true)   # Only applicable for Interface endpoints
+    service_name        = optional(string)     # If not provided, standard AWS service name will be constructed
+    service_type        = string               # "Interface", "Gateway", or "GatewayLoadBalancer"
+    private_dns_enabled = optional(bool, true) # Only applicable for Interface endpoints
     auto_accept         = optional(bool, false)
-    policy              = optional(string)       # JSON policy document
+    policy              = optional(string) # JSON policy document
     security_group_ids  = optional(list(string), [])
     tags                = optional(map(string), {})
     subnet_ids          = optional(list(string)) # Override default subnet_ids if needed
     # Required only for GatewayLoadBalancer endpoints
-    ip_address_type     = optional(string)       # "ipv4" or "dualstack"
+    ip_address_type = optional(string) # "ipv4" or "dualstack"
   }))
   default = {}
 }
@@ -837,4 +729,73 @@ variable "subnet_az_mapping" {
   description = "Optional explicit mapping of subnets to AZs - defaults to distributing across AZs"
   type        = map(string)
   default     = {}
+}
+
+variable "subnets" {
+  type = list(object({
+    custom_name       = optional(string)
+    tag               = optional(string)
+    cidr              = string
+    type              = string
+    availability_zone = string
+  }))
+
+  ### There are MANY invalid configurations for this input object which terraform will not catch, but the AWS API will reject during apply
+  ### We must define input validation rules for each known error:
+
+  # Error if subnet type is not an allowed value
+  validation {
+    condition = length([
+      for subnet in var.subnets[*].type : true if contains([
+        "firewall",
+        "public",
+        "private",
+        "tgw",
+        "database",
+        "redshift",
+        "elasticache",
+        "intra"
+        ],
+      subnet)
+    ]) == length(var.subnets)
+    error_message = "Allowed subnet types are 'firewall', 'public', 'private', 'tgw', 'database', 'redshift', 'elasticache', and 'intra'."
+  }
+  # Error if the number of public subnets is less than the number of firewall subnets
+  validation {
+    condition     = length([for s in var.subnets : s if s.type == "public"]) >= length([for s in var.subnets : s if s.type == "firewall"])
+    error_message = "The number of public subnets must be greater than or equal to the number of firewall subnets to accomodate IGW routing from the NFW."
+  }
+  # Error if multiple subnets are defined with the same CIDR
+  validation {
+    condition     = length(var.subnets) == length(distinct([for s in var.subnets : s.cidr]))
+    error_message = "Each subnet must have a unique CIDR."
+  }
+  # Error if BOTH 'tag' and 'custom_name' are defined for any subnet
+  validation {
+    condition     = length([for s in var.subnets : s if s.custom_name != null && s.tag != null]) == 0
+    error_message = "Subnets must have only one of 'custom_name' or 'tag' defined. (i.e. you cannot specify both a 'custom_name' and a 'tag' for the same subnet)."
+  }
+  # Error if NEITHER 'tag' nor 'custom_name' are defined for any subnet
+  validation {
+    condition     = length([for s in var.subnets : s if s.custom_name == null && s.tag == null]) == 0
+    error_message = "You must provide one of either 'custom_name' or 'tag' for each subnet."
+  }
+}
+
+variable "database_subnet_group_name" {
+  description = "Optional custom resource name for the database subnet group"
+  type        = string
+  default     = null
+}
+
+variable "redshift_subnet_group_name" {
+  description = "Optional custom resource name for the Redshift subnet group"
+  type        = string
+  default     = null
+}
+
+variable "elasticache_subnet_group_name" {
+  description = "Optional custom resource name for the Elasticache subnet group"
+  type        = string
+  default     = null
 }

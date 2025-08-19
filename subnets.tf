@@ -1,172 +1,170 @@
-################
-# Firewall subnet
-################
+####################
+# Firewall subnets #
+####################
+
 resource "aws_subnet" "firewall" {
-  count = length(var.firewall_subnets) > 0 ? length(var.firewall_subnets) : 0
-
-  vpc_id = local.vpc_id
-  cidr_block = var.firewall_subnets[
-    count.index
-  ]
-  availability_zone = element(var.azs, count.index)
-
-  tags = merge(tomap({
-    "Name" = format("%s-${lower(var.firewall_subnet_suffix)}-%s", var.name, element(var.azs, count.index))
-  }), var.tags)
+  count             = length(local.firewall_subnets) > 0 ? length(local.firewall_subnets) : 0
+  vpc_id            = local.vpc_id
+  cidr_block        = local.firewall_subnets[count.index].cidr
+  availability_zone = local.firewall_subnets[count.index].availability_zone
+  tags = (
+    # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
+    local.firewall_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${local.firewall_subnets[count.index].custom_name}" }), var.tags) :
+    merge(tomap({ "Name" = format("%s-${lower(local.firewall_subnets[count.index].type)}-%s", var.resource_prefix, local.firewall_subnets[count.index].availability_zone) }), var.tags)
+  )
 }
 
-################
-# Public subnet
-################
+##################
+# Public subnets #
+##################
+
 resource "aws_subnet" "public" {
   #checkov:skip=CKV_AWS_130: "Ensure VPC subnets do not assign public IP by default" - This is a public subet.
-  count = length(var.public_subnets) > 0 && (!var.one_nat_gateway_per_az || length(var.public_subnets) >= length(var.azs)) ? length(var.public_subnets) : 0
-
-  vpc_id = local.vpc_id
-  cidr_block = var.public_subnets[
-    count.index
-  ]
-  availability_zone       = element(var.azs, count.index)
+  count                   = length(local.public_subnets) > 0 ? length(local.public_subnets) : 0
+  vpc_id                  = local.vpc_id
+  cidr_block              = local.public_subnets[count.index].cidr
+  availability_zone       = local.public_subnets[count.index].availability_zone
   map_public_ip_on_launch = var.map_public_ip_on_launch
-
-  tags = merge(tomap({
-    "Name" = format("%s-${lower(var.public_subnet_suffix)}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.public_eks_tags)
+  tags = (
+    # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
+    local.public_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${local.public_subnets[count.index].custom_name}" }), var.tags, var.public_eks_tags) :
+    merge(tomap({ "Name" = format("%s-${lower(local.public_subnets[count.index].tag)}-%s", var.resource_prefix, local.public_subnets[count.index].availability_zone) }), var.tags, var.public_eks_tags)
+  )
 }
 
-#################
-# Private subnet
-#################
+##################
+# Private subnet #
+##################
+
 resource "aws_subnet" "private" {
-  count = length(var.private_subnets) > 0 ? length(var.private_subnets) : 0
-
-  vpc_id = local.vpc_id
-  cidr_block = var.private_subnets[
-    count.index
-  ]
-  availability_zone = element(var.azs, count.index)
-
-  tags = merge(tomap({
-    "Name" = format("%s-${lower(var.private_subnet_tags[count.index])}-%s", var.name, element(var.azs, count.index))
-  }), var.tags, var.private_eks_tags)
+  count             = length(local.private_subnets) > 0 ? length(local.private_subnets) : 0
+  vpc_id            = local.vpc_id
+  cidr_block        = local.private_subnets[count.index].cidr
+  availability_zone = local.private_subnets[count.index].availability_zone
+  tags = (
+    # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
+    local.private_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${local.private_subnets[count.index].custom_name}" }), var.tags, var.private_eks_tags) :
+    merge(tomap({ "Name" = format("%s-${lower(local.private_subnets[count.index].tag)}-%s", var.resource_prefix, local.private_subnets[count.index].availability_zone) }), var.tags, var.private_eks_tags)
+  )
 }
 
-#################
-# TGW subnet
-#################
+##############
+# TGW subnet #
+##############
 resource "aws_subnet" "tgw" {
-  count = length(var.tgw_subnets) > 0 ? length(var.tgw_subnets) : 0
-
-  vpc_id = local.vpc_id
-  cidr_block = var.tgw_subnets[
-    count.index
-  ]
-  availability_zone = element(var.azs, count.index)
-
-  tags = merge(tomap({
-    "Name" = format("%s-${lower(var.tgw_subnet_tags[count.index])}-%s", var.name, element(var.azs, count.index))
-  }), var.tags)
+  count             = length(local.tgw_subnets) > 0 ? length(local.tgw_subnets) : 0
+  vpc_id            = local.vpc_id
+  cidr_block        = local.tgw_subnets[count.index].cidr
+  availability_zone = local.tgw_subnets[count.index].availability_zone
+  tags = (
+    # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
+    local.tgw_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${local.tgw_subnets[count.index].custom_name}" }), var.tags) :
+    merge(tomap({ "Name" = format("%s-${lower(local.tgw_subnets[count.index].tag)}-%s", var.resource_prefix, local.tgw_subnets[count.index].availability_zone) }), var.tags)
+  )
 }
 
-##################
-# Database subnet
-##################
+####################################
+# Database subnet and subnet group #
+####################################
+
 resource "aws_subnet" "database" {
-  count = length(var.database_subnets) > 0 ? length(var.database_subnets) : 0
-
-  vpc_id = local.vpc_id
-  cidr_block = var.database_subnets[
-    count.index
-  ]
-  availability_zone = element(var.azs, count.index)
-
-  tags = merge(tomap({
-    "Name" = format("%s-${var.database_subnet_suffix}-%s", var.name, element(var.azs, count.index))
-  }), var.database_subnet_tags, var.tags)
+  count             = length(local.database_subnets) > 0 ? length(local.database_subnets) : 0
+  vpc_id            = local.vpc_id
+  cidr_block        = local.database_subnets[count.index].cidr
+  availability_zone = local.database_subnets[count.index].availability_zone
+  tags = (
+    # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
+    local.database_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${local.database_subnets[count.index].custom_name}" }), var.database_subnet_tags, var.tags) :
+    merge(tomap({ "Name" = format("%s-${local.database_subnets[count.index].tag}-%s", var.resource_prefix, local.database_subnets[count.index].availability_zone) }), var.database_subnet_tags, var.tags)
+  )
 }
 
 resource "aws_db_subnet_group" "database" {
-  count = length(var.database_subnets) > 0 && var.create_database_subnet_group ? 1 : 0
-
-  name        = "${lower(var.name)}-backend"
-  description = "Database subnet group for ${var.name}"
+  count = length(aws_subnet.database) > 0 && var.create_database_subnet_group ? 1 : 0
+  # if a custom subnet group name is defined, set it, else, generate one based on Coalfire's naming convention
+  name        = var.database_subnet_group_name != null ? var.database_subnet_group_name : "${lower(var.resource_prefix)}-backend"
+  description = "Database subnet group for ${var.resource_prefix}"
   subnet_ids  = aws_subnet.database[*].id
-
-  tags = merge(tomap({
-    "Name" = format("%s", var.name)
-  }), var.tags, var.database_subnet_group_tags)
+  tags = (
+    # if a custom subnet group name is defined, set resource tag 'Name' to the custom name, else, generate one based on Coalfire's naming convention
+    local.tgw_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${var.database_subnet_group_name}" }), var.database_subnet_tags, var.tags) :
+    merge(tomap({ "Name" = format("%s", var.resource_prefix) }), var.tags, var.database_subnet_group_tags)
+  )
 }
 
-##################
-# Redshift subnet
-##################
+####################################
+# Redshift subnet and subnet group #
+####################################
+
 resource "aws_subnet" "redshift" {
-  count = length(var.redshift_subnets) > 0 ? length(var.redshift_subnets) : 0
-
-  vpc_id = local.vpc_id
-  cidr_block = var.redshift_subnets[
-    count.index
-  ]
-  availability_zone = element(var.azs, count.index)
-
-  tags = merge(tomap({
-    "Name" = format("%s-${var.redshift_subnet_suffix}-%s", var.name, element(var.azs, count.index))
-  }), var.tags)
+  count             = length(local.redshift_subnets) > 0 ? length(local.redshift_subnets) : 0
+  vpc_id            = local.vpc_id
+  cidr_block        = local.redshift_subnets[count.index].cidr
+  availability_zone = local.redshift_subnets[count.index].availability_zone
+  tags = (
+    # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
+    local.redshift_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${local.redshift_subnets[count.index].custom_name}" }), var.tags) :
+    merge(tomap({ "Name" = format("%s-${local.redshift_subnets[count.index].tag}-%s", var.resource_prefix, local.redshift_subnets[count.index].availability_zone) }), var.tags)
+  )
 }
 
 resource "aws_redshift_subnet_group" "redshift" {
-  count = length(var.redshift_subnets) > 0 ? 1 : 0
-
-  name        = var.name
-  description = "Redshift subnet group for ${var.name}"
-  subnet_ids = [
-    aws_subnet.redshift[*].id
-  ]
-
-  tags = merge(tomap({
-    "Name" = format("%s", var.name)
-  }), var.tags, var.redshift_subnet_group_tags)
+  count = length(aws_subnet.redshift) > 0 ? 1 : 0
+  # if a custom subnet group name is defined, set it, else, generate one based on Coalfire's naming convention
+  name        = var.redshift_subnet_group_name != null ? var.redshift_subnet_group_name : var.resource_prefix
+  description = "Redshift subnet group for ${var.resource_prefix}"
+  subnet_ids  = aws_subnet.redshift[*].id
+  tags = (
+    # if a custom subnet group name is defined, set resource tag 'Name' to the custom name, else, generate one based on Coalfire's naming convention
+    var.redshift_subnet_group_name != null ?
+    merge(tomap({ "Name" = "${var.redshift_subnet_group_name}" }), var.redshift_subnet_group_tags, var.tags) :
+    merge(tomap({ "Name" = format("%s", var.resource_prefix) }), var.redshift_subnet_group_tags, var.tags)
+  )
 }
 
-#####################
-# ElastiCache subnet
-#####################
+######################
+# ElastiCache subnet #
+######################
+
 resource "aws_subnet" "elasticache" {
-  count = length(var.elasticache_subnets) > 0 ? length(var.elasticache_subnets) : 0
-
-  vpc_id = local.vpc_id
-  cidr_block = var.elasticache_subnets[
-    count.index
-  ]
-  availability_zone = element(var.azs, count.index)
-
-  tags = merge(tomap({
-    "Name" = format("%s-${var.elasticache_subnet_suffix}-%s", var.name, element(var.azs, count.index))
-  }), var.tags)
+  count             = length(local.elasticache_subnets) > 0 ? length(local.elasticache_subnets) : 0
+  vpc_id            = local.vpc_id
+  cidr_block        = local.elasticache_subnets[count.index].cidr
+  availability_zone = local.elasticache_subnets[count.index].availability_zone
+  tags = (
+    local.elasticache_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${local.elasticache_subnets[count.index].custom_name}" }), var.tags) :
+    merge(tomap({ "Name" = format("%s-${local.elasticache_subnets[count.index].tag}-%s", var.resource_prefix, local.elasticache_subnets[count.index].availability_zone) }), var.tags)
+  )
 }
 
 resource "aws_elasticache_subnet_group" "elasticache" {
-  count = length(var.elasticache_subnets) > 0 ? 1 : 0
-
-  name        = var.name
-  description = "ElastiCache subnet group for ${var.name}"
+  count = length(aws_subnet.elasticache) > 0 ? 1 : 0
+  # if a custom subnet group name is defined, set resource tag 'Name' to the custom name, else, generate one based on Coalfire's naming convention
+  name        = var.elasticache_subnet_group_name != null ? var.elasticache_subnet_group_name : var.resource_prefix
+  description = "ElastiCache subnet group for ${var.resource_prefix}"
   subnet_ids  = aws_subnet.elasticache[*].id
 }
 
-#####################################################
-# intra subnets - private subnet without NAT gateway
-#####################################################
+######################################################
+# intra subnets - private subnet without NAT gateway #
+######################################################
 resource "aws_subnet" "intra" {
-  count = length(var.intra_subnets) > 0 ? length(var.intra_subnets) : 0
-
-  vpc_id = local.vpc_id
-  cidr_block = var.intra_subnets[
-    count.index
-  ]
-  availability_zone = element(var.azs, count.index)
-
-  # tags = merge(tomap("Name", format("%s-intra-%s", var.name, element(var.azs, count.index))), var.tags, var.intra_subnet_tags)
-  tags = merge(tomap({
-    "Name" = format("%s-${var.intra_subnet_tags[count.index]}-%s", var.name, element(var.azs, count.index))
-  }), var.tags)
+  count             = length(local.intra_subnets) > 0 ? length(local.intra_subnets) : 0
+  vpc_id            = local.vpc_id
+  cidr_block        = local.intra_subnets[count.index].cidr
+  availability_zone = local.intra_subnets[count.index].availability_zone
+  tags = (
+    # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
+    local.intra_subnets[count.index].custom_name != null ?
+    merge(tomap({ "Name" = "${local.intra_subnets[count.index].custom_name}" }), var.tags) :
+    merge(tomap({ "Name" = format("%s-${local.intra_subnets[count.index].tag}-%s", var.resource_prefix, local.intra_subnets[count.index].availability_zone) }), var.tags)
+  )
 }
