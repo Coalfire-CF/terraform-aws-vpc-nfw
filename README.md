@@ -39,7 +39,7 @@ The following type of resources are supported:
   * `module.mgmt_vpc.private_subnets["mvp-mgmt-compute-us-gov-west-1a"]`
   * `data.terraform_remote_state.network.outputs.public_subnets["mvp-mgmt-dmz-us-gov-west-1a"]`
 * This is designed to automatically reference the firewall subnets when opted to be created.
-* Automatically adds AWS region to the subnet name upon creation.
+* AWS region is appended to the subnet name by default.
 * The private route table IDs includes the route table IDs from database subnets as well.
 
 ## Replacing the Default Deny All NFW Policy
@@ -103,61 +103,83 @@ Some variables expose different expected values based on sensible assumptions.  
 
 The variables can be further inspected to see what parameters and types are expected.
 
-## Usage
+# Usage
+
+## Inputs
+
+| Input | Description |
+|---|---|
+| name | Deployment-wide identifier which is used as a prefix for resource names. |
+| 
+
+### Defining the `subnets` input
+Subnets are specified via the `subnets` block:
+
+```hcl
+  subnets = [
+    {
+      tag               = "fw1"  
+      cidr              = "10.0.0.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "fw2"  
+      cidr              = "10.0.1.0/24"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    }
+  ]
+```
+
+Each subnet must be defined with the following Attributes:
+
+| Attribute | Description | Example |
+|---|---|---|
+| tag | An arbitrary identifier (freindly name) which will be combined with the deployment-wide `name` variable and the subnet's `availability_zone` to form the subnet `Name` tag. For example, for a deployment with `resource_prefix` "example", setting `tag = "secops"` and `availability_zone = us-gov-west-1a` will result in the subnet name `example-secops-us-gov-west-1a` | `siem` |
+| cidr | Defines the CIDR block for the subnet. Subnet CIDR blocks must not overlap, and no two subnets can have the same CIDR block. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html) for more information on defining CIDR blocks for VPC subnets. | `10.0.3.0/24` |
+| type | Determines the type of subnet to deploy. Allowed values are `firewall`, `public`, `private`, `tgw`, `database`, `redshift`, `elasticache`, or `intra` | `private` | 
+| availability_zone | The availability zone in which to create the subnet. The AZ specified here must be available in your environment. | `us-gov-west-1b` |
+| custom_name | (Optional, supersedes `tag`) If your environment has strict requirements for resource naming, you may specify `custom_name` in place of `tag` to define the exact string to assign to the subnet's Name tag. | `aws-subnet-private-secops-west-1a` |
+
+You may specify any number of subnets in any order, of any combination of types, availability zones, and CIDR blocks. Note that subnets may be arbitrarily destroyed or created as necessary without affecting other subnets. 
+
+
+
+
+## Usage and Examples
 If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture.
 Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements. An example of 'mgmt.tf' usage is shown where VPC and AWS NFW resources are deployed, along with optional VPC endpoints:
+
+### Example with 
 ```hcl
 module "mgmt_vpc" {
   source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
 
-  name = "${var.resource_prefix}-mgmt"
-  cidr = var.mgmt_vpc_cidr
+  name = "example-mgmt"
+  cidr = "10.1.0.0/16"
   azs = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1], data.aws_availability_zones.available.names[2]]
 
-  private_subnets = local.private_subnets # Map of Name -> CIDR
-  private_subnet_tags = { #please note this goes alphabetically in order
-    "0" = "Compute"
-    "1" = "Compute"
-    "2" = "Compute"
-    "3" = "Private"
-    "4" = "Private"
-    "5" = "Private"
-  }
-
-  tgw_subnets = local.tgw_subnets
-# Example of using specific CIDRs for TGW:  
-# tgw_subnets = [
-#   "x.x.255.0/28",
-#   "x.x.255.16/28"
-# ]
-  
-  tgw_subnet_tags = {
-    "0" = "TGW"
-    "1" = "TGW"
-    "2" = "TGW"
-  }
-  
-  public_subnets       = local.public_subnets # Map of Name -> CIDR
-  public_subnet_suffix = "public"
-
-  single_nat_gateway     = var.single_nat_gateway # false
-  enable_nat_gateway     = var.enable_nat_gateway # true
-  one_nat_gateway_per_az = var.one_nat_gateway_per_az # true
-  enable_vpn_gateway     = var.enable_vpn_gateway # false
-  enable_dns_hostnames   = var.enable_dns_hostnames # true
+  single_nat_gateway     = false
+  enable_nat_gateway     = true
+  one_nat_gateway_per_az = true
+  enable_vpn_gateway     = false
+  enable_dns_hostnames   = true
 
   flow_log_destination_type              = "cloud-watch-logs"
   cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
+  cloudwatch_log_group_kms_key_id        = "arn:aws-us-gov:kms:your-kms-key-arn"
 
   ### Network Firewall ###
-  deploy_aws_nfw                        = var.deploy_aws_nfw
-  delete_protection                     = var.delete_protection
-  aws_nfw_prefix                        = var.resource_prefix
-  aws_nfw_name                          = "${var.resource_prefix}-nfw"
-  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
+  deploy_aws_nfw                        = true
+  delete_protection                     = true
+  aws_nfw_prefix                        = "example"
+  aws_nfw_name                          = "example-nfw"
+  nfw_kms_key_id                        = "arn:aws-us-gov:kms:your-kms-key-arn"
+
+  # Reference example directory for these values, as they are too large to show here
+  aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group 
   aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
-  nfw_kms_key_id                        = data.terraform_remote_state.account-setup.outputs.nfw_kms_key_id
 
   # When deploying NFW, firewall_subnets must be specified
   firewall_subnets       = local.firewall_subnets

@@ -187,8 +187,8 @@ variable "tls_source_to_port" {
 ######
 # VPC
 ######
-variable "name" {
-  description = "Name to be used on all the resources as identifier"
+variable "resource_prefix" {
+  description = "Prefix to be added to resource names as identifier"
   default     = ""
   type        = string
 }

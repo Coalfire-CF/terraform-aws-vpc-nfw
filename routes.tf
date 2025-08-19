@@ -7,7 +7,7 @@ resource "aws_route_table" "public" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (format("%s-public-%s-rtb", var.name, element(var.azs, count.index)))
+    "Name" = (format("%s-public-%s-rtb", var.resource_prefix, element(var.azs, count.index)))
   }), var.tags, var.public_route_table_tags)
 }
 
@@ -54,7 +54,7 @@ resource "aws_route_table" "aws_nfw_igw_rtb" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (format("%s-igw-rtb", var.name))
+    "Name" = (format("%s-igw-rtb", var.resource_prefix))
   }), var.tags, var.public_route_table_tags)
 }
 
@@ -126,7 +126,7 @@ resource "aws_route_table" "private" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (var.single_nat_gateway ? "${var.name}-private" : format("%s-private-%s-rtb", var.name, element(var.azs, count.index)))
+    "Name" = (var.single_nat_gateway ? "${var.resource_prefix}-private" : format("%s-private-%s-rtb", var.resource_prefix, element(var.azs, count.index)))
   }), var.tags, var.private_route_table_tags)
 
   lifecycle {
@@ -167,7 +167,7 @@ resource "aws_route_table" "tgw" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (var.single_nat_gateway ? "${var.name}-tgw" : format("%s-tgw-%s-rtb", var.name, element(var.azs, count.index)))
+    "Name" = (var.single_nat_gateway ? "${var.resource_prefix}-tgw" : format("%s-tgw-%s-rtb", var.resource_prefix, element(var.azs, count.index)))
   }), var.tags, var.tgw_route_table_tags)
 
   lifecycle {
@@ -207,7 +207,7 @@ resource "aws_route_table" "firewall" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = (var.single_nat_gateway ? "${var.name}-firewall" : format("%s-firewall-%s-rtb", var.name, element(var.azs, count.index)))
+    "Name" = (var.single_nat_gateway ? "${var.resource_prefix}-firewall" : format("%s-firewall-%s-rtb", var.resource_prefix, element(var.azs, count.index)))
   }), var.tags, var.firewall_route_table_tags)
 
   lifecycle {
@@ -248,7 +248,7 @@ resource "aws_route_table" "database" {
   vpc_id = local.vpc_id
 
   tags = merge(var.tags, var.database_route_table_tags, tomap({
-    "Name" = "${var.name}-database-rtb"
+    "Name" = "${var.resource_prefix}-database-rtb"
   }))
 }
 
@@ -282,7 +282,7 @@ resource "aws_route_table" "redshift" {
   vpc_id = local.vpc_id
 
   tags = merge(var.tags, var.redshift_route_table_tags, tomap({
-    "Name" = "${var.name}-redshift-rtb"
+    "Name" = "${var.resource_prefix}-redshift-rtb"
   }))
 }
 
@@ -316,7 +316,7 @@ resource "aws_route_table" "elasticache" {
   vpc_id = local.vpc_id
 
   tags = merge(var.tags, var.elasticache_route_table_tags, tomap({
-    "Name" = "${var.name}-elasticache-rtb"
+    "Name" = "${var.resource_prefix}-elasticache-rtb"
   }))
 }
 
@@ -350,7 +350,7 @@ resource "aws_route_table" "intra" {
   vpc_id = local.vpc_id
 
   tags = merge(tomap({
-    "Name" = "${var.name}-intra-rtb"
+    "Name" = "${var.resource_prefix}-intra-rtb"
   }), var.tags, var.intra_route_table_tags)
 }
 
