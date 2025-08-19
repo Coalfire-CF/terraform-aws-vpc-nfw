@@ -105,14 +105,29 @@ The variables can be further inspected to see what parameters and types are expe
 
 # Usage
 
-## Inputs
+## Required inputs
 
-| Input | Description |
-|---|---|
-| name | Deployment-wide identifier which is used as a prefix for resource names. |
-| 
+| Input | Description | Example |
+|---|---|---|
+| resource_prefix | Deployment-wide identifier prepended to resource names (excluding any explicitly-defined or custom resource names) | `"prod"` |
+| vpc_name | Name to assign to the VPC resource | `"mgmt-prod-vpc"` |
+| cidr | The CIDR block to assign to the VPC. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-cidr-blocks.html) for more info on defining VPC CIDRs. | `"10.0.0.0/16"` |
+| azs | This variable defines the Availability Zones in your environment. You may use a terraform `data` call to retrieve these values dynamically from the AWS provider. | `[data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]` |
+| subnets | A block of subnet definitions. | See [subnets](#defining-the-subnets-block) |
+| enable_nat_gateway | Whether to deploy NAT gateway(s) | `true` |
+| single_nat_gateway | If `true`, only deploys a single NAT gateway, shared between all private subnets | `false` |
+| one_nat_gateway_per_az | If `true`, deploys only one NAT gateway per Availability Zone, shared between all private subnets in that AZ | `true` |
+| enable_vpn_gateway | If `true`, creates a VPN gateway resource attached to the VPC | `false` |
+| enable_dns_hostnames | If `true`, enables DNS hostnames in the Default VPC | `false` |
+| flow_log_destination_type | The type of flow log destination. msut be one of `"s3"` or `"cloud-watch-logs"` | `"cloud-watch-logs"` |
+| cloudwatch_log_group_retention_in_days | The length of time, in days, to retain CloudWatch logs | `30`|
+| cloudwatch_log_group_kms_key_arn | Defines the ARN of the KMS key to use for the cloudwatch log group encryption. | `"arn:aws-us-gov:kms:your-kms-key-arn"` |
+| deploy_aws_nfw | If `true`, deploys AWS Network Firewall | `true` | 
+| delete_protection | If `true`, prevents deletion of the AWS Network Firewall. | `true` |
 
-### Defining the `subnets` input
+
+
+### Defining the subnets block
 Subnets are specified via the `subnets` block:
 
 ```hcl
@@ -136,7 +151,7 @@ Each subnet must be defined with the following Attributes:
 
 | Attribute | Description | Example |
 |---|---|---|
-| tag | An arbitrary identifier (freindly name) which will be combined with the deployment-wide `name` variable and the subnet's `availability_zone` to form the subnet `Name` tag. For example, for a deployment with `resource_prefix` "example", setting `tag = "secops"` and `availability_zone = us-gov-west-1a` will result in the subnet name `example-secops-us-gov-west-1a` | `siem` |
+| tag | An arbitrary identifier (freindly name) which will be combined with `resource_prefix` variable and the subnet's `availability_zone` to form the subnet `Name` tag. For example, for a deployment with `resource_prefix` "example", setting `tag = "secops"` and `availability_zone = us-gov-west-1a` will result in the subnet name `example-secops-us-gov-west-1a` | `siem` |
 | cidr | Defines the CIDR block for the subnet. Subnet CIDR blocks must not overlap, and no two subnets can have the same CIDR block. See the [AWS User Guide](https://docs.aws.amazon.com/vpc/latest/userguide/subnet-sizing.html) for more information on defining CIDR blocks for VPC subnets. | `10.0.3.0/24` |
 | type | Determines the type of subnet to deploy. Allowed values are `firewall`, `public`, `private`, `tgw`, `database`, `redshift`, `elasticache`, or `intra` | `private` | 
 | availability_zone | The availability zone in which to create the subnet. The AZ specified here must be available in your environment. | `us-gov-west-1b` |

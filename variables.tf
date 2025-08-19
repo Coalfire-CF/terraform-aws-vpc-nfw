@@ -8,12 +8,6 @@ variable "deploy_aws_nfw" {
   default     = false
 }
 
-variable "aws_nfw_prefix" {
-  description = "AWS NFW Prefix"
-  type        = string
-  default     = ""
-}
-
 variable "aws_nfw_name" {
   description = "AWS NFW Name"
   type        = string
@@ -554,8 +548,8 @@ variable "cloudwatch_log_group_retention_in_days" {
   default     = 365
 }
 
-variable "cloudwatch_log_group_kms_key_id" {
-  description = "Customer KMS Key id for Cloudwatch Log encryption"
+variable "cloudwatch_log_group_kms_key_arn" {
+  description = "Customer KMS Key ARN for Cloudwatch Log encryption"
   type        = string
   default     = ""
 }
