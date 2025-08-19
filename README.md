@@ -147,6 +147,50 @@ Each subnet must be defined with the following Attributes:
 
 > Note: You may specify any number of subnets, in any order, and of any combination of types, availability zones, and CIDR blocks. Note that you may arbitrarily destroy or create subnets as the need arises, without affecting other subnets. (Always check the output of `terraform plan` before applying changes)
 
+### (Optional) Defining subnet CIDRs using Hashicorp CIDR module
+If desired, you may define subnet CIDRs dynamically using Hashicorp's [Terraform CIDR Subnets Module](https://registry.terraform.io/modules/hashicorp/subnets/cidr/latest):
+
+```hcl
+module "cidr_blocks" {
+  source          = "hashicorp/subnets/cidr"
+  version         = "v1.0.0"
+  base_cidr_block = var.mgmt_vpc_cidr
+  networks = [
+    {
+      name     = "block1"
+      new_bits = 8
+    },
+    {
+      name     = "block2"
+      new_bits = 8
+    }
+  ]
+}
+
+module "mgmt_vpc" {
+  cidr = var.mgmt_vpc_cidr
+  ...
+  subnets = [
+    {
+      tag               = "firewall1"
+      cidr              = module.cidr_blocks.network_cidr_blocks["block1"]
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "firewall1"
+      cidr              = module.cidr_blocks.network_cidr_blocks["block2"]
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    }
+  ]
+  ...
+}
+```
+
+> ⚠️ **WARNING:** due to the way the module generates subnets, it is likely that removing, adding, or otherwise changing one subnet in the module can cause all other subnet CIDRs to be updated, potentially generating cascading effects across your deployment. If using this method, it is highly recommended to define all subnets during your first deployment, and excercise extreme caution when making any updates. 
+
+
 ## Replacing the Default Deny All NFW Policy
 
 #### There will be a default Deny All NFW policy that is applied `module.mgmt_vpc.module.aws_network_firewall.nfw-base-suricata-rule.json`. If you are having networking problems, please follow the example below of how to pass a customized ruleset to the module. Any customized ruleset will overwrite the default policy.
