@@ -190,9 +190,11 @@ resource "aws_vpn_gateway" "this" {
 
   vpc_id = local.vpc_id
 
-  tags = merge(tomap({
-    "Name" = format("%s", var.resource_prefix)
-  }), var.tags, var.vpn_gateway_tags)
+  tags = (
+    var.vpn_gateway_custom_name != null ?
+    merge(tomap({ "Name" = format("%s", var.vpn_gateway_custom_name) }), var.tags, var.vpn_gateway_tags) :
+    merge(tomap({ "Name" = format("%s", var.resource_prefix) }), var.tags, var.vpn_gateway_tags)
+  )
 }
 
 resource "aws_vpn_gateway_attachment" "this" {

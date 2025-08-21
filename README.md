@@ -91,7 +91,7 @@ module "mgmt_vpc" {
 
 > Note: If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements.
 
-## Required inputs
+## Inputs
 
 | Input | Description | Example |
 |---|---|---|
@@ -104,6 +104,7 @@ module "mgmt_vpc" {
 | single_nat_gateway | If `true`, only deploys a single NAT gateway, shared between all private subnets | `false` |
 | one_nat_gateway_per_az | If `true`, deploys only one NAT gateway per Availability Zone, shared between all private subnets in that AZ | `true` |
 | enable_vpn_gateway | If `true`, creates a VPN gateway resource attached to the VPC | `false` |
+| vpn_gateway_custom_name | (Optional) If set, this replaces the default generated name of the AWS VPN with the provided value  | `"mgmt-prod-vpn"` |
 | enable_dns_hostnames | If `true`, enables DNS hostnames in the Default VPC | `false` |
 | flow_log_destination_type | The type of flow log destination. msut be one of `"s3"` or `"cloud-watch-logs"` | `"cloud-watch-logs"` |
 | cloudwatch_log_group_retention_in_days | The length of time, in days, to retain CloudWatch logs | `30`|
