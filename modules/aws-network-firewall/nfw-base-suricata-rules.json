@@ -42,4 +42,4 @@ drop ip $EXTERNAL_NET any -> $HOME_NET any (msg:"Drop all other non-TCP traffic"
 # Drop all other traffic
 drop tcp any any -> any any (msg:"Deny all other TCP traffic"; flow:established; sid:1999 ; rev:1;)
 # Drop TLS1.1 or lower traffic
-alert tls any any -> any any (msg:"TLS 1.0 or 1.1"; ssl_version:tls1.0,tls1.1; sid:2000;)
+reject tls any any -> any any (msg:"TLS 1.0 or 1.1"; ssl_version:tls1.0,tls1.1; sid:2000;)
