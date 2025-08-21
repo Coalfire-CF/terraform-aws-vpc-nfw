@@ -10,11 +10,17 @@ pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".micro
 pass http $HOME_NET any -> $EXTERNAL_NET 80 (http.host; dotprefix; content:".windowsupdate.com"; endswith; msg:"Pass HTTP to .windowsupdate.com"; sid:1005; rev:1;)
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".windowsupdate.com"; endswith; msg:"Pass TLS to .windowsupdate.com"; sid:1006; rev:1;)
 
+# Elastic Domains
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".elastic-cloud.com"; endswith; msg:"Pass TLS to .elastic-cloud.com"; sid:1007; rev:1;)
+
 # Nessus Update Servers
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".nessus.org"; endswith; msg:"Pass TLS to .nessus.org"; sid:1008; rev:1;)
 
 # Trend Update Servers
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".trendmicro.com"; endswith; msg:"Pass TLS to .trendmicro.com"; sid:1009; rev:1;)
+
+# Splunk Updates Servers
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".splunk.com"; endswith; msg:"Pass TLS to .splunk.com"; sid:1010; rev:1;)
 
 # Jira Update Servers
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".atlassian.com"; endswith; msg:"Pass TLS to .atlassian.com"; sid:1011; rev:1;)
