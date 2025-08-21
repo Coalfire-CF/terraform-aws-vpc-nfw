@@ -299,6 +299,11 @@ variable "enable_vpn_gateway" {
   type        = bool
 }
 
+variable "vpn_gateway_custom_name" {
+  description = "Specifies a custom name to assign to the VPN; if not set, a name will be generated from var.resource_prefix"
+  default     = null
+}
+
 variable "flow_log_destination_arn" {
   description = "The ARN of the Cloudwatch log destination for Flow Logs"
   type        = string
