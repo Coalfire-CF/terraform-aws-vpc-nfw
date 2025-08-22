@@ -91,7 +91,7 @@ module "mgmt_vpc" {
 
 > Note: If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements.
 
-## Required inputs
+## Inputs
 
 | Input | Description | Example |
 |---|---|---|
@@ -104,6 +104,7 @@ module "mgmt_vpc" {
 | single_nat_gateway | If `true`, only deploys a single NAT gateway, shared between all private subnets | `false` |
 | one_nat_gateway_per_az | If `true`, deploys only one NAT gateway per Availability Zone, shared between all private subnets in that AZ | `true` |
 | enable_vpn_gateway | If `true`, creates a VPN gateway resource attached to the VPC | `false` |
+| vpn_gateway_custom_name | (Optional) If set, this replaces the default generated name of the AWS VPN with the provided value  | `"mgmt-prod-vpn"` |
 | enable_dns_hostnames | If `true`, enables DNS hostnames in the Default VPC | `false` |
 | flow_log_destination_type | The type of flow log destination. msut be one of `"s3"` or `"cloud-watch-logs"` | `"cloud-watch-logs"` |
 | cloudwatch_log_group_retention_in_days | The length of time, in days, to retain CloudWatch logs | `30`|
@@ -532,6 +533,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_vpc_endpoints"></a> [vpc\_endpoints](#input\_vpc\_endpoints) | Map of VPC endpoint definitions to create | <pre>map(object({<br/>    service_name        = optional(string)     # If not provided, standard AWS service name will be constructed<br/>    service_type        = string               # "Interface", "Gateway", or "GatewayLoadBalancer"<br/>    private_dns_enabled = optional(bool, true) # Only applicable for Interface endpoints<br/>    auto_accept         = optional(bool, false)<br/>    policy              = optional(string) # JSON policy document<br/>    security_group_ids  = optional(list(string), [])<br/>    tags                = optional(map(string), {})<br/>    subnet_ids          = optional(list(string)) # Override default subnet_ids if needed<br/>    # Required only for GatewayLoadBalancer endpoints<br/>    ip_address_type = optional(string) # "ipv4" or "dualstack"<br/>  }))</pre> | `{}` | no |
 | <a name="input_vpc_name"></a> [vpc\_name](#input\_vpc\_name) | Name to assign to the AWS VPC | `string` | n/a | yes |
 | <a name="input_vpc_tags"></a> [vpc\_tags](#input\_vpc\_tags) | Additional tags for the VPC | `map(string)` | `{}` | no |
+| <a name="input_vpn_gateway_custom_name"></a> [vpn\_gateway\_custom\_name](#input\_vpn\_gateway\_custom\_name) | Specifies a custom name to assign to the VPN; if not set, a name will be generated from var.resource\_prefix | `any` | `null` | no |
 | <a name="input_vpn_gateway_id"></a> [vpn\_gateway\_id](#input\_vpn\_gateway\_id) | ID of VPN Gateway to attach to the VPC | `string` | `""` | no |
 | <a name="input_vpn_gateway_tags"></a> [vpn\_gateway\_tags](#input\_vpn\_gateway\_tags) | Additional tags for the VPN gateway | `map(string)` | `{}` | no |
 
