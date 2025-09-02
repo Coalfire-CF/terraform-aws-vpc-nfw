@@ -106,7 +106,7 @@ module "mgmt_vpc" {
 
   flow_log_destination_type              = "cloud-watch-logs"
   cloudwatch_log_group_retention_in_days = 30
-  cloudwatch_log_group_kms_key_id        = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
+  cloudwatch_log_group_kms_key_arn       = data.terraform_remote_state.account-setup.outputs.cloudwatch_kms_key_arn
 
   ### Network Firewall ###
   deploy_aws_nfw                        = var.deploy_aws_nfw
