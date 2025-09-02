@@ -188,7 +188,7 @@ variable "vpc_name" {
 
 variable "resource_prefix" {
   description = "Prefix to be added to resource names as identifier"
-  default     = ""
+  default     = "aws"
   type        = string
 }
 
