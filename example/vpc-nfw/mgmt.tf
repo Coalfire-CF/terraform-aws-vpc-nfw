@@ -114,5 +114,5 @@ module "mgmt_vpc" {
   aws_nfw_name                          = "${var.resource_prefix}-nfw"
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
   aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
-  nfw_kms_key_id                        = data.terraform_remote_state.account-setup.outputs.nfw_kms_key_id
+  nfw_kms_key_arn                       = data.terraform_remote_state.account-setup.outputs.nfw_kms_key_id
 }
