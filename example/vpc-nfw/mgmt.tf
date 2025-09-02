@@ -111,7 +111,6 @@ module "mgmt_vpc" {
   ### Network Firewall ###
   deploy_aws_nfw                        = var.deploy_aws_nfw
   delete_protection                     = var.delete_protection
-  aws_nfw_prefix                        = var.resource_prefix
   aws_nfw_name                          = "${var.resource_prefix}-nfw"
   aws_nfw_fivetuple_stateful_rule_group = local.fivetuple_rule_group
   aws_nfw_suricata_stateful_rule_group  = local.suricata_rule_group_shrd_svcs
