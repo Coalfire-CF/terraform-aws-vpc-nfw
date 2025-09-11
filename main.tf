@@ -231,3 +231,10 @@ resource "aws_default_vpc" "this" {
     "Name" = format("%s", var.default_vpc_name)
   }), var.tags, var.default_vpc_tags)
 }
+
+###########
+# Route53 Revolver DNSSEC Config
+###########
+resource "aws_route53_resolver_dnssec_config" "vpc_resolver_dnssec" {
+  resource_id = local.vpc_id
+}
