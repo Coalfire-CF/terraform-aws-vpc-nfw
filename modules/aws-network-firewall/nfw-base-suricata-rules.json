@@ -1,14 +1,35 @@
 # Allow TCP traffic
 pass tcp $EXTERNAL_NET any -> $HOME_NET 22 (msg:"Allow inbound SSH - ONLY FOR PACKER DISABLE AFTER IMAGES ARE BUILT"; flow:established; sid:103; rev:1;)
+
 # Amazon domains
 pass http $HOME_NET any -> any 80 (http.host; dotprefix; content:".us-gov-west-1.amazonaws.com"; endswith; msg:"Pass HTTP to .amazonaws.com"; sid:1001; rev:1;)
 pass tls $HOME_NET any -> any 443 (tls.sni; dotprefix; content:".us-gov-west-1.amazonaws.com"; endswith; msg:"Pass TLS to .amazonaws.com"; sid:1002; rev:2;)
 pass http $HOME_NET any -> 169.254.169.254 80 (sid:1801; rev:1;)
+
 # Microsoft domains
 pass http $HOME_NET any -> $EXTERNAL_NET 80 (http.host; dotprefix; content:".microsoft.com"; endswith; msg:"Pass HTTP to .microsoft.com"; sid:1003; rev:1;)
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".microsoft.com"; endswith; msg:"Pass TLS to .microsoft.com"; sid:1004; rev:1;)
 pass http $HOME_NET any -> $EXTERNAL_NET 80 (http.host; dotprefix; content:".windowsupdate.com"; endswith; msg:"Pass HTTP to .windowsupdate.com"; sid:1005; rev:1;)
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".windowsupdate.com"; endswith; msg:"Pass TLS to .windowsupdate.com"; sid:1006; rev:1;)
+
+# Teleport Connection
+pass tls $EXTERNAL_NET any -> $HOME_NET 443 (tls.sni; content:"teleport.<external_domain>"; endswith; msg:"Pass TLS to teleport.<external_domain>"; sid:2200; rev:1;)
+pass tls $EXTERNAL_NET any -> $HOME_NET 443 (tls.sni; dotprefix; content:".teleport.<external_domain>"; endswith; msg:"Pass TLS to teleport.<external_domain>"; sid:2204; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 3025 (tls.sni; dotprefix; content:".teleport.<external_domain>"; endswith; msg:"Pass TLS to .teleport.<external_domain>"; sid:2201; rev:1;)
+pass tls $EXTERNAL_NET any -> $HOME_NET 3025 (tls.sni; dotprefix; content:".teleport.<external_domain>"; endswith; msg:"Pass TLS to .teleport.<external_domain>"; sid:2202; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".teleport.<external_domain>"; endswith; msg:"Pass TLS to .teleport.<external_domain>"; sid:2203; rev:1;)
+pass tls $EXTERNAL_NET any -> $HOME_NET 443 (tls.sni; dotprefix; content:".<internal_domain>"; endswith; msg:"Pass TLS to .<internal_domain>"; sid:2205; rev:1;)
+
+#Okta Connection
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".okta.com"; endswith; msg:"Pass TLS to .okta.com"; sid:2300; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; content:"okta.com"; endswith; msg:"Pass TLS to okta.com"; sid:2301; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; content:"sonatypegov.okta.com"; endswith; msg:"Pass TLS to sonatypegov.okta.com"; sid:2302; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".oktacdn.com"; endswith; msg:"Pass TLS to .oktacdn.com"; sid:2303; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".tiles.mapbox.com"; endswith; msg:"Pass TLS to .tiles.mapbox.com"; sid:2304; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".mapbox.com"; endswith; msg:"Pass TLS to .mapbox.com"; sid:2305; rev:1;)
+
+# RedHat
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".redhat.com"; endswith; msg:"Pass TLS to .redhat.com"; sid:2400; rev:1;)
 
 # Elastic Domains
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:".elastic-cloud.com"; endswith; msg:"Pass TLS to .elastic-cloud.com"; sid:1007; rev:1;)
@@ -36,6 +57,17 @@ pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:"regist
 
 # GitLab Packages
 pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:"packages.gitlab.com"; endswith; msg:"Pass TLS to packages.gitlab.com"; sid:1015; rev:1;)
+
+# Docker packages
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:"docker.io"; endswith; msg:"Pass TLS to docker.io"; sid:2500; rev:1;)
+
+# Debian Packages
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:"debian.org"; endswith; msg:"Pass TLS to debian.org"; sid:2600; rev:1;)
+pass http $HOME_NET any -> $EXTERNAL_NET any (http.host; content:"deb.debian.org"; endswith; msg:"Pass HTTP to debian.org"; sid:2601; rev:1;)
+
+# Python Packages
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; content:"pypi.org"; endswith; msg:"Pass TLS to pypi.org"; sid:2700; rev:1;)
+pass tls $HOME_NET any -> $EXTERNAL_NET 443 (tls.sni; dotprefix; content:"pythonhosted.org"; endswith; msg:"Pass TLS to pythonhosted.org"; sid:2701; rev:1;)
 
 # Drop other traffic
 drop ip $EXTERNAL_NET any -> $HOME_NET any (msg:"Drop all other non-TCP traffic"; ip_proto:!TCP; sid:1998; rev:1;)
