@@ -653,6 +653,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |       |-- outputs.tf
 |       |-- variables.tf
 |-- outputs.tf
+|-- release-please-config.json
 |-- required_providers.tf
 |-- routes.tf
 |-- subnets.tf
