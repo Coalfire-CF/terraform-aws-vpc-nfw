@@ -92,7 +92,7 @@ resource "aws_db_subnet_group" "database" {
   subnet_ids  = aws_subnet.database[*].id
   tags = (
     # if a custom subnet group name is defined, set resource tag 'Name' to the custom name, else, generate one based on Coalfire's naming convention
-    local.tgw_subnets[count.index].custom_name != null ?
+    local.database_subnets[count.index].custom_name != null ?
     merge(tomap({ "Name" = "${var.database_subnet_group_name}" }), var.database_subnet_tags, var.tags) :
     merge(tomap({ "Name" = format("%s", var.resource_prefix) }), var.tags, var.database_subnet_group_tags)
   )
