@@ -40,7 +40,7 @@ jobs:
 
       - name: Upload Pike IAM scan
         if: Always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: pike-iam-logs
           path: /tmp/pike-iam-check.tf
