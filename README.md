@@ -601,9 +601,9 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 ## Tree
 ```
 .
+|-- CHANGELOG.md
 |-- CONTRIBUTING.md
 |-- LICENSE
-|-- License.md
 |-- README.md
 |-- coalfire_logo.png
 |-- example
