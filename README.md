@@ -641,7 +641,6 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |   |   |-- coalfire_logo.png
 |   |   |-- locals.tf
 |   |   |-- main.tf
-|   |   |-- nfw-base-suricata-rules.json
 |   |   |-- output.tf
 |   |   |-- required_providers.tf
 |   |   |-- tls.tf
