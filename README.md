@@ -601,6 +601,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 ## Tree
 ```
 .
+|-- CHANGELOG.md
 |-- CONTRIBUTING.md
 |-- LICENSE
 |-- License.md
