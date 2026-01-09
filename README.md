@@ -660,6 +660,5 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 |-- test
 |   |-- src
 |       |-- vpc_endpoints_with_nfw_test.go
-|-- update-readme-tree.sh
 |-- variables.tf
 ```
