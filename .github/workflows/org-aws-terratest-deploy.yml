@@ -36,7 +36,7 @@ jobs:
         run: echo "TIMESTAMP=$(date +%s)" >> $GITHUB_ENV
 
       - name: Configure AWS credentials for GovCloud
-        uses: aws-actions/configure-aws-credentials@v4
+        uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: arn:aws-us-gov:iam::358745275192:role/github-action-test-role
           role-session-name: GitHub_to_AWS_FederatedOIDC
