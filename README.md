@@ -89,6 +89,118 @@ module "mgmt_vpc" {
 }
 ```
 
+### EKS Subnet Tagging
+
+When deploying EKS clusters, specific subnets need Kubernetes and AWS service discovery tags for the AWS Load Balancer Controller, Karpenter, and other integrations. Use the `eks` flag on individual subnets to selectively apply these tags without affecting other subnets in the VPC.
+
+The following tags are applied based on configuration:
+
+| Tag | Applied To | Purpose | Controlled By |
+|---|---|---|---|
+| `kubernetes.io/cluster/<cluster-name>` | Private + Public subnets with `eks = true` | Cluster ownership | `enable_eks_subnet_tagging`, `eks_cluster_name` |
+| `kubernetes.io/role/internal-elb` | Private subnets with `eks = true` | Internal ALB/NLB discovery | `enable_eks_private_subnet_tags` |
+| `kubernetes.io/role/elb` | Public subnets with `eks = true` | Internet-facing ALB/NLB discovery | `enable_eks_public_subnet_tags` |
+| `karpenter.sh/discovery` | Private subnets with `eks = true` | Karpenter node provisioning | `enable_karpenter_subnet_tags` |
+
+```hcl
+module "eks_vpc" {
+  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
+
+  vpc_name        = "eks-vpc"
+  resource_prefix = "prod"
+  cidr            = "10.10.0.0/16"
+  azs             = ["us-gov-west-1a", "us-gov-west-1b"]
+
+  # Enable EKS subnet tagging
+  enable_eks_subnet_tagging = true
+  eks_cluster_name          = "prod-eks-cluster"
+  eks_cluster_tag_value     = "shared"           # "shared" if multiple clusters use these subnets, "owned" if dedicated
+  enable_karpenter_subnet_tags = true             # Adds karpenter.sh/discovery to private EKS subnets
+
+  subnets = [
+    # Firewall subnets (no EKS tags)
+    {
+      tag               = "firewall"
+      cidr              = "10.10.0.0/28"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "firewall"
+      cidr              = "10.10.0.16/28"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    },
+
+    # Public subnets for EKS load balancers (tagged with kubernetes.io/role/elb)
+    {
+      tag               = "eks-public"
+      cidr              = "10.10.1.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1a"
+      eks               = true
+    },
+    {
+      tag               = "eks-public"
+      cidr              = "10.10.2.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1b"
+      eks               = true
+    },
+
+    # Public subnet NOT for EKS (no EKS tags applied)
+    {
+      tag               = "dmz"
+      cidr              = "10.10.3.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1a"
+    },
+
+    # Private subnets for EKS workloads (tagged with internal-elb + karpenter)
+    {
+      tag               = "eks-private"
+      cidr              = "10.10.10.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+      eks               = true
+    },
+    {
+      tag               = "eks-private"
+      cidr              = "10.10.11.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+      eks               = true
+    },
+
+    # Private subnet for other workloads (no EKS tags applied)
+    {
+      tag               = "app"
+      cidr              = "10.10.20.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+    },
+  ]
+
+  single_nat_gateway     = false
+  enable_nat_gateway     = true
+  one_nat_gateway_per_az = true
+  enable_dns_hostnames   = true
+
+  flow_log_destination_type              = "cloud-watch-logs"
+  cloudwatch_log_group_retention_in_days = 30
+}
+```
+
+| EKS Tagging Variable | Description | Default |
+|---|---|---|
+| `enable_eks_subnet_tagging` | Master toggle for all EKS tags | `false` |
+| `eks_cluster_name` | EKS cluster name used in tag keys/values | `""` |
+| `eks_cluster_tag_value` | `"shared"` or `"owned"` for the cluster ownership tag | `"shared"` |
+| `enable_eks_private_subnet_tags` | Apply `kubernetes.io/role/internal-elb` to private EKS subnets | `true` |
+| `enable_eks_public_subnet_tags` | Apply `kubernetes.io/role/elb` to public EKS subnets | `true` |
+| `enable_karpenter_subnet_tags` | Apply `karpenter.sh/discovery` to private EKS subnets | `false` |
+| `karpenter_discovery_tag_value` | Custom value for Karpenter tag (defaults to `eks_cluster_name`) | `""` |
+
 > Note: If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements.
 
 ## Inputs
@@ -145,6 +257,7 @@ Each subnet must be defined with the following Attributes:
 | type | Determines the type of subnet to deploy. Allowed values are `firewall`, `public`, `private`, `tgw`, `database`, `redshift`, `elasticache`, or `intra` | `private` | 
 | availability_zone | The availability zone in which to create the subnet. The AZ specified here must be available in your environment. | `us-gov-west-1b` |
 | custom_name | (Optional, supersedes `tag`) If your environment has strict requirements for resource naming, you may specify `custom_name` in place of `tag` to define the exact string to assign to the subnet's Name tag. | `aws-subnet-private-secops-west-1a` |
+| eks | (Optional) If `true`, applies EKS-related tags to this subnet when `enable_eks_subnet_tagging` is enabled. Only valid on `private` or `public` subnet types. Defaults to `false`. | `true` |
 
 > Note: You may specify any number of subnets, in any order, and of any combination of types, availability zones, and CIDR blocks. Note that you may arbitrarily destroy or create subnets as the need arises, without affecting other subnets. (Always check the output of `terraform plan` before applying changes)
 
