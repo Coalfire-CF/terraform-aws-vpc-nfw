@@ -102,6 +102,8 @@ The following tags are applied based on configuration:
 | `kubernetes.io/role/elb` | Public subnets with `eks = true` | Internet-facing ALB/NLB discovery | `enable_eks_public_subnet_tags` |
 | `karpenter.sh/discovery` | Private subnets with `eks = true` | Karpenter node provisioning | `enable_karpenter_subnet_tags` |
 
+> It is recommended to deploy EKS subnets across 3 Availability Zones for high availability.
+
 ```hcl
 module "eks_vpc" {
   source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
@@ -109,13 +111,13 @@ module "eks_vpc" {
   vpc_name        = "eks-vpc"
   resource_prefix = "prod"
   cidr            = "10.10.0.0/16"
-  azs             = ["us-gov-west-1a", "us-gov-west-1b"]
+  azs             = ["us-gov-west-1a", "us-gov-west-1b", "us-gov-west-1c"]
 
   # Enable EKS subnet tagging
-  enable_eks_subnet_tagging = true
-  eks_cluster_name          = "prod-eks-cluster"
-  eks_cluster_tag_value     = "shared"           # "shared" if multiple clusters use these subnets, "owned" if dedicated
-  enable_karpenter_subnet_tags = true             # Adds karpenter.sh/discovery to private EKS subnets
+  enable_eks_subnet_tagging    = true
+  eks_cluster_name             = "prod-eks-cluster"
+  eks_cluster_tag_value        = "shared"  # "shared" if multiple clusters use these subnets, "owned" if dedicated
+  enable_karpenter_subnet_tags = true      # Adds karpenter.sh/discovery to private EKS subnets
 
   subnets = [
     # Firewall subnets (no EKS tags)
@@ -130,6 +132,12 @@ module "eks_vpc" {
       cidr              = "10.10.0.16/28"
       type              = "firewall"
       availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "firewall"
+      cidr              = "10.10.0.32/28"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1c"
     },
 
     # Public subnets for EKS load balancers (tagged with kubernetes.io/role/elb)
@@ -147,13 +155,32 @@ module "eks_vpc" {
       availability_zone = "us-gov-west-1b"
       eks               = true
     },
-
-    # Public subnet NOT for EKS (no EKS tags applied)
     {
-      tag               = "dmz"
+      tag               = "eks-public"
       cidr              = "10.10.3.0/24"
       type              = "public"
+      availability_zone = "us-gov-west-1c"
+      eks               = true
+    },
+
+    # Public subnets NOT for EKS (no EKS tags applied)
+    {
+      tag               = "dmz"
+      cidr              = "10.10.4.0/24"
+      type              = "public"
       availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "dmz"
+      cidr              = "10.10.5.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "dmz"
+      cidr              = "10.10.6.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1c"
     },
 
     # Private subnets for EKS workloads (tagged with internal-elb + karpenter)
@@ -171,13 +198,32 @@ module "eks_vpc" {
       availability_zone = "us-gov-west-1b"
       eks               = true
     },
+    {
+      tag               = "eks-private"
+      cidr              = "10.10.12.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1c"
+      eks               = true
+    },
 
-    # Private subnet for other workloads (no EKS tags applied)
+    # Private subnets for other workloads (no EKS tags applied)
     {
       tag               = "app"
       cidr              = "10.10.20.0/24"
       type              = "private"
       availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "app"
+      cidr              = "10.10.21.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "app"
+      cidr              = "10.10.22.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1c"
     },
   ]
 
