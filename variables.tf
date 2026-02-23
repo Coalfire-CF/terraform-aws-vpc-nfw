@@ -343,18 +343,6 @@ variable "tags" {
   type        = map(string)
 }
 
-variable "private_eks_tags" {
-  description = "A map of tags to add to all privage subnets resources to support EKS"
-  default     = {}
-  type        = map(string)
-}
-
-variable "public_eks_tags" {
-  description = "A map of tags to add to all public subnets resources to support EKS"
-  default     = {}
-  type        = map(string)
-}
-
 variable "vpc_tags" {
   description = "Additional tags for the VPC"
   default     = {}
@@ -743,6 +731,7 @@ variable "subnets" {
     cidr              = string
     type              = string
     availability_zone = string
+    eks               = optional(bool, false)
   }))
 
   ### There are MANY invalid configurations for this input object which terraform will not catch, but the AWS API will reject during apply
@@ -785,6 +774,62 @@ variable "subnets" {
     condition     = length([for s in var.subnets : s if s.custom_name == null && s.tag == null]) == 0
     error_message = "You must provide one of either 'custom_name' or 'tag' for each subnet."
   }
+  # Error if 'eks' is set on a subnet type that is not 'private' or 'public'
+  validation {
+    condition     = length([for s in var.subnets : s if s.eks && !contains(["private", "public"], s.type)]) == 0
+    error_message = "The 'eks' flag can only be set on subnets of type 'private' or 'public'."
+  }
+}
+
+################################
+# EKS Subnet Tagging
+################################
+
+variable "enable_eks_subnet_tagging" {
+  description = "Enable EKS-related subnet tagging via aws_ec2_tag resources"
+  type        = bool
+  default     = false
+}
+
+variable "eks_cluster_name" {
+  description = "Name of the EKS cluster (used for kubernetes.io/cluster/<name> and karpenter.sh/discovery tags)"
+  type        = string
+  default     = ""
+}
+
+variable "eks_cluster_tag_value" {
+  description = "Value for the kubernetes.io/cluster/<name> tag. Use 'shared' if subnets are shared across clusters, 'owned' if dedicated."
+  type        = string
+  default     = "shared"
+
+  validation {
+    condition     = contains(["shared", "owned"], var.eks_cluster_tag_value)
+    error_message = "eks_cluster_tag_value must be either 'shared' or 'owned'."
+  }
+}
+
+variable "enable_eks_private_subnet_tags" {
+  description = "Enable kubernetes.io/role/internal-elb tag on private subnets for AWS Load Balancer Controller"
+  type        = bool
+  default     = true
+}
+
+variable "enable_eks_public_subnet_tags" {
+  description = "Enable kubernetes.io/role/elb tag on public subnets for AWS Load Balancer Controller"
+  type        = bool
+  default     = true
+}
+
+variable "enable_karpenter_subnet_tags" {
+  description = "Enable karpenter.sh/discovery tag on private subnets for Karpenter node provisioning"
+  type        = bool
+  default     = false
+}
+
+variable "karpenter_discovery_tag_value" {
+  description = "Custom value for the karpenter.sh/discovery tag. Defaults to eks_cluster_name if empty."
+  type        = string
+  default     = ""
 }
 
 variable "database_subnet_group_name" {

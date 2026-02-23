@@ -29,8 +29,8 @@ resource "aws_subnet" "public" {
   tags = (
     # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
     local.public_subnets[count.index].custom_name != null ?
-    merge(tomap({ "Name" = "${local.public_subnets[count.index].custom_name}" }), var.tags, var.public_eks_tags) :
-    merge(tomap({ "Name" = format("%s-${lower(local.public_subnets[count.index].tag)}-%s", var.resource_prefix, local.public_subnets[count.index].availability_zone) }), var.tags, var.public_eks_tags)
+    merge(tomap({ "Name" = "${local.public_subnets[count.index].custom_name}" }), var.tags, local.public_subnets[count.index].eks ? local.eks_public_subnet_tags : {}) :
+    merge(tomap({ "Name" = format("%s-${lower(local.public_subnets[count.index].tag)}-%s", var.resource_prefix, local.public_subnets[count.index].availability_zone) }), var.tags, local.public_subnets[count.index].eks ? local.eks_public_subnet_tags : {})
   )
 }
 
@@ -46,8 +46,8 @@ resource "aws_subnet" "private" {
   tags = (
     # if a custom subnet name is defined, set resource tag 'Name' to the custom name, else, generate a name based on Coalfire's naming convention
     local.private_subnets[count.index].custom_name != null ?
-    merge(tomap({ "Name" = "${local.private_subnets[count.index].custom_name}" }), var.tags, var.private_eks_tags) :
-    merge(tomap({ "Name" = format("%s-${lower(local.private_subnets[count.index].tag)}-%s", var.resource_prefix, local.private_subnets[count.index].availability_zone) }), var.tags, var.private_eks_tags)
+    merge(tomap({ "Name" = "${local.private_subnets[count.index].custom_name}" }), var.tags, local.private_subnets[count.index].eks ? local.eks_private_subnet_tags : {}) :
+    merge(tomap({ "Name" = format("%s-${lower(local.private_subnets[count.index].tag)}-%s", var.resource_prefix, local.private_subnets[count.index].availability_zone) }), var.tags, local.private_subnets[count.index].eks ? local.eks_private_subnet_tags : {})
   )
 }
 
