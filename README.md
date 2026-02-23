@@ -89,6 +89,164 @@ module "mgmt_vpc" {
 }
 ```
 
+### EKS Subnet Tagging
+
+When deploying EKS clusters, specific subnets need Kubernetes and AWS service discovery tags for the AWS Load Balancer Controller, Karpenter, and other integrations. Use the `eks` flag on individual subnets to selectively apply these tags without affecting other subnets in the VPC.
+
+The following tags are applied based on configuration:
+
+| Tag | Applied To | Purpose | Controlled By |
+|---|---|---|---|
+| `kubernetes.io/cluster/<cluster-name>` | Private + Public subnets with `eks = true` | Cluster ownership | `enable_eks_subnet_tagging`, `eks_cluster_name` |
+| `kubernetes.io/role/internal-elb` | Private subnets with `eks = true` | Internal ALB/NLB discovery | `enable_eks_private_subnet_tags` |
+| `kubernetes.io/role/elb` | Public subnets with `eks = true` | Internet-facing ALB/NLB discovery | `enable_eks_public_subnet_tags` |
+| `karpenter.sh/discovery` | Private subnets with `eks = true` | Karpenter node provisioning | `enable_karpenter_subnet_tags` |
+
+> It is recommended to deploy EKS subnets across 3 Availability Zones for high availability.
+
+```hcl
+module "eks_vpc" {
+  source = "git::https://github.com/Coalfire-CF/terraform-aws-vpc-nfw.git?ref=vx.x.x"
+
+  vpc_name        = "eks-vpc"
+  resource_prefix = "prod"
+  cidr            = "10.10.0.0/16"
+  azs             = ["us-gov-west-1a", "us-gov-west-1b", "us-gov-west-1c"]
+
+  # Enable EKS subnet tagging
+  enable_eks_subnet_tagging    = true
+  eks_cluster_name             = "prod-eks-cluster"
+  eks_cluster_tag_value        = "shared"  # "shared" if multiple clusters use these subnets, "owned" if dedicated
+  enable_karpenter_subnet_tags = true      # Adds karpenter.sh/discovery to private EKS subnets
+
+  subnets = [
+    # Firewall subnets (no EKS tags)
+    {
+      tag               = "firewall"
+      cidr              = "10.10.0.0/28"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "firewall"
+      cidr              = "10.10.0.16/28"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "firewall"
+      cidr              = "10.10.0.32/28"
+      type              = "firewall"
+      availability_zone = "us-gov-west-1c"
+    },
+
+    # Public subnets for EKS load balancers (tagged with kubernetes.io/role/elb)
+    {
+      tag               = "eks-public"
+      cidr              = "10.10.1.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1a"
+      eks               = true
+    },
+    {
+      tag               = "eks-public"
+      cidr              = "10.10.2.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1b"
+      eks               = true
+    },
+    {
+      tag               = "eks-public"
+      cidr              = "10.10.3.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1c"
+      eks               = true
+    },
+
+    # Public subnets NOT for EKS (no EKS tags applied)
+    {
+      tag               = "dmz"
+      cidr              = "10.10.4.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "dmz"
+      cidr              = "10.10.5.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "dmz"
+      cidr              = "10.10.6.0/24"
+      type              = "public"
+      availability_zone = "us-gov-west-1c"
+    },
+
+    # Private subnets for EKS workloads (tagged with internal-elb + karpenter)
+    {
+      tag               = "eks-private"
+      cidr              = "10.10.10.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+      eks               = true
+    },
+    {
+      tag               = "eks-private"
+      cidr              = "10.10.11.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+      eks               = true
+    },
+    {
+      tag               = "eks-private"
+      cidr              = "10.10.12.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1c"
+      eks               = true
+    },
+
+    # Private subnets for other workloads (no EKS tags applied)
+    {
+      tag               = "app"
+      cidr              = "10.10.20.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1a"
+    },
+    {
+      tag               = "app"
+      cidr              = "10.10.21.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1b"
+    },
+    {
+      tag               = "app"
+      cidr              = "10.10.22.0/24"
+      type              = "private"
+      availability_zone = "us-gov-west-1c"
+    },
+  ]
+
+  single_nat_gateway     = false
+  enable_nat_gateway     = true
+  one_nat_gateway_per_az = true
+  enable_dns_hostnames   = true
+
+  flow_log_destination_type              = "cloud-watch-logs"
+  cloudwatch_log_group_retention_in_days = 30
+}
+```
+
+| EKS Tagging Variable | Description | Default |
+|---|---|---|
+| `enable_eks_subnet_tagging` | Master toggle for all EKS tags | `false` |
+| `eks_cluster_name` | EKS cluster name used in tag keys/values | `""` |
+| `eks_cluster_tag_value` | `"shared"` or `"owned"` for the cluster ownership tag | `"shared"` |
+| `enable_eks_private_subnet_tags` | Apply `kubernetes.io/role/internal-elb` to private EKS subnets | `true` |
+| `enable_eks_public_subnet_tags` | Apply `kubernetes.io/role/elb` to public EKS subnets | `true` |
+| `enable_karpenter_subnet_tags` | Apply `karpenter.sh/discovery` to private EKS subnets | `false` |
+| `karpenter_discovery_tag_value` | Custom value for Karpenter tag (defaults to `eks_cluster_name`) | `""` |
+
 > Note: If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements.
 
 ## Inputs
@@ -145,6 +303,7 @@ Each subnet must be defined with the following Attributes:
 | type | Determines the type of subnet to deploy. Allowed values are `firewall`, `public`, `private`, `tgw`, `database`, `redshift`, `elasticache`, or `intra` | `private` | 
 | availability_zone | The availability zone in which to create the subnet. The AZ specified here must be available in your environment. | `us-gov-west-1b` |
 | custom_name | (Optional, supersedes `tag`) If your environment has strict requirements for resource naming, you may specify `custom_name` in place of `tag` to define the exact string to assign to the subnet's Name tag. | `aws-subnet-private-secops-west-1a` |
+| eks | (Optional) If `true`, applies EKS-related tags to this subnet when `enable_eks_subnet_tagging` is enabled. Only valid on `private` or `public` subnet types. Defaults to `false`. | `true` |
 
 > Note: You may specify any number of subnets, in any order, and of any combination of types, availability zones, and CIDR blocks. Note that you may arbitrarily destroy or create subnets as the need arises, without affecting other subnets. (Always check the output of `terraform plan` before applying changes)
 
@@ -339,14 +498,14 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~>1.5 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.15.0, < 6.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | ~> 1.10 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 5.64.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | ~> 6.0 |
 
 ## Modules
 
@@ -471,6 +630,8 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_dhcp_options_netbios_node_type"></a> [dhcp\_options\_netbios\_node\_type](#input\_dhcp\_options\_netbios\_node\_type) | Specify netbios node\_type for DHCP options set | `string` | `""` | no |
 | <a name="input_dhcp_options_ntp_servers"></a> [dhcp\_options\_ntp\_servers](#input\_dhcp\_options\_ntp\_servers) | Specify a list of NTP servers for DHCP options set | `list(string)` | `[]` | no |
 | <a name="input_dhcp_options_tags"></a> [dhcp\_options\_tags](#input\_dhcp\_options\_tags) | Additional tags for the DHCP option set | `map(string)` | `{}` | no |
+| <a name="input_eks_cluster_name"></a> [eks\_cluster\_name](#input\_eks\_cluster\_name) | Name of the EKS cluster (used for kubernetes.io/cluster/<name> and karpenter.sh/discovery tags) | `string` | `""` | no |
+| <a name="input_eks_cluster_tag_value"></a> [eks\_cluster\_tag\_value](#input\_eks\_cluster\_tag\_value) | Value for the kubernetes.io/cluster/<name> tag. Use 'shared' if subnets are shared across clusters, 'owned' if dedicated. | `string` | `"shared"` | no |
 | <a name="input_elasticache_custom_routes"></a> [elasticache\_custom\_routes](#input\_elasticache\_custom\_routes) | Custom routes for Elasticache Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_elasticache_route_table_tags"></a> [elasticache\_route\_table\_tags](#input\_elasticache\_route\_table\_tags) | Additional tags for the elasticache route tables | `map(string)` | `{}` | no |
 | <a name="input_elasticache_subnet_group_name"></a> [elasticache\_subnet\_group\_name](#input\_elasticache\_subnet\_group\_name) | Optional custom resource name for the Elasticache subnet group | `string` | `null` | no |
@@ -478,6 +639,10 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_enable_dhcp_options"></a> [enable\_dhcp\_options](#input\_enable\_dhcp\_options) | Should be true if you want to specify a DHCP options set with a custom domain name, DNS servers, NTP servers, netbios servers, and/or netbios server type | `bool` | `false` | no |
 | <a name="input_enable_dns_hostnames"></a> [enable\_dns\_hostnames](#input\_enable\_dns\_hostnames) | Should be true to enable DNS hostnames in the VPC | `bool` | `false` | no |
 | <a name="input_enable_dns_support"></a> [enable\_dns\_support](#input\_enable\_dns\_support) | Should be true to enable DNS support in the VPC | `bool` | `true` | no |
+| <a name="input_enable_eks_private_subnet_tags"></a> [enable\_eks\_private\_subnet\_tags](#input\_enable\_eks\_private\_subnet\_tags) | Enable kubernetes.io/role/internal-elb tag on private subnets for AWS Load Balancer Controller | `bool` | `true` | no |
+| <a name="input_enable_eks_public_subnet_tags"></a> [enable\_eks\_public\_subnet\_tags](#input\_enable\_eks\_public\_subnet\_tags) | Enable kubernetes.io/role/elb tag on public subnets for AWS Load Balancer Controller | `bool` | `true` | no |
+| <a name="input_enable_eks_subnet_tagging"></a> [enable\_eks\_subnet\_tagging](#input\_enable\_eks\_subnet\_tagging) | Enable EKS-related subnet tagging via aws\_ec2\_tag resources | `bool` | `false` | no |
+| <a name="input_enable_karpenter_subnet_tags"></a> [enable\_karpenter\_subnet\_tags](#input\_enable\_karpenter\_subnet\_tags) | Enable karpenter.sh/discovery tag on private subnets for Karpenter node provisioning | `bool` | `false` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | Should be true if you want to provision NAT Gateways for each of your private networks | `bool` | `false` | no |
 | <a name="input_enable_tls_inspection"></a> [enable\_tls\_inspection](#input\_enable\_tls\_inspection) | enable nfw tls inspection true/false. deploy\_aws\_nfw must be true to enable this | `bool` | `false` | no |
 | <a name="input_enable_vpn_gateway"></a> [enable\_vpn\_gateway](#input\_enable\_vpn\_gateway) | Should be true if you want to create a new VPN Gateway resource and attach it to the VPC | `bool` | `false` | no |
@@ -492,6 +657,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_intra_custom_routes"></a> [intra\_custom\_routes](#input\_intra\_custom\_routes) | Custom routes for Intra Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_intra_route_table_tags"></a> [intra\_route\_table\_tags](#input\_intra\_route\_table\_tags) | Additional tags for the intra route tables | `map(string)` | `{}` | no |
 | <a name="input_intra_subnet_tags"></a> [intra\_subnet\_tags](#input\_intra\_subnet\_tags) | Additional tags for the intra subnets | `map(string)` | `{}` | no |
+| <a name="input_karpenter_discovery_tag_value"></a> [karpenter\_discovery\_tag\_value](#input\_karpenter\_discovery\_tag\_value) | Custom value for the karpenter.sh/discovery tag. Defaults to eks\_cluster\_name if empty. | `string` | `""` | no |
 | <a name="input_manage_default_vpc"></a> [manage\_default\_vpc](#input\_manage\_default\_vpc) | Should be true to adopt and manage Default VPC | `bool` | `false` | no |
 | <a name="input_map_public_ip_on_launch"></a> [map\_public\_ip\_on\_launch](#input\_map\_public\_ip\_on\_launch) | Should be false if you do not want to auto-assign public IP on launch | `bool` | `true` | no |
 | <a name="input_nat_eip_tags"></a> [nat\_eip\_tags](#input\_nat\_eip\_tags) | Additional tags for the NAT EIP | `map(string)` | `{}` | no |
@@ -499,12 +665,10 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_nfw_kms_key_arn"></a> [nfw\_kms\_key\_arn](#input\_nfw\_kms\_key\_arn) | ARN of the KMS key to use for NFW encryption | `string` | `null` | no |
 | <a name="input_one_nat_gateway_per_az"></a> [one\_nat\_gateway\_per\_az](#input\_one\_nat\_gateway\_per\_az) | Should be true if you want only one NAT Gateway per availability zone. Requires `var.azs` to be set, and the number of `public_subnets` created to be greater than or equal to the number of availability zones specified in `var.azs`. | `bool` | `false` | no |
 | <a name="input_private_custom_routes"></a> [private\_custom\_routes](#input\_private\_custom\_routes) | Custom routes for Private Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_peering_connection_id  = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
-| <a name="input_private_eks_tags"></a> [private\_eks\_tags](#input\_private\_eks\_tags) | A map of tags to add to all privage subnets resources to support EKS | `map(string)` | `{}` | no |
 | <a name="input_private_route_table_tags"></a> [private\_route\_table\_tags](#input\_private\_route\_table\_tags) | Additional tags for the private route tables | `map(string)` | `{}` | no |
 | <a name="input_propagate_private_route_tables_vgw"></a> [propagate\_private\_route\_tables\_vgw](#input\_propagate\_private\_route\_tables\_vgw) | Should be true if you want route table propagation | `bool` | `false` | no |
 | <a name="input_propagate_public_route_tables_vgw"></a> [propagate\_public\_route\_tables\_vgw](#input\_propagate\_public\_route\_tables\_vgw) | Should be true if you want route table propagation | `bool` | `false` | no |
 | <a name="input_public_custom_routes"></a> [public\_custom\_routes](#input\_public\_custom\_routes) | Custom routes for Public Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    internet_route             = optional(bool, null)<br/>    transit_gateway_id         = optional(string, null)<br/>  }))</pre> | `[]` | no |
-| <a name="input_public_eks_tags"></a> [public\_eks\_tags](#input\_public\_eks\_tags) | A map of tags to add to all public subnets resources to support EKS | `map(string)` | `{}` | no |
 | <a name="input_public_route_table_tags"></a> [public\_route\_table\_tags](#input\_public\_route\_table\_tags) | Additional tags for the public route tables | `map(string)` | `{}` | no |
 | <a name="input_redshift_custom_routes"></a> [redshift\_custom\_routes](#input\_redshift\_custom\_routes) | Custom routes for Redshift Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_redshift_route_table_tags"></a> [redshift\_route\_table\_tags](#input\_redshift\_route\_table\_tags) | Additional tags for the redshift route tables | `map(string)` | `{}` | no |
@@ -518,7 +682,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_secondary_cidr_blocks"></a> [secondary\_cidr\_blocks](#input\_secondary\_cidr\_blocks) | List of secondary CIDR blocks to associate with the VPC to extend the IP Address pool | `list(string)` | `[]` | no |
 | <a name="input_single_nat_gateway"></a> [single\_nat\_gateway](#input\_single\_nat\_gateway) | Should be true if you want to provision a single shared NAT Gateway across all of your private networks | `bool` | `false` | no |
 | <a name="input_subnet_az_mapping"></a> [subnet\_az\_mapping](#input\_subnet\_az\_mapping) | Optional explicit mapping of subnets to AZs - defaults to distributing across AZs | `map(string)` | `{}` | no |
-| <a name="input_subnets"></a> [subnets](#input\_subnets) | n/a | <pre>list(object({<br/>    custom_name       = optional(string)<br/>    tag               = optional(string)<br/>    cidr              = string<br/>    type              = string<br/>    availability_zone = string<br/>  }))</pre> | n/a | yes |
+| <a name="input_subnets"></a> [subnets](#input\_subnets) | n/a | <pre>list(object({<br/>    custom_name       = optional(string)<br/>    tag               = optional(string)<br/>    cidr              = string<br/>    type              = string<br/>    availability_zone = string<br/>    eks               = optional(bool, false)<br/>  }))</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to add to all resources | `map(string)` | `{}` | no |
 | <a name="input_tgw_custom_routes"></a> [tgw\_custom\_routes](#input\_tgw\_custom\_routes) | Custom routes for TGW Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_tgw_route_table_tags"></a> [tgw\_route\_table\_tags](#input\_tgw\_route\_table\_tags) | Additional tags for the tgw route tables | `map(string)` | `{}` | no |
