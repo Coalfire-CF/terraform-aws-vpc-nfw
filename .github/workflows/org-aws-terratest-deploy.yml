@@ -28,7 +28,7 @@ jobs:
           cache: false
 
       - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+        uses: hashicorp/setup-terraform@v4
         with:
           terraform_version: '1.5.7'  # Using 1.5.7 to match ~>1.5.5 requirement
 
