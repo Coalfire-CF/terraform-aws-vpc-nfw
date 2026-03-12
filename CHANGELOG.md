@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.2.1](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/compare/v3.2.0...v3.2.1) (2026-03-12)
+
+
+### Miscellaneous
+
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-checkov.yml ([83b2dd8](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/83b2dd8a5e574707341a60fcf079cd19f5c803f3))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-checkov.yml from 0.3.1 to 0.3.2 ([0fe2fe0](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/0fe2fe079373440822ada8b23266dc23e6130fdf))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-dependabot.yml ([04e3699](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/04e3699e1ff7bdbf9f62c9932093992de15fc11f))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-dependabot.yml from 0.3.1 to 0.3.2 ([d91d27c](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/d91d27c5ed4adffd4a40bf2284101652cbb32d70))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-release.yml ([feaf83d](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/feaf83de717d8835b36aaee08e816775d1a3185e))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-release.yml from 0.3.1 to 0.3.2 ([376312e](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/376312ef4e2fae660fbb3f5bd125d4a9dbc23b44))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-terraform-fmt.yml ([62cb65a](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/62cb65ae718a33cbaa83d554fd17ee68274b2e5b))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-terraform-fmt.yml from 0.3.1 to 0.3.2 ([976fbd7](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/976fbd7d82a7d2e3eb1a9b637cc5b89db86bd5d4))
+* mass update push by coalforge ([41a489e](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/41a489e6bc8e6bfed162d3a7bd8592db81f918fc))
+* update PR template ([1840e8f](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/1840e8f955f510b522c4701ac9de55061fb21998))
+
 ## [3.2.0](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/compare/v3.1.0...v3.2.0) (2026-02-23)
 
 
