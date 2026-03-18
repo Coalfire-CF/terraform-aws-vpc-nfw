@@ -97,7 +97,7 @@ The following tags are applied based on configuration:
 
 | Tag | Applied To | Purpose | Controlled By |
 |---|---|---|---|
-| `kubernetes.io/cluster/<cluster-name>` | Private + Public subnets with `eks = true` | Cluster ownership | `enable_eks_subnet_tagging`, `eks_cluster_name` |
+| `kubernetes.io/cluster/<cluster-name>` | Private + Public subnets with `eks = true` | Cluster ownership (one tag per cluster) | `enable_eks_subnet_tagging`, `eks_cluster_names` |
 | `kubernetes.io/role/internal-elb` | Private subnets with `eks = true` | Internal ALB/NLB discovery | `enable_eks_private_subnet_tags` |
 | `kubernetes.io/role/elb` | Public subnets with `eks = true` | Internet-facing ALB/NLB discovery | `enable_eks_public_subnet_tags` |
 | `karpenter.sh/discovery` | Private subnets with `eks = true` | Karpenter node provisioning | `enable_karpenter_subnet_tags` |
@@ -115,7 +115,7 @@ module "eks_vpc" {
 
   # Enable EKS subnet tagging
   enable_eks_subnet_tagging    = true
-  eks_cluster_name             = "prod-eks-cluster"
+  eks_cluster_names            = ["prod-eks-cluster", "staging-eks-cluster"]
   eks_cluster_tag_value        = "shared"  # "shared" if multiple clusters use these subnets, "owned" if dedicated
   enable_karpenter_subnet_tags = true      # Adds karpenter.sh/discovery to private EKS subnets
 
@@ -240,12 +240,12 @@ module "eks_vpc" {
 | EKS Tagging Variable | Description | Default |
 |---|---|---|
 | `enable_eks_subnet_tagging` | Master toggle for all EKS tags | `false` |
-| `eks_cluster_name` | EKS cluster name used in tag keys/values | `""` |
+| `eks_cluster_names` | List of EKS cluster names used in tag keys/values | `[]` |
 | `eks_cluster_tag_value` | `"shared"` or `"owned"` for the cluster ownership tag | `"shared"` |
 | `enable_eks_private_subnet_tags` | Apply `kubernetes.io/role/internal-elb` to private EKS subnets | `true` |
 | `enable_eks_public_subnet_tags` | Apply `kubernetes.io/role/elb` to public EKS subnets | `true` |
 | `enable_karpenter_subnet_tags` | Apply `karpenter.sh/discovery` to private EKS subnets | `false` |
-| `karpenter_discovery_tag_value` | Custom value for Karpenter tag (defaults to `eks_cluster_name`) | `""` |
+| `karpenter_discovery_tag_value` | Custom value for Karpenter tag (defaults to first entry in `eks_cluster_names`) | `""` |
 
 > Note: If networks are being created with the goal of peering, it is best practice to build and deploy those resources within the same Terraform state. This allows for efficient referencing of peer subnets and CIDRs to facilitate a proper routing architecture. Please refer to the 'example' folder for example files needed on the parent module calling this PAK based on the deployment requirements.
 
@@ -630,7 +630,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 | <a name="input_dhcp_options_netbios_node_type"></a> [dhcp\_options\_netbios\_node\_type](#input\_dhcp\_options\_netbios\_node\_type) | Specify netbios node\_type for DHCP options set | `string` | `""` | no |
 | <a name="input_dhcp_options_ntp_servers"></a> [dhcp\_options\_ntp\_servers](#input\_dhcp\_options\_ntp\_servers) | Specify a list of NTP servers for DHCP options set | `list(string)` | `[]` | no |
 | <a name="input_dhcp_options_tags"></a> [dhcp\_options\_tags](#input\_dhcp\_options\_tags) | Additional tags for the DHCP option set | `map(string)` | `{}` | no |
-| <a name="input_eks_cluster_name"></a> [eks\_cluster\_name](#input\_eks\_cluster\_name) | Name of the EKS cluster (used for kubernetes.io/cluster/<name> and karpenter.sh/discovery tags) | `string` | `""` | no |
+| <a name="input_eks_cluster_names"></a> [eks\_cluster\_names](#input\_eks\_cluster\_names) | List of EKS cluster names (used for kubernetes.io/cluster/<name> and karpenter.sh/discovery tags). Supports multiple clusters for shared subnets. | `list(string)` | `[]` | no |
 | <a name="input_eks_cluster_tag_value"></a> [eks\_cluster\_tag\_value](#input\_eks\_cluster\_tag\_value) | Value for the kubernetes.io/cluster/<name> tag. Use 'shared' if subnets are shared across clusters, 'owned' if dedicated. | `string` | `"shared"` | no |
 | <a name="input_elasticache_custom_routes"></a> [elasticache\_custom\_routes](#input\_elasticache\_custom\_routes) | Custom routes for Elasticache Subnets | <pre>list(object({<br/>    destination_cidr_block     = optional(string, null)<br/>    destination_prefix_list_id = optional(string, null)<br/>    network_interface_id       = optional(string, null)<br/>    transit_gateway_id         = optional(string, null)<br/>    vpc_endpoint_id            = optional(string, null)<br/>  }))</pre> | `[]` | no |
 | <a name="input_elasticache_route_table_tags"></a> [elasticache\_route\_table\_tags](#input\_elasticache\_route\_table\_tags) | Additional tags for the elasticache route tables | `map(string)` | `{}` | no |
