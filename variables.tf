@@ -791,10 +791,10 @@ variable "enable_eks_subnet_tagging" {
   default     = false
 }
 
-variable "eks_cluster_name" {
-  description = "Name of the EKS cluster (used for kubernetes.io/cluster/<name> and karpenter.sh/discovery tags)"
-  type        = string
-  default     = ""
+variable "eks_cluster_names" {
+  description = "List of EKS cluster names (used for kubernetes.io/cluster/<name> and karpenter.sh/discovery tags). Supports multiple clusters for shared subnets."
+  type        = list(string)
+  default     = []
 }
 
 variable "eks_cluster_tag_value" {
@@ -827,7 +827,7 @@ variable "enable_karpenter_subnet_tags" {
 }
 
 variable "karpenter_discovery_tag_value" {
-  description = "Custom value for the karpenter.sh/discovery tag. Defaults to eks_cluster_name if empty."
+  description = "Custom value for the karpenter.sh/discovery tag. Defaults to the first entry in eks_cluster_names if empty."
   type        = string
   default     = ""
 }
