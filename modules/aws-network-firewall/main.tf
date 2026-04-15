@@ -39,6 +39,13 @@ resource "aws_networkfirewall_rule_group" "suricata_stateful_group" {
   }
 
   rule_group {
+    dynamic "stateful_rule_options" {
+      for_each = local.is_strict_order ? [1] : []
+      content {
+        rule_order = "STRICT_ORDER"
+      }
+    }
+
     rules_source {
       rules_string = try(var.suricata_stateful_rule_group[count.index]["rules_file"], file("${path.module}/nfw-base-suricata-rules.json"))
     }
@@ -85,6 +92,13 @@ resource "aws_networkfirewall_rule_group" "domain_stateful_group" {
   }
 
   rule_group {
+    dynamic "stateful_rule_options" {
+      for_each = local.is_strict_order ? [1] : []
+      content {
+        rule_order = "STRICT_ORDER"
+      }
+    }
+
     dynamic "rule_variables" {
       for_each = [
         for b in lookup(var.domain_stateful_rule_group[count.index], "rule_variables", {}) : b
@@ -140,6 +154,13 @@ resource "aws_networkfirewall_rule_group" "fivetuple_stateful_group" {
   }
 
   rule_group {
+    dynamic "stateful_rule_options" {
+      for_each = local.is_strict_order ? [1] : []
+      content {
+        rule_order = "STRICT_ORDER"
+      }
+    }
+
     rules_source {
       dynamic "stateful_rule" {
         for_each = var.fivetuple_stateful_rule_group[count.index].rule_config
@@ -287,11 +308,30 @@ resource "aws_networkfirewall_firewall_policy" "this" {
       }
     }
 
-    #StateFul Rule Group Reference
+    # Custom stateful rule groups — auto-priority assigned for STRICT_ORDER
     dynamic "stateful_rule_group_reference" {
-      for_each = local.this_stateful_group_arn
+      for_each = { for idx, arn in local.this_stateful_custom_group_arn : tostring(idx) => arn }
       content {
         resource_arn = stateful_rule_group_reference.value
+        priority     = local.is_strict_order ? (tonumber(stateful_rule_group_reference.key) + 1) * 100 : null
+      }
+    }
+
+    # AWS-managed stateful rule groups — optional priority and alert-mode override
+    dynamic "stateful_rule_group_reference" {
+      for_each = { for idx, g in var.stateful_managed_rule_groups : tostring(idx) => g }
+      content {
+        resource_arn = stateful_rule_group_reference.value.arn
+        priority = try(
+          stateful_rule_group_reference.value.priority,
+          local.is_strict_order ? (tonumber(stateful_rule_group_reference.key) + 1) * 1000 : null
+        )
+        dynamic "override" {
+          for_each = try(stateful_rule_group_reference.value.override_action, null) != null ? [1] : []
+          content {
+            action = stateful_rule_group_reference.value.override_action
+          }
+        }
       }
     }
   }

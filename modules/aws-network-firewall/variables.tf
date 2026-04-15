@@ -165,6 +165,16 @@ variable "stateful_managed_rule_groups_arns" {
   default     = []
 }
 
+variable "stateful_managed_rule_groups" {
+  description = "AWS-managed stateful rule groups with optional priority and override_action. Use override_action = \"DROP_TO_ALERT\" for discovery/alert mode with STRICT_ORDER."
+  type = list(object({
+    arn             = string
+    priority        = optional(number)
+    override_action = optional(string)
+  }))
+  default = []
+}
+
 variable "nfw_kms_key_id" {
   description = "NFW KMS Key Id for encryption"
   type        = string

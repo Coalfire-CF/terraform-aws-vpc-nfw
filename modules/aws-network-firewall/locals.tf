@@ -1,4 +1,10 @@
 locals {
-  this_stateful_group_arn  = concat(aws_networkfirewall_rule_group.suricata_stateful_group[*].arn, aws_networkfirewall_rule_group.domain_stateful_group[*].arn, aws_networkfirewall_rule_group.fivetuple_stateful_group[*].arn, var.stateful_managed_rule_groups_arns)
+  this_stateful_custom_group_arn = concat(
+    aws_networkfirewall_rule_group.suricata_stateful_group[*].arn,
+    aws_networkfirewall_rule_group.domain_stateful_group[*].arn,
+    aws_networkfirewall_rule_group.fivetuple_stateful_group[*].arn,
+    var.stateful_managed_rule_groups_arns,
+  )
   this_stateless_group_arn = concat(aws_networkfirewall_rule_group.stateless_group[*].arn)
+  is_strict_order          = try(var.stateful_engine_options.rule_order, "") == "STRICT_ORDER"
 }
