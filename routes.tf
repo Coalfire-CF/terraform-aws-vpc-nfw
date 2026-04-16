@@ -121,7 +121,7 @@ resource "aws_route" "nfw_public_custom" {
 # Private routes
 #################
 resource "aws_route_table" "private" {
-  count = local.max_subnet_length > 0 ? local.nat_gateway_count : 0
+  count = length(local.private_subnets) > 0 ? local.nat_gateway_count : 0
 
   vpc_id = local.vpc_id
 
