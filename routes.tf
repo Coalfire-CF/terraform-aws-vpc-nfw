@@ -445,18 +445,7 @@ resource "aws_route_table_association" "intra" {
 }
 
 resource "aws_route_table_association" "public" {
-  count = var.deploy_aws_nfw ? 0 : length(local.public_subnets)
-
-  subnet_id      = element(aws_subnet.public[*].id, count.index)
-  route_table_id = aws_route_table.public[0].id
-
-  depends_on = [
-    aws_subnet.public
-  ]
-}
-
-resource "aws_route_table_association" "nfw_public" {
-  count = var.deploy_aws_nfw ? length(local.public_subnets) : 0
+  count = length(local.public_subnets)
 
   subnet_id      = element(aws_subnet.public[*].id, count.index)
   route_table_id = aws_route_table.public[count.index].id

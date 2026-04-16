@@ -178,6 +178,28 @@ variable "tls_source_to_port" {
   default     = 65535
 }
 
+variable "aws_nfw_stateful_default_actions" {
+  description = "Default stateful actions for the NFW policy (e.g. [\"aws:alert_strict\"]). Requires stateful_engine_options with rule_order = STRICT_ORDER."
+  type        = list(string)
+  default     = []
+}
+
+variable "aws_nfw_stateful_engine_options" {
+  description = "Stateful engine options for the NFW policy. Use { rule_order = \"STRICT_ORDER\" } to enable stateful_default_actions."
+  type        = any
+  default     = {}
+}
+
+variable "aws_nfw_stateful_managed_rule_groups" {
+  description = "AWS-managed stateful rule groups to include in the NFW policy. Supports optional priority and override_action (use \"DROP_TO_ALERT\" to run managed groups in alert-only mode during discovery)."
+  type = list(object({
+    arn             = string
+    priority        = optional(number)
+    override_action = optional(string)
+  }))
+  default = []
+}
+
 ######
 # VPC
 ######
