@@ -193,8 +193,15 @@ variable "cloudwatch_log_group_retention_in_days" {
   default     = 365
 }
 variable "cloudwatch_log_group_kms_key_id" {
-  description = "Customer KMS Key id for Cloudwatch Log encryption"
+  description = "Customer KMS Key id for Cloudwatch Log encryption. Not required when nfw_s3_bucket_arn is set."
   type        = string
+  default     = null
+}
+
+variable "nfw_s3_bucket_arn" {
+  description = "ARN of an existing S3 bucket for NFW log delivery. When set, ALERT and FLOW logs are delivered to S3 instead of CloudWatch Logs."
+  type        = string
+  default     = ""
 }
 
 ### TLS Outbound Inspection ###

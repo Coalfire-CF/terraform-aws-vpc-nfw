@@ -1,6 +1,16 @@
 locals {
   flow_log_destination_arn = var.flow_log_destination_type == "cloud-watch-logs" ? try(aws_cloudwatch_log_group.this[0].arn, null) : var.flow_log_destination_arn
   flow_log_iam_role_arn    = var.flow_log_destination_type == "cloud-watch-logs" ? try(aws_iam_role.flowlogs_role[0].arn, null) : null
+
+  # Resolved S3 ARN for flow log delivery:
+  # - External bucket provided: use it and skip creating a per-VPC bucket.
+  # - No external bucket: use the per-VPC bucket created by this module.
+  # - Not using S3: empty (unused).
+  flow_log_s3_arn = (
+    var.flow_log_destination_type != "s3" ? "" :
+    var.flow_log_s3_bucket_arn != "" ? var.flow_log_s3_bucket_arn :
+    aws_s3_bucket.flowlogs[0].arn
+  )
 }
 
 data "aws_region" "current" {}
@@ -93,19 +103,19 @@ resource "aws_iam_role_policy_attachment" "flowlogs_policy" {
 resource "aws_flow_log" "s3" {
   count                = var.flow_log_destination_type == "s3" ? 1 : 0
   iam_role_arn         = local.flow_log_iam_role_arn
-  log_destination      = aws_s3_bucket.flowlogs[0].arn
+  log_destination      = local.flow_log_s3_arn
   log_destination_type = var.flow_log_destination_type
   traffic_type         = "ALL"
   vpc_id               = local.vpc_id
 }
 
 resource "aws_s3_bucket" "flowlogs" {
-  count  = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" && var.flow_log_s3_bucket_arn == "" ? 1 : 0
   bucket = "${var.resource_prefix}-flowlogs"
 }
 
 resource "aws_s3_bucket_server_side_encryption_configuration" "flowlogs-encryption" {
-  count  = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" && var.flow_log_s3_bucket_arn == "" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].id
   rule {
     apply_server_side_encryption_by_default {
@@ -115,13 +125,13 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "flowlogs-encrypti
   }
 }
 
-# Create a local value for the S3 bucket ARN to avoid referencing non-existent resources
+# ARN of the locally-managed flow log bucket (empty when using an external bucket)
 locals {
-  s3_bucket_arn = var.flow_log_destination_type == "s3" ? aws_s3_bucket.flowlogs[0].arn : ""
+  s3_bucket_arn = var.flow_log_destination_type == "s3" && var.flow_log_s3_bucket_arn == "" ? aws_s3_bucket.flowlogs[0].arn : ""
 }
 
 data "aws_iam_policy_document" "flowlogs_policy" {
-  count = var.flow_log_destination_type == "s3" ? 1 : 0
+  count = var.flow_log_destination_type == "s3" && var.flow_log_s3_bucket_arn == "" ? 1 : 0
 
   statement {
     actions = ["s3:GetBucketAcl"]
@@ -163,13 +173,13 @@ data "aws_iam_policy_document" "flowlogs_policy" {
 }
 
 resource "aws_s3_bucket_policy" "flowlogs_bucket_policy" {
-  count  = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" && var.flow_log_s3_bucket_arn == "" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].bucket
   policy = data.aws_iam_policy_document.flowlogs_policy[0].json
 }
 
 resource "aws_s3_bucket_public_access_block" "flowlogs" {
-  count  = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" && var.flow_log_s3_bucket_arn == "" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].id
 
   block_public_acls       = true
@@ -178,7 +188,7 @@ resource "aws_s3_bucket_public_access_block" "flowlogs" {
   ignore_public_acls      = true
 }
 resource "aws_s3_bucket_logging" "flowlogs" {
-  count  = var.flow_log_destination_type == "s3" ? 1 : 0
+  count  = var.flow_log_destination_type == "s3" && var.flow_log_s3_bucket_arn == "" ? 1 : 0
   bucket = aws_s3_bucket.flowlogs[0].id
 
   target_bucket = var.s3_access_logs_bucket

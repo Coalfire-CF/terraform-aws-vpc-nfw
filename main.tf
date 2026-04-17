@@ -130,6 +130,7 @@ module "aws_network_firewall" {
   nfw_kms_key_id                         = var.nfw_kms_key_arn
   cloudwatch_log_group_retention_in_days = var.cloudwatch_log_group_retention_in_days
   cloudwatch_log_group_kms_key_id        = var.cloudwatch_log_group_kms_key_arn
+  nfw_s3_bucket_arn                      = var.nfw_s3_bucket_arn
 
   # Stateful engine options (STRICT_ORDER / alert mode)
   stateful_default_actions     = var.aws_nfw_stateful_default_actions

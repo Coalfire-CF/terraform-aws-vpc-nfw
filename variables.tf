@@ -332,6 +332,12 @@ variable "flow_log_destination_arn" {
   default     = null
 }
 
+variable "flow_log_s3_bucket_arn" {
+  description = "ARN of an existing S3 bucket to use as the flow log destination. When set, flow logs are delivered to this bucket and no per-VPC bucket is created. Only effective when flow_log_destination_type = \"s3\"."
+  type        = string
+  default     = ""
+}
+
 variable "flow_log_destination_type" {
   description = "Type of flow log destination. Can be s3 or cloud-watch-logs"
   type        = string
@@ -565,6 +571,12 @@ variable "cloudwatch_log_group_retention_in_days" {
 
 variable "cloudwatch_log_group_kms_key_arn" {
   description = "Customer KMS Key ARN for Cloudwatch Log encryption"
+  type        = string
+  default     = ""
+}
+
+variable "nfw_s3_bucket_arn" {
+  description = "ARN of an existing S3 bucket for NFW log delivery. When set, ALERT and FLOW logs are delivered to S3 instead of CloudWatch Logs."
   type        = string
   default     = ""
 }

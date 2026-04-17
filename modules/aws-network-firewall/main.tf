@@ -362,7 +362,8 @@ resource "aws_networkfirewall_firewall_policy" "this" {
 ###################### Logging Config ######################
 
 resource "aws_cloudwatch_log_group" "nfw" {
-  name = "/aws/network-firewall/${var.firewall_name}"
+  count = var.nfw_s3_bucket_arn == "" ? 1 : 0
+  name  = "/aws/network-firewall/${var.firewall_name}"
 
   tags = merge(var.tags)
 
@@ -370,22 +371,27 @@ resource "aws_cloudwatch_log_group" "nfw" {
   kms_key_id        = var.cloudwatch_log_group_kms_key_id
 }
 
+locals {
+  nfw_log_dest_type = var.nfw_s3_bucket_arn != "" ? "S3" : "CloudWatchLogs"
+  nfw_log_dest = var.nfw_s3_bucket_arn != "" ? {
+    bucketName = element(split(":::", var.nfw_s3_bucket_arn), 1)
+  } : {
+    logGroup = aws_cloudwatch_log_group.nfw[0].name
+  }
+}
+
 resource "aws_networkfirewall_logging_configuration" "this" {
   firewall_arn = aws_networkfirewall_firewall.this.arn
 
   logging_configuration {
     log_destination_config {
-      log_destination = {
-        logGroup = aws_cloudwatch_log_group.nfw.name
-      }
-      log_destination_type = "CloudWatchLogs"
+      log_destination      = local.nfw_log_dest
+      log_destination_type = local.nfw_log_dest_type
       log_type             = "ALERT"
     }
     log_destination_config {
-      log_destination = {
-        logGroup = aws_cloudwatch_log_group.nfw.name
-      }
-      log_destination_type = "CloudWatchLogs"
+      log_destination      = local.nfw_log_dest
+      log_destination_type = local.nfw_log_dest_type
       log_type             = "FLOW"
     }
   }
