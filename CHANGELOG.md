@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.3.1](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/compare/v3.3.0...v3.3.1) (2026-04-27)
+
+
+### Miscellaneous
+
+* **deps:** bump actions/create-github-app-token from 2 to 3 ([#152](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/issues/152)) ([b5b3eb0](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/b5b3eb031eb36b5e3f268ab3dea4dec7c6a9fe77))
+* **deps:** bump actions/github-script from 8 to 9 ([#168](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/issues/168)) ([8efc1c3](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/8efc1c3dce8d6c504d24e890a489eee601c43c29))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-checkov.yml ([5473671](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/54736714ecf2c10fb7c1b7f61b7c939baabf074c))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-checkov.yml from 0.4.1 to 0.5.1 ([4d5916e](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/4d5916e6cc7dbb70836932d04c6f027ce59a0f3c))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-dependabot.yml ([0576917](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/0576917a7522bf0906443bab0136d7f30c5f9c6f))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-dependabot.yml from 0.4.1 to 0.5.1 ([613ef58](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/613ef58db2ad311a6763973811b1dc5f80ac9ad3))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-markdown-lint.yml ([8afd6ef](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/8afd6ef4a4e12af28b7b7b8e907e7e7394821621))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-markdown-lint.yml from 0.4.1 to 0.5.1 ([14d345a](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/14d345af94dea431eb256decc31652d2d0ce2051))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-release.yml ([4bc958c](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/4bc958c480155fe2a49226029a62269d7d112c12))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-release.yml from 0.4.1 to 0.5.1 ([8633897](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/86338973951ec35934c7bb53360a54af73edf4ca))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-terraform-docs.yml ([028b4fa](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/028b4fa9b7ad6de0c699088afcc0ebe84cb06285))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-terraform-docs.yml from 0.4.1 to 0.5.1 ([7d85c84](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/7d85c84946758a9f6e83f3a092fd4965d93d5cba))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-terraform-fmt.yml ([e702ee6](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/e702ee6163057bcc6e0b192159389473ffe20f27))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-terraform-fmt.yml from 0.4.1 to 0.5.1 ([40e0246](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/40e024617e65b45464e9fb4520856c076d7d149e))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-terraform-validate.yml ([7150932](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/71509321f450158a110a6381dfbc397ef2695caf))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-terraform-validate.yml from 0.4.1 to 0.5.1 ([2fdc365](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/2fdc365e7f20d8b21c2e465a83a5317f724cf468))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-tree-readme.yml ([7609bfb](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/7609bfbeec2985aa05b313fe5920afe539b4d885))
+* **deps:** bump Coalfire-CF/Actions/.github/workflows/org-tree-readme.yml from 0.3.2 to 0.5.1 ([adc9480](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/commit/adc9480e4b80f4570480994064e8380136254708))
+
 ## [3.3.0](https://github.com/Coalfire-CF/terraform-aws-vpc-nfw/compare/v3.2.0...v3.3.0) (2026-03-24)
 
 
