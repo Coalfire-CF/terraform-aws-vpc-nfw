@@ -505,7 +505,7 @@ These deployments steps assume you will be deploying this PAK (including AWS NFW
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.36.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.45.0 |
 
 ## Modules
 
